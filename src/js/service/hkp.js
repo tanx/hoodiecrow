@@ -4,6 +4,9 @@ var ngModule = angular.module('woServices');
 ngModule.service('hkp', HKP);
 module.exports = HKP;
 
+/**
+ * A HKP client for fetching public PGP keys from standard key servers
+ */
 function HKP(appConfig) {
     this._appConfig = appConfig;
 }

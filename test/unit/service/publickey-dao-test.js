@@ -137,7 +137,7 @@ describe('Public Key DAO unit tests', function() {
         it('should fail', function(done) {
             restDaoStub.remove.returns(resolves());
 
-            pubkeyDao.remove('12345').then(function(err) {
+            pubkeyDao.remove('12345').then(function() {
                 expect(restDaoStub.remove.calledOnce).to.be.true;
                 done();
             });

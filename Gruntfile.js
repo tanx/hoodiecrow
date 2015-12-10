@@ -140,7 +140,7 @@ module.exports = function(grunt) {
         // JavaScript
 
         jshint: {
-            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/*-test.js', 'test/integration/*-test.js'],
+            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/**/*-test.js', 'test/integration/**/*-test.js'],
             options: {
                 jshintrc: '.jshintrc'
             }

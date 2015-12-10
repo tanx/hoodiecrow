@@ -14,7 +14,7 @@ module.exports = appCfg;
 appCfg.config = {
     pgpComment: 'Whiteout Mail - https://whiteout.io',
     keyServerUrl: 'https://keys.whiteout.io',
-    hkpUrl: 'http://keyserver.ubuntu.com',
+    hkpUrl: 'https://keyserver.ubuntu.com',
     adminUrl: 'https://admin-node.whiteout.io',
     settingsUrl: 'https://settings.whiteout.io/autodiscovery/',
     mailServer: {
