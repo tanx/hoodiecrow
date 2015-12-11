@@ -282,6 +282,7 @@ module.exports = function(grunt) {
             },
             app: {
                 src: [
+                    'node_modules/whatwg-fetch/fetch.js',
                     'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
@@ -331,6 +332,7 @@ module.exports = function(grunt) {
             },
             unitTest: {
                 src: [
+                    'node_modules/whatwg-fetch/fetch.js',
                     'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
@@ -351,6 +353,7 @@ module.exports = function(grunt) {
             },
             integrationTest: {
                 src: [
+                    'node_modules/whatwg-fetch/fetch.js',
                     'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
