@@ -9,13 +9,6 @@ ngModule.factory('publicKeyRestDao', function(appConfig) {
     return dao;
 });
 
-// rest dao for use in the invitation service
-ngModule.factory('invitationRestDao', function(appConfig) {
-    var dao = new RestDAO();
-    dao.setBaseUri(appConfig.config.keyServerUrl);
-    return dao;
-});
-
 // rest dao for use in the admin service
 ngModule.factory('adminRestDao', function(appConfig) {
     var dao = new RestDAO();

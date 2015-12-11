@@ -352,7 +352,6 @@ describe('Write controller unit test', function() {
             scope.invite().then(function() {
                 expect(scope.showInvite).to.be.false;
                 expect(outboxMock.put.called).to.be.false;
-                expect(invitationMock.invite.called).to.be.false;
                 done();
             });
         });
@@ -365,12 +364,10 @@ describe('Write controller unit test', function() {
             }];
 
             outboxMock.put.returns(resolves());
-            invitationMock.invite.returns(resolves());
 
             scope.invite().then(function() {
                 expect(scope.showInvite).to.be.false;
                 expect(outboxMock.put.callCount).to.equal(2);
-                expect(invitationMock.invite.callCount).to.equal(2);
                 done();
             });
         });
@@ -384,12 +381,10 @@ describe('Write controller unit test', function() {
             scope.invited.push('asdf@asdf.de');
 
             outboxMock.put.returns(resolves());
-            invitationMock.invite.returns(resolves());
 
             scope.invite().then(function() {
                 expect(scope.showInvite).to.be.false;
                 expect(outboxMock.put.callCount).to.equal(1);
-                expect(invitationMock.invite.callCount).to.equal(1);
                 done();
             });
         });
@@ -400,30 +395,11 @@ describe('Write controller unit test', function() {
             }];
 
             outboxMock.put.returns(rejects(new Error('Peng')));
-            invitationMock.invite.returns(resolves());
 
             scope.invite().then(function() {
                 expect(dialogMock.error.calledOnce).to.be.true;
                 expect(scope.showInvite).to.be.true;
                 expect(outboxMock.put.callCount).to.equal(1);
-                expect(invitationMock.invite.callCount).to.equal(0);
-                done();
-            });
-        });
-
-        it('should fail due to error in invitation.invite', function(done) {
-            scope.to = [{
-                address: 'asdf@asdf.de'
-            }];
-
-            outboxMock.put.returns(resolves());
-            invitationMock.invite.returns(rejects(new Error('Peng')));
-
-            scope.invite().then(function() {
-                expect(dialogMock.error.calledOnce).to.be.true;
-                expect(scope.showInvite).to.be.true;
-                expect(outboxMock.put.callCount).to.equal(1);
-                expect(invitationMock.invite.callCount).to.equal(1);
                 done();
             });
         });

@@ -112,19 +112,7 @@ describe('Read Controller unit test', function() {
             expect(scope.keyId).to.equal('No key found.');
         });
 
-        it('should show error on invitation dao invite error', function(done) {
-            invitationMock.invite.returns(rejects(42));
-
-            scope.invite({
-                address: 'asdf@asdf.de'
-            }).then(function() {
-                expect(dialogMock.error.calledOnce).to.be.true;
-                done();
-            });
-        });
-
         it('should show error on outbox put error', function(done) {
-            invitationMock.invite.returns(resolves());
             outboxMock.put.returns(rejects(42));
 
             scope.invite({
@@ -136,7 +124,6 @@ describe('Read Controller unit test', function() {
         });
 
         it('should work', function(done) {
-            invitationMock.invite.returns(resolves());
             outboxMock.put.returns(resolves());
 
             scope.invite({

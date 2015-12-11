@@ -150,12 +150,6 @@ var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, k
             resolve();
 
         }).then(function() {
-            return invitation.invite({
-                recipient: recipient,
-                sender: sender
-            });
-
-        }).then(function() {
             var invitationMail = invitation.createMail({
                 sender: sender,
                 recipient: recipient

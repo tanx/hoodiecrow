@@ -364,12 +364,7 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
                     recipient: recipientAddress
                 });
                 // send invitation mail
-                var promise = outbox.put(invitationMail).then(function() {
-                    return invitation.invite({
-                        recipient: recipientAddress,
-                        sender: sender
-                    });
-                });
+                var promise = outbox.put(invitationMail);
                 sendJobs.push(promise);
                 // remember already invited users to prevent spamming
                 $scope.invited.push(recipientAddress);
