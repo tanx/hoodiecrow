@@ -1,71 +1,43 @@
 'use strict';
 
-var RestDAO = require('../../../src/js/service/rest'),
+var PGP = require('../../../src/js/crypto/pgp'),
     PublicKeyDAO = require('../../../src/js/service/publickey');
 
 describe('Public Key DAO unit tests', function() {
 
-    var pubkeyDao, restDaoStub;
+    var pubkeyDao, pgpStub, hkpStub;
 
     beforeEach(function() {
-        restDaoStub = sinon.createStubInstance(RestDAO);
-        pubkeyDao = new PublicKeyDAO(restDaoStub);
+        pgpStub = sinon.createStubInstance(PGP);
+        hkpStub = sinon.createStubInstance(openpgp.HKP);
+        pubkeyDao = new PublicKeyDAO(pgpStub);
+        pubkeyDao._hkp = hkpStub;
     });
 
     afterEach(function() {});
 
     describe('get', function() {
         it('should fail', function(done) {
-            restDaoStub.get.returns(rejects(42));
+            hkpStub.lookup.returns(rejects(42));
 
             pubkeyDao.get('id').catch(function(err) {
                 expect(err).to.exist;
-                expect(restDaoStub.get.calledOnce).to.be.true;
+                expect(hkpStub.lookup.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should work', function(done) {
-            restDaoStub.get.returns(resolves({
-                _id: '12345',
-                publicKey: 'asdf'
-            }));
-
-            pubkeyDao.get('id').then(function(key) {
-                expect(key._id).to.exist;
-                expect(key.publicKey).to.exist;
-                expect(restDaoStub.get.calledOnce).to.be.true;
-                done();
+            var keyId = 'id';
+            hkpStub.lookup.returns(resolves('asdf'));
+            pgpStub.getKeyParams.returns({
+                _id: keyId
             });
-        });
-    });
 
-    describe('verify', function() {
-        it('should fail', function(done) {
-            restDaoStub.get.returns(rejects(42));
-
-            pubkeyDao.verify('id').catch(function(err) {
-                expect(err).to.exist;
-                done();
-            });
-        });
-
-        it('should not error for 400', function(done) {
-            restDaoStub.get.returns(rejects({
-                code: 400
-            }));
-
-            pubkeyDao.verify('id').then(done);
-        });
-
-        it('should work', function(done) {
-            var uuid = 'c621e328-8548-40a1-8309-adf1955e98a9';
-            restDaoStub.get.returns(resolves());
-
-            pubkeyDao.verify(uuid).then(function() {
-                expect(restDaoStub.get.calledWith(sinon.match(function(arg) {
-                    return arg.uri === '/verify/' + uuid && arg.type === 'text';
-                }))).to.be.true;
+            pubkeyDao.get(keyId).then(function(key) {
+                expect(key._id).to.equal('id');
+                expect(key.publicKey).to.equal('asdf');
+                expect(hkpStub.lookup.calledOnce).to.be.true;
                 done();
             });
         });
@@ -73,47 +45,35 @@ describe('Public Key DAO unit tests', function() {
 
     describe('get by userId', function() {
         it('should fail', function(done) {
-            restDaoStub.get.returns(rejects(42));
+            hkpStub.lookup.returns(rejects(42));
 
             pubkeyDao.getByUserId('userId').catch(function(err) {
                 expect(err).to.exist;
-                expect(restDaoStub.get.calledOnce).to.be.true;
+                expect(hkpStub.lookup.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should react to 404', function(done) {
-            restDaoStub.get.returns(resolves({
-                code: 404
-            }));
+            hkpStub.lookup.returns(resolves());
 
             pubkeyDao.getByUserId('userId').then(function(key) {
                 expect(key).to.not.exist;
-                expect(restDaoStub.get.calledOnce).to.be.true;
-                done();
-            });
-        });
-
-        it('should return empty array', function(done) {
-            restDaoStub.get.returns(resolves([]));
-
-            pubkeyDao.getByUserId('userId').then(function(key) {
-                expect(key).to.not.exist;
-                expect(restDaoStub.get.calledOnce).to.be.true;
+                expect(hkpStub.lookup.calledOnce).to.be.true;
                 done();
             });
         });
 
         it('should work', function(done) {
-            restDaoStub.get.returns(resolves([{
-                _id: '12345',
-                publicKey: 'asdf'
-            }]));
+            hkpStub.lookup.returns(resolves('asdf'));
+            pgpStub.getKeyParams.returns({
+                _id: 'id'
+            });
 
             pubkeyDao.getByUserId('userId').then(function(key) {
                 expect(key._id).to.exist;
                 expect(key.publicKey).to.exist;
-                expect(restDaoStub.get.calledOnce).to.be.true;
+                expect(hkpStub.lookup.calledOnce).to.be.true;
                 done();
             });
         });
@@ -121,24 +81,13 @@ describe('Public Key DAO unit tests', function() {
 
     describe('put', function() {
         it('should fail', function(done) {
-            restDaoStub.put.returns(resolves());
+            hkpStub.upload.returns(resolves());
 
             pubkeyDao.put({
                 _id: '12345',
                 publicKey: 'asdf'
             }).then(function() {
-                expect(restDaoStub.put.calledOnce).to.be.true;
-                done();
-            });
-        });
-    });
-
-    describe('remove', function() {
-        it('should fail', function(done) {
-            restDaoStub.remove.returns(resolves());
-
-            pubkeyDao.remove('12345').then(function() {
-                expect(restDaoStub.remove.calledOnce).to.be.true;
+                expect(hkpStub.upload.calledOnce).to.be.true;
                 done();
             });
         });
