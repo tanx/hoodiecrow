@@ -233,8 +233,7 @@ module.exports = function(grunt) {
                 files: {
                     'test/integration/index.browserified.js': [
                         'test/main.js',
-                        'test/integration/email-dao-test.js',
-                        'test/integration/publickey-verifier-test.js'
+                        'test/integration/email-dao-test.js'
                     ]
                 },
                 options: browserifyOpt
