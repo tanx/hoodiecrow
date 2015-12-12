@@ -4,7 +4,7 @@
 // Controller
 //
 
-var ContactsCtrl = function($scope, $q, keychain, pgp, dialog, appConfig) {
+var ContactsCtrl = function($scope, $q, keychain, pgp, dialog) {
 
     //
     // scope state
