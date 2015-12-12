@@ -46,14 +46,6 @@ Keychain.prototype.requestPermissionForKeyUpdate = function(params, callback) {
 };
 
 /**
- * Verifies the public key of a user o nthe public key store
- * @param {String} uuid The uuid to verify the key
- */
-Keychain.prototype.verifyPublicKey = function(uuid) {
-    return this._publicKeyDao.verify(uuid);
-};
-
-/**
  * Checks for public key updates of a given user id
  * @param {String} options.userId The user id (email address) for which to check the key
  * @param {String} options.overridePermission (optional) Indicates if the update should happen automatically (true) or with the user being queried (false). Defaults to false
