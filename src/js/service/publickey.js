@@ -29,6 +29,7 @@ PublicKey.prototype.getByUserId = function(userId) {
 
 PublicKey.prototype._get = function(options) {
     var self = this;
+
     return self._hkp.lookup(options).then(function(publicKeyArmored) {
         if (!publicKeyArmored) {
             return;
@@ -38,7 +39,8 @@ PublicKey.prototype._get = function(options) {
             _id: keyParams._id,
             userId: keyParams.userId,
             userIds: keyParams.userIds,
-            publicKey: publicKeyArmored
+            publicKey: publicKeyArmored,
+            source: self._hkp._baseUrl.split('://')[1]
         };
     });
 };

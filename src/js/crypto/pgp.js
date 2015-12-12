@@ -21,7 +21,8 @@ function PGP() {
  * @return {HKP} The HKP client
  */
 PGP.prototype.getHKPClient = function() {
-    return new openpgp.HKP(config.hkpUrl);
+    openpgp.config.keyserver = config.hkpUrl;
+    return new openpgp.HKP();
 };
 
 /**

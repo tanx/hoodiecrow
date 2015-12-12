@@ -1,7 +1,8 @@
 'use strict';
 
 var PGP = require('../../../src/js/crypto/pgp'),
-    PublicKeyDAO = require('../../../src/js/service/publickey');
+    PublicKeyDAO = require('../../../src/js/service/publickey'),
+    appConfig = require('../../../src/js/app-config');
 
 describe('Public Key DAO unit tests', function() {
 
@@ -9,8 +10,9 @@ describe('Public Key DAO unit tests', function() {
 
     beforeEach(function() {
         pgpStub = sinon.createStubInstance(PGP);
-        hkpStub = sinon.createStubInstance(openpgp.HKP);
         pubkeyDao = new PublicKeyDAO(pgpStub);
+        hkpStub = sinon.createStubInstance(openpgp.HKP);
+        hkpStub._baseUrl = appConfig.config.hkpUrl;
         pubkeyDao._hkp = hkpStub;
     });
 
@@ -31,12 +33,17 @@ describe('Public Key DAO unit tests', function() {
             var keyId = 'id';
             hkpStub.lookup.returns(resolves('asdf'));
             pgpStub.getKeyParams.returns({
-                _id: keyId
+                _id: keyId,
+                userId: 'userId',
+                userIds: []
             });
 
             pubkeyDao.get(keyId).then(function(key) {
                 expect(key._id).to.equal('id');
+                expect(key.userId).to.equal('userId');
+                expect(key.userIds).to.exist;
                 expect(key.publicKey).to.equal('asdf');
+                expect(key.source).to.exist;
                 expect(hkpStub.lookup.calledOnce).to.be.true;
                 done();
             });
