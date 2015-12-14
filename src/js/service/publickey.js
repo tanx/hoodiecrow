@@ -15,6 +15,11 @@ function PublicKey(pgp) {
 PublicKey.prototype.get = function(keyId) {
     return this._get({
         keyId: keyId
+    }).then(function(key) {
+        if (key && key._id !== keyId) {
+            throw new Error('Key ID of fetched public key does not match!');
+        }
+        return key;
     });
 };
 
@@ -24,6 +29,11 @@ PublicKey.prototype.get = function(keyId) {
 PublicKey.prototype.getByUserId = function(userId) {
     return this._get({
         query: userId
+    }).then(function(key) {
+        if (key && key.userId !== userId) {
+            throw new Error('User ID of fetched public key does not match!');
+        }
+        return key;
     });
 };
 

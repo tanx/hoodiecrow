@@ -29,6 +29,32 @@ describe('Public Key DAO unit tests', function() {
             });
         });
 
+        it('should react to 404', function(done) {
+            hkpStub.lookup.returns(resolves());
+
+            pubkeyDao.get('id').then(function(key) {
+                expect(key).to.not.exist;
+                expect(hkpStub.lookup.calledOnce).to.be.true;
+                done();
+            });
+        });
+
+        it('should fail on key id mismatch', function(done) {
+            var keyId = 'id';
+            hkpStub.lookup.returns(resolves('asdf'));
+            pgpStub.getKeyParams.returns({
+                _id: 'id2',
+                userId: 'userId',
+                userIds: []
+            });
+
+            pubkeyDao.get(keyId).catch(function(err) {
+                expect(err).to.exist;
+                expect(hkpStub.lookup.calledOnce).to.be.true;
+                done();
+            });
+        });
+
         it('should work', function(done) {
             var keyId = 'id';
             hkpStub.lookup.returns(resolves('asdf'));
@@ -51,7 +77,7 @@ describe('Public Key DAO unit tests', function() {
     });
 
     describe('get by userId', function() {
-        it('should fail', function(done) {
+        it('should fail on hkp error', function(done) {
             hkpStub.lookup.returns(rejects(42));
 
             pubkeyDao.getByUserId('userId').catch(function(err) {
@@ -71,10 +97,25 @@ describe('Public Key DAO unit tests', function() {
             });
         });
 
+        it('should fail on user id mismatch', function(done) {
+            hkpStub.lookup.returns(resolves('asdf'));
+            pgpStub.getKeyParams.returns({
+                _id: 'id',
+                userId: 'userId2'
+            });
+
+            pubkeyDao.getByUserId('userId').catch(function(err) {
+                expect(err).to.exist;
+                expect(hkpStub.lookup.calledOnce).to.be.true;
+                done();
+            });
+        });
+
         it('should work', function(done) {
             hkpStub.lookup.returns(resolves('asdf'));
             pgpStub.getKeyParams.returns({
-                _id: 'id'
+                _id: 'id',
+                userId: 'userId'
             });
 
             pubkeyDao.getByUserId('userId').then(function(key) {
