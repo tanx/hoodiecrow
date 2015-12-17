@@ -206,7 +206,7 @@ Keychain.prototype.getUserKeyPair = function(userId) {
             userId: userId
         });
 
-        if (pubkey && pubkey._id && !pubkey.source) {
+        if (pubkey && !pubkey.source) {
             // that user's public key is already in local storage...
             // sync keypair to the cloud
             return syncKeypair(pubkey._id);
@@ -215,7 +215,7 @@ Keychain.prototype.getUserKeyPair = function(userId) {
         // no public key by that user id in storage
         // find from cloud by email address
         return self._publicKeyDao.getByUserId(userId).then(function(cloudPubkey) {
-            if (cloudPubkey && cloudPubkey._id && !cloudPubkey.source) {
+            if (cloudPubkey && !cloudPubkey.source) {
                 // there is a public key for that user already in the cloud...
                 // sync keypair to local storage
                 return syncKeypair(cloudPubkey._id);
