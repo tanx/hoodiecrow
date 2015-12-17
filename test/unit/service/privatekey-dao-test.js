@@ -148,7 +148,6 @@ describe('Private Key DAO unit tests', function() {
         });
 
         it('should be synced', function(done) {
-
             privkeyDao._getFolder.returns(resolves('foo'));
             privkeyDao._fetchMessage.returns(resolves({}));
 
@@ -221,10 +220,7 @@ describe('Private Key DAO unit tests', function() {
             privkeyDao._getFolder.returns(resolves('foo'));
             privkeyDao._fetchMessage.returns(resolves());
 
-            privkeyDao.download({
-                userId: emailAddress,
-                keyId: keyId
-            }).catch(function(err) {
+            privkeyDao.download().catch(function(err) {
                 expect(err.message).to.match(/not synced/);
                 done();
             });
@@ -236,13 +232,10 @@ describe('Private Key DAO unit tests', function() {
             imapClientStub.getBodyParts.returns(resolves());
             privkeyDao._parse.returns(resolves(root));
 
-            privkeyDao.download({
-                userId: emailAddress,
-                keyId: keyId
-            }).then(function(privkey) {
-                expect(privkey._id).to.equal(keyId);
-                expect(privkey.userId).to.equal(emailAddress);
+            privkeyDao.download().then(function(privkey) {
                 expect(privkey.encryptedPrivateKey).to.exist;
+                expect(privkey.salt).to.exist;
+                expect(privkey.iv).to.exist;
                 done();
             });
         });
@@ -261,8 +254,6 @@ describe('Private Key DAO unit tests', function() {
             cryptoStub.decrypt.returns(rejects(new Error()));
 
             privkeyDao.decrypt({
-                _id: keyId,
-                userId: emailAddress,
                 code: 'asdf',
                 encryptedPrivateKey: encryptedPrivateKey,
                 salt: salt,
@@ -273,46 +264,30 @@ describe('Private Key DAO unit tests', function() {
             });
         });
 
-        it('should  fail for invalid key params', function(done) {
-            cryptoStub.deriveKey.returns(resolves('derivedKey'));
-            cryptoStub.decrypt.returns(resolves('PGP BLOCK'));
-            pgpStub.getKeyParams.returns({
-                _id: '7890',
-                userId: emailAddress
-            });
-
-            privkeyDao.decrypt({
-                _id: keyId,
-                userId: emailAddress,
-                code: 'asdf',
-                encryptedPrivateKey: encryptedPrivateKey,
-                salt: salt,
-                iv: iv
-            }).catch(function(err) {
-                expect(err.message).to.match(/key parameters/);
-                done();
-            });
-        });
-
         it('should work', function(done) {
             cryptoStub.deriveKey.returns(resolves('derivedKey'));
-            cryptoStub.decrypt.returns(resolves('PGP BLOCK'));
+            cryptoStub.decrypt.returns(resolves('PRIVATE PGP BLOCK'));
             pgpStub.getKeyParams.returns({
                 _id: keyId,
-                userId: emailAddress
+                userId: emailAddress,
+                userIds: []
             });
+            pgpStub.extractPublicKey.returns('PUBLIC PGP BLOCK');
 
             privkeyDao.decrypt({
-                _id: keyId,
-                userId: emailAddress,
                 code: 'asdf',
                 encryptedPrivateKey: encryptedPrivateKey,
                 salt: salt,
                 iv: iv
-            }).then(function(privkey) {
-                expect(privkey._id).to.equal(keyId);
-                expect(privkey.userId).to.equal(emailAddress);
-                expect(privkey.encryptedKey).to.equal('PGP BLOCK');
+            }).then(function(keypair) {
+                expect(keypair.privateKey._id).to.equal(keyId);
+                expect(keypair.privateKey.userId).to.equal(emailAddress);
+                expect(keypair.privateKey.userIds).to.exist;
+                expect(keypair.privateKey.encryptedKey).to.equal('PRIVATE PGP BLOCK');
+                expect(keypair.publicKey._id).to.equal(keyId);
+                expect(keypair.publicKey.userId).to.equal(emailAddress);
+                expect(keypair.publicKey.userIds).to.exist;
+                expect(keypair.publicKey.publicKey).to.equal('PUBLIC PGP BLOCK');
                 done();
             });
         });
@@ -362,29 +337,31 @@ describe('Private Key DAO unit tests', function() {
             });
         });
 
-
-        it('should work', function(done) {
+        it('should work for unspecified key id', function(done) {
             imapClientStub.listMessages.returns(resolves([{
+                subject: 'id_0'
+            },{
                 subject: keyId
             }]));
 
             privkeyDao._fetchMessage({
-                userId: emailAddress,
-                keyId: keyId
+                path: 'openpgp_keys',
             }).then(function(msg) {
-                expect(msg.subject).to.equal(keyId);
+                expect(msg.subject).to.equal('id_0');
                 expect(imapClientStub.listMessages.calledOnce).to.be.true;
                 done();
             });
         });
 
-        it('should work with path prefix', function(done) {
+        it('should work for specified keyId', function(done) {
             imapClientStub.listMessages.returns(resolves([{
+                subject: 'id_0'
+            },{
                 subject: keyId
             }]));
 
             privkeyDao._fetchMessage({
-                userId: emailAddress,
+                path: 'openpgp_keys',
                 keyId: keyId
             }).then(function(msg) {
                 expect(msg.subject).to.equal(keyId);
@@ -399,7 +376,7 @@ describe('Private Key DAO unit tests', function() {
             }]));
 
             privkeyDao._fetchMessage({
-                userId: emailAddress,
+                path: 'openpgp_keys',
                 keyId: keyId
             }).then(function(msg) {
                 expect(msg).to.not.exist;
@@ -411,8 +388,7 @@ describe('Private Key DAO unit tests', function() {
             imapClientStub.listMessages.returns(resolves([]));
 
             privkeyDao._fetchMessage({
-                userId: emailAddress,
-                keyId: keyId
+                path: 'openpgp_keys',
             }).then(function(msg) {
                 expect(msg).to.not.exist;
                 done();

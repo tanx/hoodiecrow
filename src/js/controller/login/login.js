@@ -1,6 +1,6 @@
 'use strict';
 
-var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, auth, email, keychain, dialog, appConfig) {
+var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, auth, email, privateKey, dialog, appConfig) {
 
     //
     // Scope functions
@@ -50,15 +50,24 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
                     return $scope.goTo('/account');
                 });
             });
-
-        } else if (availableKeys && availableKeys.publicKey && !availableKeys.privateKey) {
-            // proceed to private key download
-            return $scope.goTo('/login-privatekey-download');
-
-        } else {
-            // no public key available, start onboarding process
-            return $scope.goTo('/login-initial');
         }
+
+        // no local key, check for synced private key
+        var privateKeySynced;
+        return privateKey.init().then(function() {
+            return privateKey.isSynced();
+        }).then(function(synced) {
+            privateKeySynced = synced;
+            // logout of imap
+            return privateKey.destroy();
+        }).then(function() {
+            // key is not synced ... continue to keygen/import
+            if (!privateKeySynced) {
+                return $scope.goTo('/login-initial');
+            }
+            // key is synced ... continue to private key download
+            return $scope.goTo('/login-privatekey-download');
+        });
     }
 
     $scope.goTo = function(location) {

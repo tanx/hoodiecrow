@@ -46,15 +46,17 @@ describe('Login Private Key Download Controller unit test', function() {
         var encryptedPrivateKey = {
             encryptedPrivateKey: 'encryptedPrivateKey'
         };
-        var cachedKeypair = {
+        var keypair = {
+            privateKey: {
+                _id: 'keyId',
+                userId: emailAddress,
+                encryptedKey: 'PRIVATE PGP BLOCK'
+            },
             publicKey: {
-                _id: 'keyId'
+                _id: 'keyId',
+                userId: emailAddress,
+                publicKey: 'PUBLIC PGP BLOCK'
             }
-        };
-        var privkey = {
-            _id: cachedKeypair.publicKey._id,
-            userId: emailAddress,
-            encryptedKey: 'PRIVATE PGP BLOCK'
         };
 
         beforeEach(function() {
@@ -78,13 +80,13 @@ describe('Login Private Key Download Controller unit test', function() {
 
         it('should work with empty passphrase', function(done) {
             privateKeyStub.init.returns(resolves());
-            keychainMock.getUserKeyPair.withArgs(emailAddress).returns(resolves(cachedKeypair));
-            privateKeyStub.download.withArgs({
-                userId: emailAddress,
-                keyId: cachedKeypair.publicKey._id
-            }).returns(resolves(encryptedPrivateKey));
-            privateKeyStub.decrypt.returns(resolves(privkey));
-            emailDaoMock.unlock.returns(resolves());
+            privateKeyStub.download.returns(resolves(encryptedPrivateKey));
+            privateKeyStub.decrypt.returns(resolves(keypair));
+            keychainMock.putUserKeyPair.withArgs(keypair).returns(resolves());
+            emailDaoMock.unlock.withArgs({
+                keypair: keypair,
+                passphrase: undefined
+            }).returns(resolves());
             authMock.storeCredentials.returns(resolves());
             privateKeyStub.destroy.returns(resolves());
 
@@ -97,13 +99,13 @@ describe('Login Private Key Download Controller unit test', function() {
 
         it('should work with passphrase', function(done) {
             privateKeyStub.init.returns(resolves());
-            keychainMock.getUserKeyPair.withArgs(emailAddress).returns(resolves(cachedKeypair));
-            privateKeyStub.download.withArgs({
-                userId: emailAddress,
-                keyId: cachedKeypair.publicKey._id
-            }).returns(resolves(encryptedPrivateKey));
-            privateKeyStub.decrypt.returns(resolves(privkey));
-            emailDaoMock.unlock.returns(rejects(new Error()));
+            privateKeyStub.download.returns(resolves(encryptedPrivateKey));
+            privateKeyStub.decrypt.returns(resolves(keypair));
+            keychainMock.putUserKeyPair.withArgs(keypair).returns(resolves());
+            emailDaoMock.unlock.withArgs({
+                keypair: keypair,
+                passphrase: undefined
+            }).returns(rejects(new Error()));
             authMock.storeCredentials.returns(resolves());
             privateKeyStub.destroy.returns(resolves());
 

@@ -7,6 +7,9 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, 
     // scope functions
     //
 
+    /**
+     * Download a synced key and decrypt it.
+     */
     $scope.checkCode = function() {
         if ($scope.form.$invalid) {
             $scope.errMsg = 'Please fill out all required fields!';
@@ -14,7 +17,6 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, 
         }
 
         var cachedKeypair;
-        var userId = auth.emailAddress;
 
         return $q(function(resolve) {
             $scope.busy = true;
@@ -26,16 +28,8 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, 
             return privateKey.init();
 
         }).then(function() {
-            // get public key id for reference
-            return keychain.getUserKeyPair(userId);
-
-        }).then(function(keypair) {
             // remember for storage later
-            cachedKeypair = keypair;
-            return privateKey.download({
-                userId: userId,
-                keyId: keypair.publicKey._id
-            });
+            return privateKey.download();
 
         }).then(function(encryptedKey) {
             // set decryption code
@@ -43,9 +37,8 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, 
             // decrypt the downloaded encrypted private key
             return privateKey.decrypt(encryptedKey);
 
-        }).then(function(privkey) {
-            // add private key to cached keypair object
-            cachedKeypair.privateKey = privkey;
+        }).then(function(keypair) {
+            cachedKeypair = keypair;
             // store the decrypted private key locally
             return keychain.putUserKeyPair(cachedKeypair);
 
