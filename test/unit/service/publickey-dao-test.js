@@ -97,20 +97,6 @@ describe('Public Key DAO unit tests', function() {
             });
         });
 
-        it('should fail on user id mismatch', function(done) {
-            hkpStub.lookup.returns(resolves('asdf'));
-            pgpStub.getKeyParams.returns({
-                _id: 'id',
-                userId: 'userId2'
-            });
-
-            pubkeyDao.getByUserId('userId').catch(function(err) {
-                expect(err).to.exist;
-                expect(hkpStub.lookup.calledOnce).to.be.true;
-                done();
-            });
-        });
-
         it('should work', function(done) {
             hkpStub.lookup.returns(resolves('asdf'));
             pgpStub.getKeyParams.returns({
