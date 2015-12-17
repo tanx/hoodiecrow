@@ -36,4 +36,66 @@ describe('Public-Key Verifier', function() {
     });
 
     afterEach(function() {});
+
+    describe('#uploadPublicKey', function() {
+        it('should work', function(done) {
+            keychainStub.uploadPublicKey.returns(resolves());
+
+            verifier.keypair = {
+                publicKey: 'PGP PUBLIC KEY BLOCK'
+            };
+            verifier.hkpUpload = true;
+
+            verifier.uploadPublicKey().then(function() {
+                expect(keychainStub.uploadPublicKey.called).to.be.true;
+                done();
+            });
+        });
+
+        it('should not upload for missing key', function(done) {
+            verifier.keypair = undefined;
+            verifier.hkpUpload = true;
+
+            verifier.uploadPublicKey().then(function() {
+                expect(keychainStub.uploadPublicKey.called).to.be.false;
+                done();
+            });
+        });
+
+        it('should not upload when disabled', function(done) {
+            verifier.keypair = {
+                publicKey: 'PGP PUBLIC KEY BLOCK'
+            };
+            verifier.hkpUpload = false;
+
+            verifier.uploadPublicKey().then(function() {
+                expect(keychainStub.uploadPublicKey.called).to.be.false;
+                done();
+            });
+        });
+    });
+
+    describe('#persistKeypair', function() {
+        it('should work', function(done) {
+            keychainStub.putUserKeyPair.returns(resolves());
+
+            verifier.keypair = {
+                publicKey: 'PGP PUBLIC KEY BLOCK'
+            };
+
+            verifier.persistKeypair().then(function() {
+                expect(keychainStub.putUserKeyPair.called).to.be.true;
+                done();
+            });
+        });
+
+        it('should not work for missing key', function(done) {
+            verifier.keypair = undefined;
+
+            verifier.persistKeypair().then(function() {
+                expect(keychainStub.putUserKeyPair.called).to.be.false;
+                done();
+            });
+        });
+    });
 });

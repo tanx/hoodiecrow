@@ -1,9 +1,7 @@
 'use strict';
 
-var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter, email, auth, publickeyVerifier) {
+var LoginInitialCtrl = function($scope, $location, $routeParams, $q, email, auth, publickeyVerifier) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
-
-    var emailAddress = auth.emailAddress;
 
     var termsMsg = 'You must accept the Terms of Service to continue.',
         states = {
@@ -13,6 +11,7 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter,
         };
 
     $scope.state.ui = states.IDLE; // initial state
+    $scope.hkpUpload = true;
 
     //
     // scope functions
@@ -29,8 +28,8 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter,
 
         $scope.errMsg = undefined;
 
-        // sing up to newsletter
-        newsletter.signup(emailAddress, $scope.newsletter);
+        // remember if public key should be uploaded
+        publickeyVerifier.hkpUpload = $scope.hkpUpload;
         // go to key import
         $location.path('/login-new-device');
     };
@@ -44,8 +43,6 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter,
             return;
         }
 
-        // sing up to newsletter
-        newsletter.signup(emailAddress, $scope.newsletter);
         // go to set keygen screen
         $scope.setState(states.PROCESSING);
 
@@ -63,6 +60,8 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, $q, newsletter,
         }).then(function(keypair) {
             // remember keypair for storing after public key verification
             publickeyVerifier.keypair = keypair;
+            // remember if public key should be uploaded
+            publickeyVerifier.hkpUpload = $scope.hkpUpload;
             $location.path('/login-privatekey-upload');
 
         }).catch(displayError);

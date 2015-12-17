@@ -13,7 +13,7 @@ function PublickeyVerifier(keychain) {
 //
 
 PublickeyVerifier.prototype.uploadPublicKey = function() {
-    if (this.keypair) {
+    if (this.keypair && this.hkpUpload) {
         return this._keychain.uploadPublicKey(this.keypair.publicKey);
     }
     return new Promise(function(resolve) {

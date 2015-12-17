@@ -196,7 +196,6 @@ module.exports = function(grunt) {
                         'test/unit/service/lawnchair-dao-test.js',
                         'test/unit/service/keychain-dao-test.js',
                         'test/unit/service/devicestorage-dao-test.js',
-                        'test/unit/service/newsletter-service-test.js',
                         'test/unit/service/mail-config-service-test.js',
                         'test/unit/service/invitation-dao-test.js',
                         'test/unit/service/publickey-verifier-test.js',

@@ -6,7 +6,7 @@ var Auth = require('../../../../src/js/service/auth'),
     Email = require('../../../../src/js/email/email');
 
 describe('Login (initial user) Controller unit test', function() {
-    var scope, ctrl, location, emailMock, authMock, newsletterStub, verifierMock,
+    var scope, ctrl, location, emailMock, authMock, verifierMock,
         emailAddress = 'fred@foo.com',
         keyId, expectedKeyId;
 
@@ -22,10 +22,9 @@ describe('Login (initial user) Controller unit test', function() {
 
         angular.module('logininitialtest', ['woServices']);
         angular.mock.module('logininitialtest');
-        angular.mock.inject(function($rootScope, $controller, $location, newsletter) {
+        angular.mock.inject(function($rootScope, $controller, $location) {
             scope = $rootScope.$new();
             location = $location;
-            newsletterStub = sinon.stub(newsletter, 'signup');
             scope.state = {
                 ui: {}
             };
@@ -33,7 +32,6 @@ describe('Login (initial user) Controller unit test', function() {
                 $scope: scope,
                 $routeParams: {},
                 $q: window.qMock,
-                newsletter: newsletter,
                 publickeyVerifier: verifierMock,
                 email: emailMock,
                 auth: authMock
@@ -56,13 +54,11 @@ describe('Login (initial user) Controller unit test', function() {
             scope.importKey();
 
             expect(scope.errMsg).to.contain('Terms');
-            expect(newsletterStub.called).to.be.false;
         });
 
         it('should work', function() {
             scope.agree = true;
             scope.importKey();
-            expect(newsletterStub.calledOnce).to.be.true;
             expect(location.$$path).to.equal('/login-new-device');
         });
     });
@@ -79,7 +75,6 @@ describe('Login (initial user) Controller unit test', function() {
 
             expect(scope.errMsg).to.contain('Terms');
             expect(scope.state.ui).to.equal(1);
-            expect(newsletterStub.called).to.be.false;
         });
 
         it('should fail due to error in emailDao.unlock', function(done) {
@@ -94,7 +89,6 @@ describe('Login (initial user) Controller unit test', function() {
             scope.generateKey().then(function() {
                 expect(scope.errMsg).to.exist;
                 expect(scope.state.ui).to.equal(1);
-                expect(newsletterStub.called).to.be.true;
                 done();
             });
         });
@@ -111,7 +105,6 @@ describe('Login (initial user) Controller unit test', function() {
             scope.generateKey().then(function() {
                 expect(scope.errMsg).to.not.exist;
                 expect(scope.state.ui).to.equal(2);
-                expect(newsletterStub.called).to.be.true;
                 expect(location.$$path).to.equal('/login-privatekey-upload');
                 expect(emailMock.unlock.calledOnce).to.be.true;
                 done();
