@@ -12,6 +12,11 @@ module.exports = appCfg;
  * Global app configurations
  */
 appCfg.config = {
+    oauthClientId: '440907777130-bnk8b12nsqmpcf5cdbnhpskefhfhfgu1.apps.googleusercontent.com',
+    oauthScopes: [
+        'https://www.googleapis.com/auth/gmail.modify',
+        'https://www.googleapis.com/auth/userinfo.email'
+    ],
     pgpComment: 'Whiteout Mail - https://whiteout.io',
     hkpUrl: 'https://keyserver.ubuntu.com',
     adminUrl: 'https://admin-node.whiteout.io',

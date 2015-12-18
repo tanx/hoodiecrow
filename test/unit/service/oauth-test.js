@@ -1,15 +1,16 @@
 'use strict';
 
 var OAuth = require('../../../src/js/service/oauth'),
-    RestDAO = require('../../../src/js/service/rest');
+    appConfig = require('../../../src/js/app-config');
 
 describe('OAuth unit tests', function() {
-    var oauth, googleApiStub, identityStub, getPlatformInfoStub, removeCachedStub,
-        testEmail = 'test@example.com';
+    var oauth, identityStub, getPlatformInfoStub, removeCachedStub,
+        testEmail = 'test@example.com',
+        redirectUri = window.location.origin + '/test/unit/?grep=oauthCallback&oauth=true';
 
     beforeEach(function() {
-        googleApiStub = sinon.createStubInstance(RestDAO);
-        oauth = new OAuth(googleApiStub);
+        oauth = new OAuth(appConfig);
+        oauth._redirectUri = redirectUri;
 
         window.chrome = window.chrome || {};
 
@@ -40,6 +41,36 @@ describe('OAuth unit tests', function() {
     describe('isSupported', function() {
         it('should work', function() {
             expect(oauth.isSupported()).to.be.true;
+        });
+    });
+
+    describe('webAuthenticate', function() {
+        it('should work', function() {
+            if (window.location.search.indexOf('oauth=true') < 0) {
+                return;
+            }
+
+            oauth.webAuthenticate();
+        });
+    });
+
+    describe('oauthCallback', function() {
+        it('should work', function(done) {
+            if (window.location.search.indexOf('oauth=true') < 0) {
+                done();
+                return;
+            }
+
+            oauth.oauthCallback();
+            expect(oauth.accessToken).to.exist;
+            expect(oauth.tokenType).to.exist;
+            expect(oauth.expiresIn).to.exist;
+
+            oauth.queryEmailAddress(oauth.accessToken).then(function(emailAddress) {
+                expect(emailAddress).to.exist;
+                console.log(emailAddress);
+                done();
+            });
         });
     });
 
@@ -154,12 +185,23 @@ describe('OAuth unit tests', function() {
     });
 
     describe('queryEmailAddress', function() {
+        var res = new window.Response('{"email":"asdf@example.com"}', {
+            status: 200,
+            headers: {
+                'Content-type': 'application/json'
+            }
+        });
+
+        beforeEach(function() {
+            sinon.stub(window, 'fetch');
+        });
+
+        afterEach(function() {
+            window.fetch.restore();
+        });
+
         it('should work', function(done) {
-            googleApiStub.get.withArgs({
-                uri: '/oauth2/v3/userinfo?access_token=token'
-            }).returns(resolves({
-                email: 'asdf@example.com'
-            }));
+            window.fetch.returns(resolves(res));
 
             oauth.queryEmailAddress('token').then(function(emailAddress) {
                 expect(emailAddress).to.equal('asdf@example.com');
@@ -175,9 +217,7 @@ describe('OAuth unit tests', function() {
         });
 
         it('should fail due to error in rest api', function(done) {
-            googleApiStub.get.withArgs({
-                uri: '/oauth2/v3/userinfo?access_token=token'
-            }).yields(new Error());
+            window.fetch.returns(rejects(new Error()));
 
             oauth.queryEmailAddress('token').catch(function(err) {
                 expect(err).to.exist;
