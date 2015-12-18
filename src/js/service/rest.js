@@ -9,13 +9,6 @@ ngModule.factory('adminRestDao', function(appConfig) {
     return dao;
 });
 
-// rest dao for use in the oauth service
-ngModule.factory('oauthRestDao', function() {
-    var dao = new RestDAO();
-    dao.setBaseUri('https://www.googleapis.com');
-    return dao;
-});
-
 module.exports = RestDAO;
 
 function RestDAO() {}
