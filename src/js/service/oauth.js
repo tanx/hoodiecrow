@@ -5,9 +5,10 @@ ngModule.service('oauth', OAuth);
 module.exports = OAuth;
 
 function OAuth(appConfig) {
-    this._clientId = appConfig.config.oauthClientId;
-    this._scope = appConfig.config.oauthScopes.join(' ');
-    this._redirectUri = window.location.origin;
+    var cfg = appConfig.config;
+    this._clientId = cfg.oauthClientId;
+    this._scope = cfg.oauthScopes.join(' ');
+    this._redirectUri = cfg.oauthRedirectUrl;
 }
 
 /**
@@ -15,7 +16,7 @@ function OAuth(appConfig) {
  * @return {Boolean} If is supported
  */
 OAuth.prototype.isSupported = function() {
-    return !!(window.chrome && chrome.identity);
+    return true;
 };
 
 /**
@@ -65,7 +66,28 @@ OAuth.prototype.oauthCallback = function() {
  * @param  {String}   emailAddress  The user's email address (optional)
  */
 OAuth.prototype.getOAuthToken = function(emailAddress) {
+    var self = this;
     return new Promise(function(resolve, reject) {
+
+        //
+        // Web oauth flow
+        //
+
+        // check for cached access token (from webmail redirect)
+        if (self.accessToken) {
+            resolve(self.accessToken);
+            return;
+        }
+        // redirect to Google login page
+        if (!(window.chrome && chrome.identity)) {
+            self.webAuthenticate();
+            return;
+        }
+
+        //
+        // Chrome App Oauth flow
+        //
+
         var idOptions = {
             interactive: true
         };

@@ -17,6 +17,7 @@ appCfg.config = {
         'https://www.googleapis.com/auth/gmail.modify',
         'https://www.googleapis.com/auth/userinfo.email'
     ],
+    oauthRedirectUrl: window.location.origin,
     pgpComment: 'Whiteout Mail - https://whiteout.io',
     hkpUrl: 'https://keyserver.ubuntu.com',
     adminUrl: 'https://admin-node.whiteout.io',

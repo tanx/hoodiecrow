@@ -90,11 +90,13 @@ app.config(function($routeProvider, $animateProvider) {
     $animateProvider.classNameFilter(/lightbox/);
 });
 
-app.run(function($rootScope) {
+app.run(function($rootScope, oauth) {
     // global state... inherited to all child scopes
     $rootScope.state = {};
     // attach fastclick
     FastClick.attach(document.body);
+    // try to catch oauth token
+    oauth.oauthCallback();
 });
 
 // inject controllers from ng-included view templates
