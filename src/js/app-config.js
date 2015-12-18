@@ -14,7 +14,7 @@ module.exports = appCfg;
 appCfg.config = {
     oauthClientId: '440907777130-bnk8b12nsqmpcf5cdbnhpskefhfhfgu1.apps.googleusercontent.com',
     oauthScopes: [
-        'https://www.googleapis.com/auth/gmail.modify',
+        'https://mail.google.com/',
         'https://www.googleapis.com/auth/userinfo.email'
     ],
     oauthRedirectUrl: window.location.origin,
