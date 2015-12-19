@@ -13,10 +13,7 @@ module.exports = appCfg;
  */
 appCfg.config = {
     oauthClientId: '440907777130-bnk8b12nsqmpcf5cdbnhpskefhfhfgu1.apps.googleusercontent.com',
-    oauthScopes: [
-        'https://mail.google.com/',
-        'email'
-    ],
+    oauthScopes: ['https://mail.google.com/', 'email'],
     oauthRedirectUrl: window.location.origin,
     pgpComment: 'Whiteout Mail - https://whiteout.io',
     hkpUrl: 'https://keyserver.ubuntu.com',
