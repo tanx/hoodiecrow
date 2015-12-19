@@ -64,6 +64,11 @@ describe.skip('Gmail DAO integration tests', function() {
             // try to catch oauth token
             oauth.oauthCallback();
 
+            // set email address in auth module to prevent google api roundtrip for userinfo
+            auth.setCredentials({
+                emailAddress: testAccount.user,
+            });
+
             // stub rest request to key server
             sinon.stub(gmail._keychain._publicKeyDao, 'get').returns(resolves(mockKeyPair.publicKey));
             sinon.stub(gmail._keychain._publicKeyDao, 'getByUserId').returns(resolves(mockKeyPair.publicKey));
@@ -95,8 +100,31 @@ describe.skip('Gmail DAO integration tests', function() {
         gmail.isOnline.restore();
     });
 
-    describe('test', function() {
-        it('should work', function() {});
+    describe('_updateFolders', function() {
+        it('should work', function(done) {
+            gmail._updateFolders().then(function() {
+                expect(gmail._account.folders.length).to.be.above(0);
+                done();
+            });
+        });
+    });
+
+    describe('_fetchMessages', function() {
+        var inboxFolder = {
+            name: 'Inbox',
+            type: 'Inbox',
+            path: 'INBOX',
+            messages: []
+        };
+
+        it('should work', function(done) {
+            gmail._fetchMessages({
+                folder: inboxFolder,
+            }).then(function(messages) {
+                expect(messages).to.exist;
+                done();
+            });
+        });
     });
 
 });
