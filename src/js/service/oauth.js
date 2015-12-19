@@ -5,10 +5,9 @@ ngModule.service('oauth', OAuth);
 module.exports = OAuth;
 
 function OAuth(appConfig) {
-    var cfg = appConfig.config;
-    this._clientId = cfg.oauthClientId;
-    this._scope = cfg.oauthScopes.join(' ');
-    this._redirectUri = cfg.oauthRedirectUrl;
+    this._clientId = appConfig.config.oauthClientId;
+    this._scope = appConfig.config.oauthScopes.join(' ');
+    this._redirectUri = appConfig.config.oauthRedirectUrl;
 }
 
 /**
