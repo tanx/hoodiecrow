@@ -25,12 +25,12 @@ var FOLDER_TYPE_INBOX = 'Inbox';
 
 // var MSG_ATTR_UID = 'uid';
 // var MSG_ATTR_MODSEQ = 'modseq';
-// var MSG_PART_ATTR_CONTENT = 'content';
-// var MSG_PART_TYPE_ATTACHMENT = 'attachment';
-// var MSG_PART_TYPE_ENCRYPTED = 'encrypted';
-// var MSG_PART_TYPE_SIGNED = 'signed';
-// var MSG_PART_TYPE_TEXT = 'text';
-// var MSG_PART_TYPE_HTML = 'html';
+var MSG_PART_ATTR_CONTENT = 'content';
+var MSG_PART_TYPE_ATTACHMENT = 'attachment';
+var MSG_PART_TYPE_ENCRYPTED = 'encrypted';
+var MSG_PART_TYPE_SIGNED = 'signed';
+var MSG_PART_TYPE_TEXT = 'text';
+var MSG_PART_TYPE_HTML = 'html';
 
 //
 //
@@ -53,6 +53,14 @@ function Gmail(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog, appC
     this._appConfig = appConfig;
     this._auth = auth;
 }
+
+
+//
+//
+// Public API
+//
+//
+
 
 /**
  * Initializes the gmail dao:
@@ -234,7 +242,9 @@ Gmail.prototype.onConnect = function() {
 
     // get auth.oauthToken and auth.emailAddress
     return self._auth.getOAuthToken().then(function() {
-
+        // set status to online
+        self._account.loggingIn = false;
+        self._account.online = true;
     });
 };
 
@@ -251,6 +261,304 @@ Gmail.prototype.onDisconnect = function() {
 
     return new Promise(function(resolve) {
         resolve(); // ASYNC ALL THE THINGS!!!
+    });
+};
+
+
+//
+//
+// Internal API
+//
+//
+
+
+
+//
+//
+// Gmail Api
+//
+//
+
+/**
+ * Updates the folder information from Gmail (if we're online). Adds/removes folders in account.folders,
+ * if we added/removed folder in Gmail. If we have an uninitialized folder that lacks folder.messages,
+ * all the locally available messages are loaded from memory.
+ */
+Gmail.prototype._updateFolders = function() {
+    var self = this;
+
+    self.busy(); // start the spinner
+
+    // fetch list from the server
+    return self._apiRequest({
+        resource: 'labels'
+    }).then(function(response) {
+        var gmailLabels = response.labels;
+
+        // initialize the folders to something meaningful if that hasn't already happened
+        self._account.folders = self._account.folders || [];
+
+        // map gmail labels to local folder model
+        gmailLabels.forEach(function(label) {
+            self._account.folders.push({
+                name: label.name,
+                path: label.id,
+                messages: []
+            });
+        });
+
+        // update unread count
+        self._account.folders.forEach(updateUnreadCount);
+    });
+};
+
+/**
+ * Fetch messages from gmail api
+ */
+Gmail.prototype._fetchMessages = function(options) {
+    var self = this,
+        folder = options.folder;
+
+    return new Promise(function(resolve) {
+        self.checkOnline();
+        resolve();
+
+    }).then(function() {
+
+        return self._apiRequest({
+            resource: 'messages',
+            params: {
+                labelIds: folder.path
+            }
+        });
+
+    });
+};
+
+/**
+ * Make an HTTP request to the Gmail REST api via the window.fetch function.
+ * @param  {String} options.resource    The api resource e.g. 'messages'
+ * @param  {String} options.method      (optional) The HTTP method to be used depending on the CRUD
+ *                                      operation e.g. 'get' or 'post'. If not specified it defaults to 'get'.
+ * @param  {Array} options.params       A list of query parameters e.g. [{name: 'value'}]
+ * @param  {Object} options.payload     (optional) The request's payload for create/update operations
+ * @return {Promise<Object>}            A promise containing the response's parsed JSON object
+ */
+Gmail.prototype._apiRequest = function(options) {
+    var uri = 'https://www.googleapis.com/gmail/v1/users/';
+    uri += encodeURIComponent(this._auth.emailAddress) + '/';
+    uri += encodeURIComponent(options.resource);
+
+    // append query parameters
+    if (options.params) {
+        var query = '?';
+        for (var name in options.params) {
+            query += encodeURIComponent(name) + '=' + encodeURIComponent(options.params[name]) + '&';
+        }
+        uri += query.slice(0, -1); // remove trailing &
+    }
+
+    return window.fetch(uri, {
+        method: options.method ? options.method : 'get',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + this._auth.oauthToken
+        },
+        body: options.payload ? JSON.stringify(options.payload) : undefined
+    }).then(function(response) {
+        if (response.status !== 200 && response.status !== 201) {
+            throw response.json();
+        }
+        return response.json();
+    });
+};
+
+
+//
+//
+// Local Storage API
+//
+//
+
+
+/**
+ * persist encrypted list in device storage
+ * note: the folders in the ui also include the messages array, so let's create a clean array here
+ */
+Gmail.prototype._localStoreFolders = function() {
+    var folders = this._account.folders.map(function(folder) {
+        return {
+            name: folder.name,
+            path: folder.path,
+            type: folder.type,
+            modseq: folder.modseq,
+            wellknown: !!folder.wellknown,
+            uids: folder.uids
+        };
+    });
+
+    return this._devicestorage.storeList([folders], FOLDER_DB_TYPE);
+};
+
+/**
+ * List the locally available items form the indexed db stored under "email_[FOLDER PATH]_[MESSAGE UID]" (if a message was provided),
+ * or "email_[FOLDER PATH]", respectively
+ *
+ * @param {Object} options.folder The folder for which to list the content
+ * @param {Object} options.uid A specific uid to look up locally in the folder
+ */
+Gmail.prototype._localListMessages = function(options) {
+    var query;
+
+    var needsExactMatch = typeof options.exactmatch === 'undefined' ? true : options.exactmatch;
+
+    if (Array.isArray(options.uid)) {
+        // batch list
+        query = options.uid.map(function(uid) {
+            return 'email_' + options.folder.path + (uid ? '_' + uid : '');
+        });
+    } else {
+        // single list
+        query = 'email_' + options.folder.path + (options.uid ? '_' + options.uid : '');
+    }
+
+    return this._devicestorage.listItems(query, needsExactMatch);
+};
+
+/**
+ * Stores a bunch of messages to the indexed db. The messages are stored under "email_[FOLDER PATH]_[MESSAGE UID]"
+ *
+ * @param {Object} options.folder The folder for which to list the content
+ * @param {Array} options.messages The messages to store
+ */
+Gmail.prototype._localStoreMessages = function(options) {
+    var dbType = 'email_' + options.folder.path;
+    return this._devicestorage.storeList(options.emails, dbType);
+};
+
+/**
+ * Stores a bunch of messages to the indexed db. The messages are stored under "email_[FOLDER PATH]_[MESSAGE UID]"
+ *
+ * @param {Object} options.folder The folder for which to list the content
+ * @param {Array} options.messages The messages to store
+ */
+Gmail.prototype._localDeleteMessage = function(options) {
+    var path = options.folder.path,
+        uid = options.uid,
+        id = options.id;
+
+    if (!path || !(uid || id)) {
+        return new Promise(function() {
+            throw new Error('Invalid options!');
+        });
+    }
+
+    var dbType = 'email_' + path + '_' + (uid || id);
+    return this._devicestorage.removeList(dbType);
+};
+
+
+//
+//
+// Internal Helper Methods
+//
+//
+
+
+/**
+ * Helper method that extracts a message body from the body parts
+ *
+ * @param {Object} message DTO
+ */
+Gmail.prototype._extractBody = function(message) {
+    var self = this;
+
+    return new Promise(function(resolve) {
+        resolve();
+
+    }).then(function() {
+        // extract the content
+        if (message.encrypted) {
+            // show the encrypted message
+            message.body = filterBodyParts(message.bodyParts, MSG_PART_TYPE_ENCRYPTED)[0].content;
+            return;
+        }
+
+        var root = message.bodyParts;
+
+        if (message.signed) {
+            // PGP/MIME signed
+            var signedRoot = filterBodyParts(message.bodyParts, MSG_PART_TYPE_SIGNED)[0]; // in case of a signed message, you only want to show the signed content and ignore the rest
+            message.signedMessage = signedRoot.signedMessage;
+            message.signature = signedRoot.signature;
+            root = signedRoot.content;
+        }
+
+        var body = _.pluck(filterBodyParts(root, MSG_PART_TYPE_TEXT), MSG_PART_ATTR_CONTENT).join('\n');
+
+        // if the message is plain text and contains pgp/inline, we are only interested in the encrypted content, the rest (corporate mail footer, attachments, etc.) is discarded.
+        var pgpInlineMatch = /^-{5}BEGIN PGP MESSAGE-{5}[\s\S]*-{5}END PGP MESSAGE-{5}$/im.exec(body);
+        if (pgpInlineMatch) {
+            message.body = pgpInlineMatch[0]; // show the plain text content
+            message.encrypted = true; // signal the ui that we're handling encrypted content
+
+            // replace the bodyParts info with an artificial bodyPart of type "encrypted"
+            message.bodyParts = [{
+                type: MSG_PART_TYPE_ENCRYPTED,
+                content: pgpInlineMatch[0],
+                _isPgpInline: true // used internally to avoid trying to parse non-MIME text with the mailreader
+            }];
+            return;
+        }
+
+        // any content before/after the PGP block will be discarded, untrusted attachments and html is ignored
+        var clearSignedMatch = /^-{5}BEGIN PGP SIGNED MESSAGE-{5}\nHash:[ ][^\n]+\n(?:[A-Za-z]+:[ ][^\n]+\n)*\n([\s\S]*?)\n-{5}BEGIN PGP SIGNATURE-{5}[\S\s]*-{5}END PGP SIGNATURE-{5}$/im.exec(body);
+        if (clearSignedMatch) {
+            // PGP/INLINE signed
+            message.signed = true;
+            message.clearSignedMessage = clearSignedMatch[0];
+            body = (clearSignedMatch[1] || '').replace(/^- /gm, ''); // remove dash escaping https://tools.ietf.org/html/rfc4880#section-7.1
+        }
+
+        if (!message.signed) {
+            // message is not signed, so we're done here
+            return setBody(body, root);
+        }
+
+        // check the signatures for signed messages
+        return self._checkSignatures(message).then(function(signaturesValid) {
+            message.signed = typeof signaturesValid !== 'undefined';
+            message.signaturesValid = signaturesValid;
+            setBody(body, root);
+        });
+    });
+
+    function setBody(body, root) {
+        message.body = body;
+        if (!message.clearSignedMessage) {
+            message.attachments = filterBodyParts(root, MSG_PART_TYPE_ATTACHMENT);
+            message.html = _.pluck(filterBodyParts(root, MSG_PART_TYPE_HTML), MSG_PART_ATTR_CONTENT).join('\n');
+            inlineExternalImages(message);
+        }
+    }
+};
+
+/**
+ * Parse an email using the mail reader
+ * @param  {Object} options The option to be passed to the mailreader
+ * @return {Promise}
+ */
+Gmail.prototype._parse = function(options) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        self._mailreader.parse(options, function(err, root) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(root);
+            }
+        });
     });
 };
 
@@ -279,3 +587,72 @@ Gmail.prototype.checkOnline = function() {
 Gmail.prototype.isOnline = function() {
     return navigator.onLine;
 };
+
+
+//
+//
+// Helper Functions
+//
+//
+
+
+/**
+ * Updates a folder's unread count:
+ * - For the outbox, that's the total number of messages (countAllMessages === true),
+ * - For every other folder, it's the number of unread messages (countAllMessages === falsy)
+ */
+function updateUnreadCount(folder, countAllMessages) {
+    folder.count = countAllMessages ? folder.messages.length : _.filter(folder.messages, function(msg) {
+        return msg.unread;
+    }).length;
+}
+
+/**
+ * Helper function that recursively traverses the body parts tree. Looks for bodyParts that match the provided type and aggregates them
+ *
+ * @param {Array} bodyParts The bodyParts array
+ * @param {String} type The type to look up
+ * @param {undefined} result Leave undefined, only used for recursion
+ */
+function filterBodyParts(bodyParts, type, result) {
+    result = result || [];
+    bodyParts.forEach(function(part) {
+        if (part.type === type) {
+            result.push(part);
+        } else if (Array.isArray(part.content)) {
+            filterBodyParts(part.content, type, result);
+        }
+    });
+    return result;
+}
+
+/**
+ * Helper function that looks through the HTML content for <img src="cid:..."> and
+ * inlines the images linked internally. Manipulates message.html as a side-effect.
+ * If no attachment matching the internal reference is found, or constructing a data
+ * uri fails, just remove the source.
+ *
+ * @param {Object} message DTO
+ */
+function inlineExternalImages(message) {
+    message.html = message.html.replace(/(<img[^>]+\bsrc=['"])cid:([^'">]+)(['"])/ig, function(match, prefix, src, suffix) {
+        var localSource = '',
+            payload = '';
+
+        var internalReference = _.findWhere(message.attachments, {
+            id: src
+        });
+
+        if (internalReference) {
+            for (var i = 0; i < internalReference.content.byteLength; i++) {
+                payload += String.fromCharCode(internalReference.content[i]);
+            }
+
+            try {
+                localSource = 'data:application/octet-stream;base64,' + btoa(payload); // try to replace the source
+            } catch (e) {}
+        }
+
+        return prefix + localSource + suffix;
+    });
+}
