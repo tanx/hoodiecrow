@@ -232,6 +232,7 @@ module.exports = function(grunt) {
                 files: {
                     'test/integration/index.browserified.js': [
                         'test/main.js',
+                        'test/integration/gmail-dao-test.js',
                         'test/integration/email-dao-test.js'
                     ]
                 },

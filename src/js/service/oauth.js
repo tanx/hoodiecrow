@@ -18,6 +18,9 @@ OAuth.prototype.webAuthenticate = function() {
     uri += '&client_id=' + encodeURIComponent(this._clientId);
     uri += '&redirect_uri=' + encodeURIComponent(this._redirectUri);
     uri += '&scope=' + encodeURIComponent(this._scope);
+    if (this._loginHint) {
+        uri += '&login_hint=' + encodeURIComponent(this._loginHint);
+    }
 
     // go to google account login
     window.location.href = uri;
