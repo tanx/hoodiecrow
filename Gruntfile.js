@@ -807,8 +807,7 @@ module.exports = function(grunt) {
 
         patchManifest({
             version: version,
-            deleteKey: true,
-            keyServer: 'https://keys.whiteout.io/'
+            deleteKey: true
         });
     });
 
@@ -825,10 +824,6 @@ module.exports = function(grunt) {
         }
         if (options.client_id) {
             manifest.oauth2.client_id = options.client_id;
-        }
-        if (options.keyServer) {
-            var ksIndex = manifest.permissions.indexOf('https://keys-test.whiteout.io/');
-            manifest.permissions[ksIndex] = options.keyServer;
         }
         if (options.deleteKey) {
             delete manifest.key;
