@@ -15,7 +15,7 @@ appCfg.config = {
     oauthClientId: '440907777130-bnk8b12nsqmpcf5cdbnhpskefhfhfgu1.apps.googleusercontent.com',
     oauthScopes: [
         'https://mail.google.com/',
-        'https://www.googleapis.com/auth/userinfo.email'
+        'email'
     ],
     oauthRedirectUrl: window.location.origin,
     pgpComment: 'Whiteout Mail - https://whiteout.io',
