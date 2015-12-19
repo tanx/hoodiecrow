@@ -11,14 +11,6 @@ function OAuth(appConfig) {
 }
 
 /**
- * Check if chrome.identity api is supported
- * @return {Boolean} If is supported
- */
-OAuth.prototype.isSupported = function() {
-    return true;
-};
-
-/**
  * Start an OAuth2 web authentication flow including redirects from and to the current page.
  */
 OAuth.prototype.webAuthenticate = function() {

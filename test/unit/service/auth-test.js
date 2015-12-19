@@ -154,23 +154,12 @@ describe('Auth unit tests', function() {
     });
 
     describe('#useOAuth', function() {
-        it('should not recommend oauth for unsupported platorm', function() {
-            oauthStub.isSupported.returns(false);
-
-            var res = auth.useOAuth('imap.gmail.com');
-            expect(res).to.be.false;
-        });
-
         it('should recommend oauth for whitelisted host', function() {
-            oauthStub.isSupported.returns(true);
-
             var res = auth.useOAuth('imap.gmail.com');
             expect(res).to.be.true;
         });
 
         it('should not recommend oauth for other hosts', function() {
-            oauthStub.isSupported.returns(true);
-
             var res = auth.useOAuth('imap.ggmail.com');
             expect(res).to.be.false;
         });

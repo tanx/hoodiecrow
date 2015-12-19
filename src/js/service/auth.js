@@ -216,10 +216,6 @@ Auth.prototype.getEmailAddress = function() {
  * @return {Boolean}            If oauth should be used
  */
 Auth.prototype.useOAuth = function(hostname) {
-    if (!this._oauth.isSupported()) {
-        return false;
-    }
-
     var regex = cfg.oauthDomains;
     for (var i = 0; i < regex.length; i++) {
         if (regex[i].test(hostname)) {

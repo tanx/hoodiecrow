@@ -38,12 +38,6 @@ describe('OAuth unit tests', function() {
         removeCachedStub.restore();
     });
 
-    describe('isSupported', function() {
-        it('should work', function() {
-            expect(oauth.isSupported()).to.be.true;
-        });
-    });
-
     describe('webAuthenticate', function() {
         it('should work', function() {
             if (window.location.search.indexOf('oauth=true') < 0) {
