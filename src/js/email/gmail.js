@@ -367,10 +367,18 @@ Gmail.prototype._apiRequest = function(options) {
         },
         body: options.payload ? JSON.stringify(options.payload) : undefined
     }).then(function(response) {
-        if (response.status !== 200 && response.status !== 201) {
-            throw response.json();
+        if (response.status >= 200 && response.status <= 299) {
+            // success ... parse response
+            return response.json();
+        } else {
+            // error ... parse response and throw
+            return response.json().then(function(res) {
+                var err = new Error(res.error.message);
+                err.code = res.error.code;
+                err.errors = res.error.errors;
+                throw err;
+            });
         }
-        return response.json();
     });
 };
 
