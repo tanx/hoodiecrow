@@ -293,22 +293,17 @@ Gmail.prototype._updateFolders = function() {
     return self._apiRequest({
         resource: 'labels'
     }).then(function(response) {
-        var gmailLabels = response.labels;
-
         // initialize the folders to something meaningful if that hasn't already happened
         self._account.folders = self._account.folders || [];
 
         // map gmail labels to local folder model
-        gmailLabels.forEach(function(label) {
+        response.labels.forEach(function(label) {
             self._account.folders.push({
                 name: label.name,
                 path: label.id,
                 messages: []
             });
         });
-
-        // update unread count
-        self._account.folders.forEach(updateUnreadCount);
     });
 };
 
@@ -347,13 +342,13 @@ Gmail.prototype._fetchMessages = function(options) {
 Gmail.prototype._apiRequest = function(options) {
     var uri = 'https://www.googleapis.com/gmail/v1/users/';
     uri += encodeURIComponent(this._auth.emailAddress) + '/';
-    uri += encodeURIComponent(options.resource);
+    uri += options.resource;
 
     // append query parameters
     if (options.params) {
         var query = '?';
         for (var name in options.params) {
-            query += encodeURIComponent(name) + '=' + encodeURIComponent(options.params[name]) + '&';
+            query += name + '=' + encodeURIComponent(options.params[name]) + '&';
         }
         uri += query.slice(0, -1); // remove trailing &
     }
@@ -603,17 +598,6 @@ Gmail.prototype.isOnline = function() {
 //
 //
 
-
-/**
- * Updates a folder's unread count:
- * - For the outbox, that's the total number of messages (countAllMessages === true),
- * - For every other folder, it's the number of unread messages (countAllMessages === falsy)
- */
-function updateUnreadCount(folder, countAllMessages) {
-    folder.count = countAllMessages ? folder.messages.length : _.filter(folder.messages, function(msg) {
-        return msg.unread;
-    }).length;
-}
 
 /**
  * Helper function that recursively traverses the body parts tree. Looks for bodyParts that match the provided type and aggregates them
