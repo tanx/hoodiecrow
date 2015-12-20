@@ -176,6 +176,116 @@ Gmail.prototype.unlock = function(options) {
     }
 };
 
+/**
+ * Decrypts a message and replaces sets the decrypted plaintext as the message's body, html, or attachment, respectively.
+ * The first encrypted body part's ciphertext (in the content property) will be decrypted.
+ *
+ * @param {Object} options.message The message
+ * @return {Promise}
+ * @resolve {Object} message    The decrypted message object
+ */
+Gmail.prototype.decryptBody = function(options) {
+    var self = this,
+        message = options.message,
+        encryptedNode;
+
+    // the message is decrypting has no body, is not encrypted or has already been decrypted
+    if (!message.bodyParts || message.decryptingBody || !message.body || !message.encrypted || message.decrypted) {
+        return new Promise(function(resolve) {
+            resolve(message);
+        });
+    }
+
+    message.decryptingBody = true;
+    self.busy();
+
+    // get the sender's public key for signature checking
+    return self._keychain.getReceiverPublicKey(message.from[0].address).then(function(senderPublicKey) {
+        // get the receiver's public key to check the message signature
+        encryptedNode = filterBodyParts(message.bodyParts, MSG_PART_TYPE_ENCRYPTED)[0];
+        var senderKey = senderPublicKey ? senderPublicKey.publicKey : undefined;
+        return self._pgp.decrypt(encryptedNode.content, senderKey);
+
+    }).then(function(pt) {
+        if (!pt.decrypted) {
+            throw new Error('Error decrypting message.');
+        }
+
+        // if the decryption worked and signatures are present, everything's fine.
+        // no error is thrown if signatures are not present
+        message.signed = typeof pt.signaturesValid !== 'undefined';
+        message.signaturesValid = pt.signaturesValid;
+
+        // if the encrypted node contains pgp/inline, we must not parse it
+        // with the mailreader as it is not well-formed MIME
+        if (encryptedNode._isPgpInline) {
+            message.body = pt.decrypted;
+            message.decrypted = true;
+            return;
+        }
+
+        // the mailparser works on the .raw property
+        encryptedNode.raw = pt.decrypted;
+        // parse the decrypted raw content in the mailparser
+        return self._parse({
+            bodyParts: [encryptedNode]
+        }).then(handleRaw);
+
+    }).then(function() {
+        self.done(); // stop the spinner
+        message.decryptingBody = false;
+        return message;
+
+    }).catch(function(err) {
+        self.done(); // stop the spinner
+        message.decryptingBody = false;
+        message.body = err.message; // display error msg in body
+        message.decrypted = true;
+        return message;
+    });
+
+    function handleRaw(root) {
+        if (message.signed) {
+            // message had a signature in the ciphertext, so we're done here
+            return setBody(root);
+        }
+
+        // message had no signature in the ciphertext, so there's a little extra effort to be done here
+        // is there a signed MIME node?
+        var signedRoot = filterBodyParts(root, MSG_PART_TYPE_SIGNED)[0];
+        if (!signedRoot) {
+            // no signed MIME node, obviously an unsigned PGP/MIME message
+            return setBody(root);
+        }
+
+        // if there is something signed in here, we're only interested in the signed content
+        message.signedMessage = signedRoot.signedMessage;
+        message.signature = signedRoot.signature;
+        root = signedRoot.content;
+
+        // check the signatures for encrypted messages
+        return self._checkSignatures(message).then(function(signaturesValid) {
+            message.signed = typeof signaturesValid !== 'undefined';
+            message.signaturesValid = signaturesValid;
+            return setBody(root);
+        });
+    }
+
+    function setBody(root) {
+        // we have successfully interpreted the descrypted message,
+        // so let's update the views on the message parts
+        message.body = _.pluck(filterBodyParts(root, MSG_PART_TYPE_TEXT), MSG_PART_ATTR_CONTENT).join('\n');
+        message.html = _.pluck(filterBodyParts(root, MSG_PART_TYPE_HTML), MSG_PART_ATTR_CONTENT).join('\n');
+        message.attachments = _.reject(filterBodyParts(root, MSG_PART_TYPE_ATTACHMENT), function(attmt) {
+            // remove the pgp-signature from the attachments
+            return attmt.mimeType === "application/pgp-signature";
+        });
+        inlineExternalImages(message);
+        message.decrypted = true;
+        return message;
+    }
+};
+
 Gmail.prototype._initFolders = function() {
     var self = this;
 
@@ -319,7 +429,6 @@ Gmail.prototype._fetchMessages = function(options) {
         resolve();
 
     }).then(function() {
-
         return self._apiRequest({
             resource: 'messages',
             params: {
@@ -327,6 +436,28 @@ Gmail.prototype._fetchMessages = function(options) {
             }
         });
 
+    }).then(function(response) {
+        return self._apiRequest({
+            resource: 'messages/' + response.messages[0].id,
+            params: {
+                format: 'raw'
+            }
+        });
+
+    }).then(function(msg) {
+        // decode base64url encoded raw message
+        var decoded = atob(msg.raw.replace(/\-/g, '+').replace(/_/g, '/'));
+        return self._parse({
+            bodyParts: [{
+                raw: decoded
+            }]
+        });
+
+    }).then(function(parsed) {
+        return self._pgp.decrypt(parsed[0].content);
+    }).then(function(pt) {
+        console.log(pt.decrypted);
+        return pt;
     });
 };
 
