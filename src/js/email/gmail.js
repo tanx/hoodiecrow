@@ -4,6 +4,8 @@ var ngModule = angular.module('woEmail');
 ngModule.service('gmail', Gmail);
 module.exports = Gmail;
 
+var base64url = require('../util/base64url');
+
 //
 //
 // Constants
@@ -286,6 +288,92 @@ Gmail.prototype.decryptBody = function(options) {
     }
 };
 
+/**
+ * Encrypted (if necessary) and sends a message with a predefined clear text greeting.
+ *
+ * @param {Object} options.email The message to be sent
+ */
+Gmail.prototype.sendEncrypted = function(options) {
+    // mime encode, sign, encrypt and send email via smtp
+    return this._sendGeneric({
+        encrypt: true,
+        mail: options.email,
+        publicKeysArmored: options.email.publicKeysArmored
+    });
+};
+
+/**
+ * Sends a signed message in the plain
+ *
+ * @param {Object} options.email The message to be sent
+ */
+Gmail.prototype.sendPlaintext = function(options) {
+    // mime encode, sign and send email via smtp
+    return this._sendGeneric({
+        mail: options.email
+    });
+};
+
+/**
+ * This funtion wraps error handling for sending via pgpMailer and uploading to imap.
+ * @param {Object} options.email The message to be sent
+ */
+Gmail.prototype._sendGeneric = function(options) {
+    var self = this;
+    self.busy();
+    return new Promise(function(resolve) {
+        self.checkOnline();
+        resolve();
+
+    }).then(function() {
+        // decide wether to encrypt+sign or just sign the message
+        if (options.encrypt) {
+            if (!options.mail.encrypted) {
+                return self._pgpbuilder.encrypt(options).then(function() {
+                    return self._pgpbuilder.buildEncrypted(options);
+                });
+            }
+            return self._pgpbuilder.buildEncrypted(options);
+        }
+        return self._pgpbuilder.buildSigned(options);
+
+    }).then(function(msg) {
+        // send as raw rfc822 base64url encoded message
+        return self._apiRequest({
+            resource: 'messages/send',
+            method: 'post',
+            params: {
+                uploadType: 'multipart'
+            },
+            payload: {
+                raw: base64url.encode(msg.rfcMessage)
+            }
+        });
+
+    }).then(function(response) {
+        self.done(); // stop the spinner
+        return response;
+    }).catch(function(err) {
+        self.done(); // stop the spinner
+        throw err;
+    });
+};
+
+/**
+ * Signs and encrypts a message
+ *
+ * @param {Object} options.email The message to be encrypted
+ * @param {Function} callback(message) Invoked when the message was encrypted, or an error occurred
+ */
+Gmail.prototype.encrypt = function(options) {
+    var self = this;
+    self.busy();
+    return self._pgpbuilder.encrypt(options).then(function(message) {
+        self.done();
+        return message;
+    });
+};
+
 Gmail.prototype._initFolders = function() {
     var self = this;
 
@@ -446,10 +534,9 @@ Gmail.prototype._fetchMessages = function(options) {
 
     }).then(function(msg) {
         // decode base64url encoded raw message
-        var decoded = atob(msg.raw.replace(/\-/g, '+').replace(/_/g, '/'));
         return self._parse({
             bodyParts: [{
-                raw: decoded
+                raw: base64url.decode(msg.raw)
             }]
         });
 

@@ -115,6 +115,25 @@ describe.skip('Gmail DAO integration tests', function() {
         gmail.isOnline.restore();
     });
 
+    describe('sendEncrypted', function() {
+        var email = {
+            from: [testAccount.user],
+            to: [testAccount.user],
+            subject: 'PGP/MIME send test',
+            body: 'hello world!',
+            publicKeysArmored: [mockKeyPair.publicKey.publicKey]
+        };
+
+        it('should work', function(done) {
+            gmail.sendEncrypted({
+                email: email
+            }).then(function(response) {
+                expect(response).to.exist;
+                done();
+            });
+        });
+    });
+
     describe('_updateFolders', function() {
         it('should work', function(done) {
             gmail._updateFolders().then(function() {

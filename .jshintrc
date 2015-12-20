@@ -47,7 +47,9 @@
         "_",
         "openpgp",
         "PhoneNumber",
-        "DOMPurify"
+        "DOMPurify",
+        "escape",
+        "unescape"
     ],
 
     "globals": {}
