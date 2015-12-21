@@ -510,7 +510,158 @@ Gmail.prototype._updateFolders = function() {
  */
 Gmail.prototype._fetchMessages = function(options) {
     var self = this,
-        folder = options.folder;
+        folder = options.folder,
+        emailDTO;
+
+    //
+    // Mime parsing
+    //
+
+    function getHeader(node, name) {
+        return _.findWhere(node.headers, {
+            name: name
+        }).value;
+    }
+
+    /*
+     * Mime Tree Handling
+     * ==================
+     *
+     * matchEncrypted, matchSigned, ... are matchers that are called on each node of the mimde tree
+     * when it is being traversed in a DFS. if one of the matchers returns true, it indicates that it
+     * matched respective mime node, hence there is no need to look any further down in the tree.
+     *
+     */
+
+    var mimeTreeMatchers = [matchEncrypted, matchSigned, matchAttachment, matchText, matchHtml];
+
+    /**
+     * Helper function that walks the MIME tree in a dfs and calls the handlers
+     * @param {Object} mimeNode The initial MIME node whose subtree should be traversed
+     * @param {Object} message The initial root MIME node whose subtree should be traversed
+     */
+    function walkMimeTree(mimeNode, message) {
+        var i = mimeTreeMatchers.length;
+        while (i--) {
+            if (mimeTreeMatchers[i](mimeNode, message)) {
+                return;
+            }
+        }
+
+        if (mimeNode.parts) {
+            mimeNode.parts.forEach(function(childNode) {
+                walkMimeTree(childNode, message);
+            });
+        }
+    }
+
+    /**
+     * Matches encrypted PGP/MIME nodes
+     *
+     * multipart/encrypted
+     * |
+     * |-- application/pgp-encrypted
+     * |-- application/octet-stream <-- ciphertext
+     */
+    function matchEncrypted(node, message) {
+        var isEncrypted = /^multipart\/encrypted/i.test(node.mimeType) && node.parts && node.parts[1];
+        if (!isEncrypted) {
+            return false;
+        }
+
+        message.bodyParts.push({
+            type: 'encrypted',
+            partNumber: isEncrypted.partId || '',
+        });
+        return true;
+    }
+
+    /**
+     * Matches signed PGP/MIME nodes
+     *
+     * multipart/signed
+     * |
+     * |-- *** (signed mime sub-tree)
+     * |-- application/pgp-signature
+     */
+    function matchSigned(node, message) {
+        var c = node.parts;
+
+        var isSigned = /^multipart\/signed/i.test(node.mimeType) && c && c[0] && c[1] && /^application\/pgp-signature/i.test(c[1].mimeType);
+        if (!isSigned) {
+            return false;
+        }
+
+        message.bodyParts.push({
+            type: 'signed',
+            partNumber: node.partId || '',
+        });
+        return true;
+    }
+
+    /**
+     * Matches non-attachment text/plain nodes
+     */
+    function matchText(node, message) {
+        var isText = (/^text\/plain/i.test(node.mimeType) && node.disposition !== 'attachment');
+        if (!isText) {
+            return false;
+        }
+
+        message.bodyParts.push({
+            type: 'text',
+            partNumber: node.partId || ''
+        });
+        return true;
+    }
+
+    /**
+     * Matches non-attachment text/html nodes
+     */
+    function matchHtml(node, message) {
+        var isHtml = (/^text\/html/i.test(node.mimeType) && node.disposition !== 'attachment');
+        if (!isHtml) {
+            return false;
+        }
+
+        message.bodyParts.push({
+            type: 'html',
+            partNumber: node.partId || ''
+        });
+        return true;
+    }
+
+    /**
+     * Matches non-attachment text/html nodes
+     */
+    function matchAttachment(node, message) {
+        var isAttachment = (/^text\//i.test(node.mimeType) && node.disposition) || (!/^text\//i.test(node.mimeType) && !/^multipart\//i.test(node.mimeType));
+        if (!isAttachment) {
+            return false;
+        }
+
+        var bodyPart = {
+            type: 'attachment',
+            partNumber: node.partId || '',
+            mimeType: node.mimeType || 'application/octet-stream',
+            id: node.id ? node.id.replace(/[<>]/g, '') : undefined
+        };
+
+        if (node.dispositionParameters && node.dispositionParameters.filename) {
+            bodyPart.filename = node.dispositionParameters.filename;
+        } else if (node.parameters && node.parameters.name) {
+            bodyPart.filename = node.parameters.name;
+        } else {
+            bodyPart.filename = 'attachment';
+        }
+
+        message.bodyParts.push(bodyPart);
+        return true;
+    }
+
+    //
+    // Gmail api requests
+    //
 
     return new Promise(function(resolve) {
         self.checkOnline();
@@ -525,26 +676,75 @@ Gmail.prototype._fetchMessages = function(options) {
         });
 
     }).then(function(response) {
+        // get email metadata and body structure
         return self._apiRequest({
             resource: 'messages/' + response.messages[0].id,
             params: {
-                format: 'raw'
+                format: 'full'
             }
         });
 
     }).then(function(msg) {
-        // decode base64url encoded raw message
-        return self._parse({
-            bodyParts: [{
-                raw: base64url.decode(msg.raw)
-            }]
+
+        //
+        // Build email DTO to be display in UI
+        //
+
+        emailDTO = {
+            uid: parseInt(msg.internalDate, 10),
+            id: msg.id,
+            from: [{
+                address: getHeader(msg.payload, 'From')
+            }] || [],
+            // replyTo: message.envelope['reply-to'] || [],
+            // to: message.envelope.to || [],
+            // cc: message.envelope.cc || [],
+            // bcc: message.envelope.bcc || [],
+            subject: getHeader(msg.payload, 'Subject') || '(no subject)',
+            // inReplyTo: (message.envelope['in-reply-to'] || '').replace(/[<>]/g, ''),
+            // references: references ? references.split(/\s+/).map(function(reference) {
+            //     return reference.replace(/[<>]/g, '');
+            // }) : [],
+            // sentDate: message.envelope.date ? new Date(message.envelope.date) : new Date(),
+            // unread: (message.flags || []).indexOf('\\Seen') === -1,
+            // flagged: (message.flags || []).indexOf('\\Flagged') > -1,
+            // answered: (message.flags || []).indexOf('\\Answered') > -1,
+            bodyParts: []
+        };
+
+        walkMimeTree((msg.payload || {}), emailDTO);
+        emailDTO.encrypted = emailDTO.bodyParts.filter(function(bodyPart) {
+            return bodyPart.type === 'encrypted';
+        }).length > 0;
+        emailDTO.signed = emailDTO.bodyParts.filter(function(bodyPart) {
+            return bodyPart.type === 'signed';
+        }).length > 0;
+
+        // get first attachment
+        var attachmentId = _.findWhere(msg.payload.parts, {
+            partId: emailDTO.bodyParts[0].partNumber
+        }).body.attachmentId;
+
+        return self._apiRequest({
+            resource: 'messages/' + msg.id + '/attachments/' + attachmentId
         });
 
-    }).then(function(parsed) {
-        return self._pgp.decrypt(parsed[0].content);
-    }).then(function(pt) {
-        console.log(pt.decrypted);
-        return pt;
+    }).then(function(attachment) {
+
+        // decode base64url encoded raw message
+        emailDTO.bodyParts[0].content = base64url.decode(attachment.data);
+        delete emailDTO.bodyParts[0].partNumber;
+
+        // extract body
+        return self._extractBody(emailDTO);
+
+    }).then(function() {
+
+        // decrypt email dto
+        return self.decryptBody({
+            message: emailDTO
+        });
+
     });
 };
 
