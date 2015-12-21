@@ -74,7 +74,7 @@ function base64_charIndex(c) {
  * Input is assumed to be a base64/base64url encoded UTF-8 string.
  * Returned result is a JavaScript (UCS-2) string.
  */
-function base64_decode(data) {
+function base64_decodeJS(data) {
     var dst = "";
     var i, a, b, c, d;
 
@@ -93,8 +93,15 @@ function base64_decode(data) {
         }
     }
 
-    dst = decodeURIComponent(escape(dst));
-    return dst;
+    return decodeURIComponent(escape(dst));
+}
+
+function base64_decode(data) {
+    if (typeof window !== 'undefined' && window.atob) {
+        return atob(data.replace(/\-/g, '+').replace(/_/g, '/'));
+    } else {
+        return base64_decodeJS(data);
+    }
 }
 
 /* base64url_sniff
