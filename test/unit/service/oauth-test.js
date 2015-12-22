@@ -70,6 +70,33 @@ describe('OAuth unit tests', function() {
     });
 
     describe('getOAuthToken', function() {
+        it('should return cached oauth token', function(done) {
+            oauth.accessToken = 'token';
+
+            oauth.getOAuthToken(testEmail).then(function(token) {
+                expect(token).to.equal('token');
+                done();
+            });
+        });
+
+        it('should work for chrome browser (not chrome app)', function() {
+            oauth.accessToken = undefined;
+            window.chrome.identity = undefined;
+            sinon.stub(oauth, 'webAuthenticate');
+
+            oauth.getOAuthToken(testEmail);
+            expect(oauth.webAuthenticate.calledOnce).to.be.true;
+        });
+
+        it('should work for non-chrome browsers', function() {
+            oauth.accessToken = undefined;
+            window.chrome = undefined;
+            sinon.stub(oauth, 'webAuthenticate');
+
+            oauth.getOAuthToken(testEmail);
+            expect(oauth.webAuthenticate.calledOnce).to.be.true;
+        });
+
         it('should work for empty emailAddress', function(done) {
             getPlatformInfoStub.yields({
                 os: 'android'
@@ -127,13 +154,6 @@ describe('OAuth unit tests', function() {
     });
 
     describe('queryEmailAddress', function() {
-        var res = new window.Response('{"email":"' + testEmail + '"}', {
-            status: 200,
-            headers: {
-                'Content-type': 'application/json'
-            }
-        });
-
         beforeEach(function() {
             sinon.stub(window, 'fetch');
         });
@@ -143,7 +163,9 @@ describe('OAuth unit tests', function() {
         });
 
         it('should work', function(done) {
-            window.fetch.returns(resolves(res));
+            window.fetch.returns(fetchOk({
+                email: testEmail
+            }));
 
             oauth.queryEmailAddress('token').then(function(emailAddress) {
                 expect(emailAddress).to.equal(testEmail);
@@ -158,11 +180,28 @@ describe('OAuth unit tests', function() {
             });
         });
 
-        it('should fail due to error in rest api', function(done) {
-            window.fetch.returns(rejects(new Error()));
+        it('should fail due to expired token', function(done) {
+            window.fetch.returns(fetchError(401, {
+                error_description: 'Invalid credentials!'
+            }));
+            oauth.accessToken = 'cachedToken';
 
             oauth.queryEmailAddress('token').catch(function(err) {
-                expect(err).to.exist;
+                expect(err.code).to.equal(401);
+                expect(oauth.accessToken).to.be.undefined;
+                done();
+            });
+        });
+
+        it('should fail due to expired token', function(done) {
+            window.fetch.returns(fetchError(400, {
+                error_description: 'Invalid credentials!'
+            }));
+            oauth.accessToken = 'cachedToken';
+
+            oauth.queryEmailAddress('token').catch(function(err) {
+                expect(err.code).to.equal(400);
+                expect(oauth.accessToken).to.equal('cachedToken');
                 done();
             });
         });
