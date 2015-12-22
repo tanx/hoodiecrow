@@ -8,8 +8,7 @@ module.exports = GmailClient;
  * This module wraps the REST based Google Mail api and provides a similar high-level
  * api as the Imap Client module
  */
-function GmailClient(appConfig, auth, base64url) {
-    this._appConfig = appConfig;
+function GmailClient(auth, base64url) {
     this._auth = auth;
     this._base64url = base64url;
 }

@@ -201,6 +201,7 @@ module.exports = function(grunt) {
                         'test/unit/service/publickey-verifier-test.js',
                         'test/unit/email/outbox-bo-test.js',
                         'test/unit/email/email-dao-test.js',
+                        'test/unit/email/gmail-client-test.js',
                         'test/unit/email/account-test.js',
                         'test/unit/email/search-test.js',
                         'test/unit/controller/login/add-account-ctrl-test.js',
