@@ -4,8 +4,6 @@ var ngModule = angular.module('woEmail');
 ngModule.service('gmail', Gmail);
 module.exports = Gmail;
 
-var base64url = require('../util/base64url');
-
 //
 //
 // Constants
@@ -45,7 +43,7 @@ var MSG_PART_TYPE_HTML = 'html';
  * as the Email module, which orchestrates everything around the handling of encrypted mails:
  * PGP de-/encryption, receiving via Gmail api, sending via Gmail api, MIME parsing, local db persistence
  */
-function Gmail(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog, appConfig, auth) {
+function Gmail(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog, appConfig, auth, gmailClient) {
     this._keychain = keychain;
     this._pgp = pgp;
     this._devicestorage = accountStore;
@@ -54,6 +52,7 @@ function Gmail(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog, appC
     this._dialog = dialog;
     this._appConfig = appConfig;
     this._auth = auth;
+    this._gmailClient = gmailClient;
 }
 
 
@@ -338,16 +337,9 @@ Gmail.prototype._sendGeneric = function(options) {
         return self._pgpbuilder.buildSigned(options);
 
     }).then(function(msg) {
-        // send as raw rfc822 base64url encoded message
-        return self._apiRequest({
-            resource: 'messages/send',
-            method: 'post',
-            params: {
-                uploadType: 'multipart'
-            },
-            payload: {
-                raw: base64url.encode(msg.rfcMessage)
-            }
+        // send raw rfc822 message via gmail api
+        return self._gmailClient.send({
+            raw: msg.rfcMessage
         });
 
     }).then(function(response) {
@@ -439,7 +431,7 @@ Gmail.prototype.onConnect = function() {
     self._account.loggingIn = true;
 
     // get auth.oauthToken and auth.emailAddress
-    return self._auth.getOAuthToken().then(function() {
+    return self._gmailClient.login().then(function() {
         // set status to online
         self._account.loggingIn = false;
         self._account.online = true;
@@ -451,15 +443,11 @@ Gmail.prototype.onConnect = function() {
  * It will discard the imap client and pgp mailer
  */
 Gmail.prototype.onDisconnect = function() {
-    // logout of gmail api
+    // logout of gmail-client
     // ignore error, because it's not problem if logout fails
-
-    // discard clients
     this._account.online = false;
-
-    return new Promise(function(resolve) {
-        resolve(); // ASYNC ALL THE THINGS!!!
-    });
+    this._gmailClient.stopListeningForChanges(function() {});
+    return this._gmailClient.logout();
 };
 
 
@@ -487,21 +475,15 @@ Gmail.prototype._updateFolders = function() {
 
     self.busy(); // start the spinner
 
-    // fetch list from the server
-    return self._apiRequest({
-        resource: 'labels'
-    }).then(function(response) {
-        // initialize the folders to something meaningful if that hasn't already happened
-        self._account.folders = self._account.folders || [];
+    return self._gmailClient.listFolders().then(function(folders) {
+        self._account.folders = folders;
 
-        // map gmail labels to local folder model
-        response.labels.forEach(function(label) {
-            self._account.folders.push({
-                name: label.name,
-                path: label.id,
-                messages: []
-            });
-        });
+    }).then(function() {
+        self.done(); // stop the spinner
+
+    }).catch(function(err) {
+        self.done(); // stop the spinner
+        throw err;
     });
 };
 
@@ -510,288 +492,50 @@ Gmail.prototype._updateFolders = function() {
  */
 Gmail.prototype._fetchMessages = function(options) {
     var self = this,
-        folder = options.folder,
-        emailDTO;
-
-    //
-    // Mime parsing
-    //
-
-    function getHeader(node, name) {
-        return _.findWhere(node.headers, {
-            name: name
-        }).value;
-    }
-
-    /*
-     * Mime Tree Handling
-     * ==================
-     *
-     * matchEncrypted, matchSigned, ... are matchers that are called on each node of the mimde tree
-     * when it is being traversed in a DFS. if one of the matchers returns true, it indicates that it
-     * matched respective mime node, hence there is no need to look any further down in the tree.
-     *
-     */
-
-    var mimeTreeMatchers = [matchEncrypted, matchSigned, matchAttachment, matchText, matchHtml];
-
-    /**
-     * Helper function that walks the MIME tree in a dfs and calls the handlers
-     * @param {Object} mimeNode The initial MIME node whose subtree should be traversed
-     * @param {Object} message The initial root MIME node whose subtree should be traversed
-     */
-    function walkMimeTree(mimeNode, message) {
-        var i = mimeTreeMatchers.length;
-        while (i--) {
-            if (mimeTreeMatchers[i](mimeNode, message)) {
-                return;
-            }
-        }
-
-        if (mimeNode.parts) {
-            mimeNode.parts.forEach(function(childNode) {
-                walkMimeTree(childNode, message);
-            });
-        }
-    }
-
-    /**
-     * Matches encrypted PGP/MIME nodes
-     *
-     * multipart/encrypted
-     * |
-     * |-- application/pgp-encrypted
-     * |-- application/octet-stream <-- ciphertext
-     */
-    function matchEncrypted(node, message) {
-        var isEncrypted = /^multipart\/encrypted/i.test(node.mimeType) && node.parts && node.parts[1];
-        if (!isEncrypted) {
-            return false;
-        }
-
-        message.bodyParts.push({
-            type: 'encrypted',
-            partNumber: isEncrypted.partId || '',
-        });
-        return true;
-    }
-
-    /**
-     * Matches signed PGP/MIME nodes
-     *
-     * multipart/signed
-     * |
-     * |-- *** (signed mime sub-tree)
-     * |-- application/pgp-signature
-     */
-    function matchSigned(node, message) {
-        var c = node.parts;
-
-        var isSigned = /^multipart\/signed/i.test(node.mimeType) && c && c[0] && c[1] && /^application\/pgp-signature/i.test(c[1].mimeType);
-        if (!isSigned) {
-            return false;
-        }
-
-        message.bodyParts.push({
-            type: 'signed',
-            partNumber: node.partId || '',
-        });
-        return true;
-    }
-
-    /**
-     * Matches non-attachment text/plain nodes
-     */
-    function matchText(node, message) {
-        var isText = (/^text\/plain/i.test(node.mimeType) && node.disposition !== 'attachment');
-        if (!isText) {
-            return false;
-        }
-
-        message.bodyParts.push({
-            type: 'text',
-            partNumber: node.partId || ''
-        });
-        return true;
-    }
-
-    /**
-     * Matches non-attachment text/html nodes
-     */
-    function matchHtml(node, message) {
-        var isHtml = (/^text\/html/i.test(node.mimeType) && node.disposition !== 'attachment');
-        if (!isHtml) {
-            return false;
-        }
-
-        message.bodyParts.push({
-            type: 'html',
-            partNumber: node.partId || ''
-        });
-        return true;
-    }
-
-    /**
-     * Matches non-attachment text/html nodes
-     */
-    function matchAttachment(node, message) {
-        var isAttachment = (/^text\//i.test(node.mimeType) && node.disposition) || (!/^text\//i.test(node.mimeType) && !/^multipart\//i.test(node.mimeType));
-        if (!isAttachment) {
-            return false;
-        }
-
-        var bodyPart = {
-            type: 'attachment',
-            partNumber: node.partId || '',
-            mimeType: node.mimeType || 'application/octet-stream',
-            id: node.id ? node.id.replace(/[<>]/g, '') : undefined
-        };
-
-        if (node.dispositionParameters && node.dispositionParameters.filename) {
-            bodyPart.filename = node.dispositionParameters.filename;
-        } else if (node.parameters && node.parameters.name) {
-            bodyPart.filename = node.parameters.name;
-        } else {
-            bodyPart.filename = 'attachment';
-        }
-
-        message.bodyParts.push(bodyPart);
-        return true;
-    }
-
-    //
-    // Gmail api requests
-    //
+        folder = options.folder;
 
     return new Promise(function(resolve) {
         self.checkOnline();
         resolve();
 
     }).then(function() {
-        return self._apiRequest({
-            resource: 'messages',
-            params: {
-                labelIds: folder.path
-            }
-        });
-
-    }).then(function(response) {
-        // get email metadata and body structure
-        return self._apiRequest({
-            resource: 'messages/' + response.messages[0].id,
-            params: {
-                format: 'full'
-            }
-        });
-
-    }).then(function(msg) {
-
-        //
-        // Build email DTO to be display in UI
-        //
-
-        emailDTO = {
-            uid: parseInt(msg.internalDate, 10),
-            id: msg.id,
-            from: [{
-                address: getHeader(msg.payload, 'From')
-            }] || [],
-            // replyTo: message.envelope['reply-to'] || [],
-            // to: message.envelope.to || [],
-            // cc: message.envelope.cc || [],
-            // bcc: message.envelope.bcc || [],
-            subject: getHeader(msg.payload, 'Subject') || '(no subject)',
-            // inReplyTo: (message.envelope['in-reply-to'] || '').replace(/[<>]/g, ''),
-            // references: references ? references.split(/\s+/).map(function(reference) {
-            //     return reference.replace(/[<>]/g, '');
-            // }) : [],
-            // sentDate: message.envelope.date ? new Date(message.envelope.date) : new Date(),
-            // unread: (message.flags || []).indexOf('\\Seen') === -1,
-            // flagged: (message.flags || []).indexOf('\\Flagged') > -1,
-            // answered: (message.flags || []).indexOf('\\Answered') > -1,
-            bodyParts: []
-        };
-
-        walkMimeTree((msg.payload || {}), emailDTO);
-        emailDTO.encrypted = emailDTO.bodyParts.filter(function(bodyPart) {
-            return bodyPart.type === 'encrypted';
-        }).length > 0;
-        emailDTO.signed = emailDTO.bodyParts.filter(function(bodyPart) {
-            return bodyPart.type === 'signed';
-        }).length > 0;
-
-        // get first attachment
-        var attachmentId = _.findWhere(msg.payload.parts, {
-            partId: emailDTO.bodyParts[0].partNumber
-        }).body.attachmentId;
-
-        return self._apiRequest({
-            resource: 'messages/' + msg.id + '/attachments/' + attachmentId
-        });
-
-    }).then(function(attachment) {
-
-        // decode base64url encoded raw message
-        emailDTO.bodyParts[0].content = base64url.decode(attachment.data);
-        delete emailDTO.bodyParts[0].partNumber;
-
-        // extract body
-        return self._extractBody(emailDTO);
-
-    }).then(function() {
-
-        // decrypt email dto
-        return self.decryptBody({
-            message: emailDTO
-        });
-
+        return self._gmailClient.listMessageIds(folder);
     });
 };
 
 /**
- * Make an HTTP request to the Gmail REST api via the window.fetch function.
- * @param  {String} options.resource    The api resource e.g. 'messages'
- * @param  {String} options.method      (optional) The HTTP method to be used depending on the CRUD
- *                                      operation e.g. 'get' or 'post'. If not specified it defaults to 'get'.
- * @param  {Array} options.params       A list of query parameters e.g. [{name: 'value'}]
- * @param  {Object} options.payload     (optional) The request's payload for create/update operations
- * @return {Promise<Object>}            A promise containing the response's parsed JSON object
+ * Get a message's headers, body and body structure. In case of a text/plain body only
+ *   one http roundtrip is required. In case of a PGP/MIME message, the content body part
+ *   will be fetched automatically in a second http roundtrip, but no other attachments
+ *   for example for cleartext messages. Those must be fetched using the getAttachment api.
+ * @param  {Object} options.message     The message object
  */
-Gmail.prototype._apiRequest = function(options) {
-    var uri = 'https://www.googleapis.com/gmail/v1/users/';
-    uri += encodeURIComponent(this._auth.emailAddress) + '/';
-    uri += options.resource;
+Gmail.prototype.getBody = function(options) {
+    var self = this,
+        message = options.message;
 
-    // append query parameters
-    if (options.params) {
-        var query = '?';
-        for (var name in options.params) {
-            query += name + '=' + encodeURIComponent(options.params[name]) + '&';
-        }
-        uri += query.slice(0, -1); // remove trailing &
-    }
+    return self._gmailClient.getMessage(message).then(function() {
+        // automatically fetch the message content body part for PGP/MIME
+        var encryptedBodyPart = _.findWhere(message.bodyParts, {
+            type: 'encrypted'
+        });
+        var signedBodyPart = _.findWhere(message.bodyParts, {
+            type: 'signed'
+        });
 
-    return window.fetch(uri, {
-        method: options.method ? options.method : 'get',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + this._auth.oauthToken
-        },
-        body: options.payload ? JSON.stringify(options.payload) : undefined
-    }).then(function(response) {
-        if (response.status >= 200 && response.status <= 299) {
-            // success ... parse response
-            return response.json();
-        } else {
-            // error ... parse response and throw
-            return response.json().then(function(res) {
-                var err = new Error(res.error.message);
-                err.code = res.error.code;
-                err.errors = res.error.errors;
-                throw err;
-            });
+        var pgpContentBodyPart = encryptedBodyPart || signedBodyPart;
+        if (!pgpContentBodyPart || !pgpContentBodyPart.attachmentId) {
+            // no body part to be fetched
+            return;
         }
+
+        return self._gmailClient.getAttachment({
+            message: message,
+            attachmentId: pgpContentBodyPart.attachmentId
+        }).then(function() {
+            // extract body
+            return self._extractBody(message);
+        });
     });
 };
 

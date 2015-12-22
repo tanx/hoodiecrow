@@ -16,6 +16,13 @@ describe.skip('Gmail DAO integration tests', function() {
         xoauth2: 'testtoken'
     };
 
+    var inboxFolder = {
+        name: 'Inbox',
+        type: 'Inbox',
+        path: 'INBOX',
+        messages: []
+    };
+
     var mockKeyPair = {
         privateKey: {
             _id: '514BEE3B15C7F569',
@@ -76,11 +83,6 @@ describe.skip('Gmail DAO integration tests', function() {
 
             // try to catch oauth token
             oauth.oauthCallback();
-
-            // set email address in auth module to prevent google api roundtrip for userinfo
-            auth.setCredentials({
-                emailAddress: testAccount.user,
-            });
 
             // stub rest request to key server
             sinon.stub(gmail._keychain._publicKeyDao, 'get').returns(resolves(mockKeyPair.publicKey));
@@ -143,21 +145,36 @@ describe.skip('Gmail DAO integration tests', function() {
         });
     });
 
-    describe('_fetchMessages', function() {
-        var inboxFolder = {
-            name: 'Inbox',
-            type: 'Inbox',
-            path: 'INBOX',
-            messages: []
-        };
-
+    describe('getBody and decrypt', function() {
         it('should work', function(done) {
+            var msg;
+
             gmail._fetchMessages({
                 folder: inboxFolder
             }).then(function(messages) {
-                expect(messages).to.exist;
+                expect(messages && messages.length).to.exist;
+
+                msg = messages[0];
+
+                // get first message body
+                return gmail.getBody({
+                    message: msg
+                });
+
+            }).then(function() {
+
+                // decrypt email dto
+                return gmail.decryptBody({
+                    message: msg
+                });
+
+            }).then(function() {
+                expect(msg.body).to.exist;
+                expect(msg.encrypted).to.be.true;
+                expect(msg.decrypted).to.be.true;
                 done();
             });
+
         });
     });
 

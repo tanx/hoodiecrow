@@ -1,9 +1,19 @@
 'use strict';
 
+var ngModule = angular.module('woUtil');
+ngModule.service('base64url', Base64Url);
+module.exports = Base64Url;
+
 /*
  * JavaScript base64 / base64url encoder and decoder
  * http://www.simplycalc.com/base64-source.php
  */
+function Base64Url() {}
+
+Base64Url.prototype.encodeBase64 = base64_encode;
+Base64Url.prototype.decode = base64_decode;
+Base64Url.prototype.encode = base64url_encode;
+Base64Url.prototype.sniff = base64url_sniff;
 
 var b64c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; // base64 dictionary
 var b64u = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"; // base64url dictionary
@@ -117,9 +127,3 @@ function base64url_sniff(base64) {
     }
     return false;
 }
-
-var base64url = module.exports;
-base64url.encodeBase64 = base64_encode;
-base64url.decode = base64_decode;
-base64url.encode = base64url_encode;
-base64url.sniff = base64url_sniff;

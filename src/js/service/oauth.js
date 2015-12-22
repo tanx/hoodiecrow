@@ -11,6 +11,15 @@ function OAuth(appConfig) {
 }
 
 /**
+ * Delete the locally cached oauth token.
+ */
+OAuth.prototype.flushToken = function() {
+    this.accessToken = undefined;
+    this.tokenType = undefined;
+    this.expiresIn = undefined;
+};
+
+/**
  * Start an OAuth2 web authentication flow including redirects from and to the current page.
  */
 OAuth.prototype.webAuthenticate = function() {
@@ -112,37 +121,15 @@ OAuth.prototype.getOAuthToken = function(emailAddress) {
 };
 
 /**
- * Remove an old OAuth token and get a new one.
- * @param  {String}   options.oldToken      The old token to be removed
- * @param  {String}   options.emailAddress  The user's email address (optional)
- */
-OAuth.prototype.refreshToken = function(options) {
-    var self = this;
-    return new Promise(function(resolve) {
-        if (!options.oldToken) {
-            throw new Error('oldToken option not set!');
-        }
-
-        // remove cached token
-        chrome.identity.removeCachedAuthToken({
-            token: options.oldToken
-        }, function() {
-            // get a new token
-            self.getOAuthToken(options.emailAddress).then(resolve);
-        });
-    });
-};
-
-/**
  * Get email address from google api
  * @param  {String}   token    The oauth token
  */
 OAuth.prototype.queryEmailAddress = function(token) {
+    var self = this;
     return new Promise(function(resolve) {
         if (!token) {
             throw new Error('Invalid OAuth token!');
         }
-
         resolve();
 
     }).then(function() {
@@ -151,12 +138,20 @@ OAuth.prototype.queryEmailAddress = function(token) {
         return window.fetch(uri);
 
     }).then(function(response) {
-        return response.json();
-    }).then(function(info) {
-        if (!info || !info.email) {
-            throw new Error('Error looking up email address on google api!');
+        if (response.status === 200) {
+            // success ... parse response
+            return response.json();
         }
 
+        // error ... the oauth token has probably expired
+        return response.json().then(function(res) {
+            self.flushToken();
+            var error = new Error('Error looking up email address on Google api: ' + res.error_description);
+            error.code = response.status;
+            throw error;
+        });
+
+    }).then(function(info) {
         return info.email;
     });
 };
