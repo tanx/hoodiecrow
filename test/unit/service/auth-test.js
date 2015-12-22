@@ -165,7 +165,22 @@ describe('Auth unit tests', function() {
         });
     });
 
+    describe('#flushOAuthToken', function() {
+        it('should work', function() {
+            auth.oauthToken = 'cachedToken';
+
+            auth.flushOAuthToken().then(function() {
+                expect(auth.oauthToken).to.be.undefined;
+                expect(oauthStub.flushToken.called).to.be.true;
+            });
+        });
+    });
+
     describe('#getOAuthToken', function() {
+        beforeEach(function() {
+            sinon.stub(auth, 'flushOAuthToken');
+        });
+
         it('should fetch token with known email address', function(done) {
             auth.emailAddress = emailAddress;
             oauthStub.getOAuthToken.withArgs(emailAddress).returns(resolves(oauthToken));
@@ -201,6 +216,25 @@ describe('Auth unit tests', function() {
                 expect(err).to.exist;
                 expect(auth.emailAddress).to.not.exist;
                 expect(auth.oauthToken).to.not.exist;
+                expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
+                expect(oauthStub.queryEmailAddress.calledOnce).to.be.true;
+
+                done();
+            });
+        });
+
+        it('should fail when oauth token expires', function(done) {
+            oauthStub.getOAuthToken.returns(resolves(oauthToken));
+            oauthStub.queryEmailAddress.returns(rejects({
+                code: 401
+            }));
+            auth.flushOAuthToken.returns(resolves());
+
+            auth.getOAuthToken().catch(function(err) {
+                expect(err.code).to.equal(401);
+                expect(auth.emailAddress).to.not.exist;
+                expect(auth.oauthToken).to.not.exist;
+                expect(auth.flushOAuthToken.calledOnce).to.be.true;
                 expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
                 expect(oauthStub.queryEmailAddress.calledOnce).to.be.true;
 
@@ -361,6 +395,7 @@ describe('Auth unit tests', function() {
             auth.logout().then(function() {
                 expect(auth.password).to.be.undefined;
                 expect(auth.initialized).to.be.undefined;
+                expect(auth.oauthToken).to.be.undefined;
                 expect(auth.credentialsDirty).to.be.undefined;
                 expect(auth.passwordNeedsDecryption).to.be.undefined;
                 done();
