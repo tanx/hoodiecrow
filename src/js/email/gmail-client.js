@@ -183,8 +183,9 @@ GmailClient.prototype.listFolders = function() {
  * @return {Promise<Object>}            A promise containing the response's parsed JSON object
  */
 GmailClient.prototype._apiRequest = function(options) {
+    var self = this;
     var uri = 'https://www.googleapis.com/gmail/v1/users/';
-    uri += encodeURIComponent(this._auth.emailAddress) + '/';
+    uri += encodeURIComponent(self._auth.emailAddress) + '/';
     uri += options.resource;
 
     // append query parameters
@@ -201,22 +202,30 @@ GmailClient.prototype._apiRequest = function(options) {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + this._auth.oauthToken
+            'Authorization': 'Bearer ' + self._auth.oauthToken
         },
         body: options.payload ? JSON.stringify(options.payload) : undefined
     }).then(function(response) {
         if (response.status >= 200 && response.status <= 299) {
             // success ... parse response
             return response.json();
+
+        } else if (response.status === 401) {
+            // error ... the oauth token has probably expired
+            return self._auth.flushOAuthToken().then(handleError);
         }
 
-        // error ... parse response and throw
-        return response.json().then(function(res) {
-            var err = new Error(res.error.message);
-            err.code = res.error.code;
-            err.errors = res.error.errors;
-            throw err;
-        });
+        return handleError();
+
+        function handleError() {
+            // error ... parse response and throw
+            return response.json().then(function(res) {
+                var err = new Error(res.error.message);
+                err.code = response.status;
+                err.errors = res.error.errors;
+                throw err;
+            });
+        }
     });
 };
 
