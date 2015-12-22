@@ -23,6 +23,8 @@
         "Promise",
         "resolves",
         "rejects",
+        "fetchOk",
+        "fetchError",
         "self",
         "importScripts",
         "console",
