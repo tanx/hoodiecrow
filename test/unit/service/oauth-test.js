@@ -69,59 +69,6 @@ describe('OAuth unit tests', function() {
         });
     });
 
-    describe('refreshToken', function() {
-        var getOAuthTokenStub;
-
-        beforeEach(function() {
-            getOAuthTokenStub = sinon.stub(oauth, 'getOAuthToken');
-        });
-        afterEach(function() {
-            getOAuthTokenStub.restore();
-        });
-
-        it('should work', function() {
-            removeCachedStub.withArgs({
-                token: 'oldToken'
-            }).returns(resolves());
-
-            getOAuthTokenStub.withArgs(testEmail).returns(resolves());
-
-            oauth.refreshToken({
-                oldToken: 'oldToken',
-                emailAddress: testEmail
-            }).then(function() {
-                expect(removeCachedStub.calledOnce).to.be.true;
-                expect(getOAuthTokenStub.calledOnce).to.be.true;
-            });
-        });
-
-        it('should work without email', function() {
-            removeCachedStub.withArgs({
-                token: 'oldToken'
-            }).returns(resolves());
-
-            getOAuthTokenStub.withArgs(undefined).returns(resolves());
-
-            oauth.refreshToken({
-                oldToken: 'oldToken',
-            }).then(function() {
-                expect(removeCachedStub.calledOnce).to.be.true;
-                expect(getOAuthTokenStub.calledOnce).to.be.true;
-                expect(getOAuthTokenStub.calledWith(undefined)).to.be.true;
-            });
-        });
-
-        it('should fail without all options', function() {
-            oauth.refreshToken({
-                emailAddress: testEmail
-            }).catch(function(err) {
-                expect(err).to.exist;
-                expect(removeCachedStub.called).to.be.false;
-                expect(getOAuthTokenStub.called).to.be.false;
-            });
-        });
-    });
-
     describe('getOAuthToken', function() {
         it('should work for empty emailAddress', function(done) {
             getPlatformInfoStub.yields({

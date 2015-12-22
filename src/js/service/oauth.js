@@ -143,9 +143,12 @@ OAuth.prototype.queryEmailAddress = function(token) {
             return response.json();
         }
 
-        // error ... the oauth token has probably expired
-        return response.json().then(function(res) {
+        if (response.status === 401) {
+            // the oauth token has probably expired
             self.flushToken();
+        }
+
+        return response.json().then(function(res) {
             var error = new Error('Error looking up email address on Google api: ' + res.error_description);
             error.code = response.status;
             throw error;
