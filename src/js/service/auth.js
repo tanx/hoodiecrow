@@ -227,6 +227,19 @@ Auth.prototype.useOAuth = function(hostname) {
 };
 
 /**
+ * Delete the locally cached oauth token.
+ */
+Auth.prototype.flushOAuthToken = function() {
+    this.oauthToken = undefined;
+    this._oauth.flushToken();
+
+    // TODO: remove cached token from local storage
+    return new Promise(function(resolve) {
+        resolve();
+    });
+};
+
+/**
  * READ FIRST b/c usage of the oauth api is weird.
  * the chrome identity api will let you query an oauth token for an email account without knowing
  * the corresponding email address. also, android has multiple accounts whereas desktop chrome only
@@ -254,6 +267,15 @@ Auth.prototype.getOAuthToken = function() {
         return self._oauth.queryEmailAddress(oauthToken).then(function(emailAddress) {
             self.oauthToken = oauthToken;
             self.emailAddress = emailAddress;
+
+        }).catch(function(err) {
+            if (err.code === 401) {
+                // oauth token has probably expired
+                return self.flushOAuthToken().then(function() {
+                    throw err;
+                });
+            }
+            throw err;
         });
     }
 };
@@ -359,6 +381,8 @@ Auth.prototype.logout = function() {
     return self._appConfigStore.clear().then(function() {
         // clear in memory cache
         self.setCredentials({});
+        self._oauth.flushToken();
+        self.oauthToken = undefined;
         self.initialized = undefined;
         self.credentialsDirty = undefined;
         self.passwordNeedsDecryption = undefined;

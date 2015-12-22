@@ -10,3 +10,4 @@ require('./update/update-handler');
 require('./status');
 require('./download');
 require('./notification');
+require('./base64url');
