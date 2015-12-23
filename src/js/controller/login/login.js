@@ -1,27 +1,27 @@
 'use strict';
 
-var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, auth, email, privateKey, dialog, appConfig) {
+var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, auth, email, privateKey, dialog, appConfig, oauth, gmailClient) {
 
     //
     // Scope functions
     //
 
     $scope.init = function() {
-        // initialize the user account
+        // show login screen if no oauth token
+        if (!oauth.accessToken) {
+            return $scope.goTo('/add-account');
+        }
+
+        // initialize the app-config database
         return auth.init().then(function() {
             // get email address
-            return auth.getEmailAddress();
+            return gmailClient.login();
 
-        }).then(function(info) {
-            // check if account needs to be selected
-            if (!info.emailAddress) {
-                return $scope.goTo('/add-account');
-            }
-
+        }).then(function() {
             // initiate the account by initializing the email dao and user storage
             return account.init({
-                emailAddress: info.emailAddress,
-                realname: info.realname
+                emailAddress: auth.emailAddress,
+                realname: auth.realname
             }).then(function(availableKeys) {
                 return redirect(availableKeys);
             });

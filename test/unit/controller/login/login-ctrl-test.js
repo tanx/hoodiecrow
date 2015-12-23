@@ -6,26 +6,31 @@ var LoginCtrl = require('../../../../src/js/controller/login/login'),
     Dialog = require('../../../../src/js/util/dialog'),
     UpdateHandler = require('../../../../src/js/util/update/update-handler'),
     Auth = require('../../../../src/js/service/auth'),
-    PrivateKey = require('../../../../src/js/service/privatekey');
+    OAuth = require('../../../../src/js/service/oauth'),
+    PrivateKey = require('../../../../src/js/service/privatekey'),
+    GmailClient = require('../../../../src/js/email/gmail-client');
 
 describe('Login Controller unit test', function() {
     var scope, location, ctrl,
-        emailMock, privateKeyMock, authMock, accountMock, dialogMock, updateHandlerMock, goToStub,
+        emailMock, privateKeyMock, authMock, accountMock, dialogMock, updateHandlerMock, goToStub, gmailClientStub, oauthStub,
         emailAddress = 'fred@foo.com';
 
     beforeEach(function() {
         emailMock = sinon.createStubInstance(Email);
         accountMock = sinon.createStubInstance(Account);
+        oauthStub = sinon.createStubInstance(OAuth);
         authMock = sinon.createStubInstance(Auth);
         privateKeyMock = sinon.createStubInstance(PrivateKey);
         dialogMock = sinon.createStubInstance(Dialog);
         updateHandlerMock = sinon.createStubInstance(UpdateHandler);
+        gmailClientStub = sinon.createStubInstance(GmailClient);
 
         location = {
             path: function() {}
         };
 
         authMock.emailAddress = emailAddress;
+        oauthStub.accessToken = 'token';
 
         angular.module('login-test', ['woServices', 'woEmail', 'woUtil']);
         angular.mock.module('login-test');
@@ -45,7 +50,9 @@ describe('Login Controller unit test', function() {
                 dialog: dialogMock,
                 appConfig: {
                     preventAutoStart: true
-                }
+                },
+                gmailClient: gmailClientStub,
+                oauth: oauthStub
             });
         });
 
@@ -55,48 +62,41 @@ describe('Login Controller unit test', function() {
 
     afterEach(function() {});
 
-    it('should fail for auth.getEmailAddress', function(done) {
-        authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(rejects(new Error()));
+    it('should redirect to /add-account', function() {
+        oauthStub.accessToken = undefined;
 
-        scope.init().then(function() {
-            expect(updateHandlerMock.checkForUpdate.calledOnce).to.be.true;
-            expect(authMock.init.calledOnce).to.be.true;
-            expect(dialogMock.error.calledOnce).to.be.true;
-            done();
-        });
+        scope.init();
+        expect(goToStub.withArgs('/add-account').called).to.be.true;
     });
 
     it('should fail for auth.init', function(done) {
         authMock.init.returns(rejects(new Error()));
-        authMock.getEmailAddress.returns(resolves({
-            emailAddress: emailAddress
-        }));
+        gmailClientStub.login.returns(resolves());
 
         scope.init().then(function() {
             expect(authMock.init.calledOnce).to.be.true;
-            expect(accountMock.init.called).to.be.false;
+            expect(gmailClientStub.login.called).to.be.false;
             expect(dialogMock.error.calledOnce).to.be.true;
             done();
         });
     });
 
-    it('should redirect to /add-account', function(done) {
+    it('should fail for auth.getEmailAddress', function(done) {
         authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(resolves({}));
+        gmailClientStub.login.returns(rejects(new Error()));
 
         scope.init().then(function() {
-            expect(goToStub.withArgs('/add-account').called).to.be.true;
-            expect(goToStub.calledOnce).to.be.true;
+            expect(updateHandlerMock.checkForUpdate.calledOnce).to.be.true;
+            expect(authMock.init.calledOnce).to.be.true;
+            expect(gmailClientStub.login.called).to.be.true;
+            expect(dialogMock.error.calledOnce).to.be.true;
             done();
         });
     });
 
     it('should redirect to /login-existing', function(done) {
         authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(resolves({
-            emailAddress: emailAddress
-        }));
+        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves({
             publicKey: 'publicKey',
             privateKey: 'privateKey'
@@ -113,9 +113,7 @@ describe('Login Controller unit test', function() {
 
     it('should fail for auth.storeCredentials', function(done) {
         authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(resolves({
-            emailAddress: emailAddress
-        }));
+        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves({
             publicKey: 'publicKey',
             privateKey: 'privateKey'
@@ -131,9 +129,7 @@ describe('Login Controller unit test', function() {
 
     it('should redirect to /account', function(done) {
         authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(resolves({
-            emailAddress: emailAddress
-        }));
+        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves({
             publicKey: 'publicKey',
             privateKey: 'privateKey'
@@ -150,9 +146,7 @@ describe('Login Controller unit test', function() {
 
     it('should redirect to /login-privatekey-download', function(done) {
         authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(resolves({
-            emailAddress: emailAddress
-        }));
+        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves());
         privateKeyMock.init.returns(resolves());
         privateKeyMock.isSynced.returns(resolves(true));
@@ -168,9 +162,7 @@ describe('Login Controller unit test', function() {
 
     it('should redirect to /login-initial', function(done) {
         authMock.init.returns(resolves());
-        authMock.getEmailAddress.returns(resolves({
-            emailAddress: emailAddress
-        }));
+        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves());
         privateKeyMock.init.returns(resolves());
         privateKeyMock.isSynced.returns(resolves(false));
