@@ -158,7 +158,7 @@ describe.skip('Gmail DAO integration tests', function() {
 
                 // get first message body
                 return gmail.getBody({
-                    message: msg
+                    messages: [msg]
                 });
 
             }).then(function() {

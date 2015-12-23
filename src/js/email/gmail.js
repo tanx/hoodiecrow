@@ -4,6 +4,8 @@ var ngModule = angular.module('woEmail');
 ngModule.service('gmail', Gmail);
 module.exports = Gmail;
 
+var config = require('../app-config').config;
+
 //
 //
 // Constants
@@ -43,7 +45,8 @@ var MSG_PART_TYPE_HTML = 'html';
  * as the Email module, which orchestrates everything around the handling of encrypted mails:
  * PGP de-/encryption, receiving via Gmail api, sending via Gmail api, MIME parsing, local db persistence
  */
-function Gmail(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog, appConfig, auth, gmailClient) {
+function Gmail(gmailClient, keychain, pgp, accountStore, pgpbuilder, mailreader, dialog, appConfig, auth) {
+    this._gmailClient = gmailClient;
     this._keychain = keychain;
     this._pgp = pgp;
     this._devicestorage = accountStore;
@@ -52,7 +55,6 @@ function Gmail(keychain, pgp, accountStore, pgpbuilder, mailreader, dialog, appC
     this._dialog = dialog;
     this._appConfig = appConfig;
     this._auth = auth;
-    this._gmailClient = gmailClient;
 }
 
 
@@ -176,6 +178,145 @@ Gmail.prototype.unlock = function(options) {
         return keypair;
     }
 };
+
+/**
+ * Opens a folder in the GmailClient and list messages the containing messages.
+ * Please note that this is a no-op if you try to open the outbox, since it is not an Gmail folder
+ * but a virtual folder that only exists on disk.
+ *
+ * @param {Object} options.folder The folder to be opened
+ */
+Gmail.prototype.openFolder = function(options) {
+    var self = this,
+        folder = options.folder;
+
+    return new Promise(function(resolve) {
+        self.checkOnline();
+        resolve();
+
+    }).then(function() {
+        if (folder.path === config.outboxMailboxPath) {
+            return;
+        }
+
+        return self._fetchMessages({
+            folder: folder
+        }).then(function(messages) {
+            folder.messages = messages;
+        });
+    });
+};
+
+Gmail.prototype.deleteMessage = function( /*options*/ ) {};
+
+Gmail.prototype.setFlags = function( /*options*/ ) {};
+
+Gmail.prototype.moveMessage = function( /*options*/ ) {};
+
+/**
+ * Get a message's headers, body and body structure. In case of a text/plain body only
+ *   one http roundtrip is required. In case of a PGP/MIME message, the content body part
+ *   will be fetched automatically in a second http roundtrip, but no other attachments
+ *   for example for cleartext messages. Those must be fetched using the getAttachment api.
+ * @param  {Object} options.message     The message object
+ */
+Gmail.prototype.getBody = function(options) {
+    var self = this,
+        messages = options.messages;
+
+    messages = messages.filter(function(message) {
+        // the message either already has a body or is fetching it right now, so no need to become active here
+        return !(message.loadingBody || typeof message.body !== 'undefined');
+    });
+
+    if (!messages.length) {
+        return new Promise(function(resolve) {
+            resolve();
+        });
+    }
+
+    messages.forEach(function(message) {
+        message.loadingBody = true;
+    });
+
+    self.busy();
+
+    return new Promise(function(resolve) {
+        resolve();
+
+    }).then(function() {
+        // fetch each message body
+        var jobs = [];
+
+        messages.forEach(function(message) {
+            var job = fetchSingleBody(message);
+            jobs.push(job);
+        });
+
+        return Promise.all(jobs);
+
+    }).then(function() {
+        done();
+
+        if (options.notifyNew && messages.length) {
+            // notify for incoming mail
+            self.onIncomingMessage(messages);
+        }
+
+        return messages;
+    }).catch(function(err) {
+        done();
+        throw err;
+    });
+
+    function fetchSingleBody(message) {
+        return self._gmailClient.getMessage(message).then(function() {
+            // automatically fetch the message content body part for PGP/MIME
+            var encryptedBodyPart = _.findWhere(message.bodyParts, {
+                type: 'encrypted'
+            });
+            var signedBodyPart = _.findWhere(message.bodyParts, {
+                type: 'signed'
+            });
+
+            var pgpContentBodyPart = encryptedBodyPart || signedBodyPart;
+            if (!pgpContentBodyPart || !pgpContentBodyPart.attachmentId) {
+                // no body part to be fetched
+                return;
+            }
+
+            return self._gmailClient.getAttachment({
+                message: message,
+                attachmentId: pgpContentBodyPart.attachmentId
+            }).then(function() {
+                // extract body
+                return self._extractBody(message);
+            });
+        });
+    }
+
+    function done() {
+        messages.forEach(function(message) {
+            message.loadingBody = false;
+        });
+        self.done();
+    }
+};
+
+Gmail.prototype._checkSignatures = function(message) {
+    var self = this;
+    return self._keychain.getReceiverPublicKey(message.from[0].address).then(function(senderPublicKey) {
+        // get the receiver's public key to check the message signature
+        var senderKey = senderPublicKey ? senderPublicKey.publicKey : undefined;
+        if (message.clearSignedMessage) {
+            return self._pgp.verifyClearSignedMessage(message.clearSignedMessage, senderKey);
+        } else if (message.signedMessage && message.signature) {
+            return self._pgp.verifySignedMessage(message.signedMessage, message.signature, senderKey);
+        }
+    });
+};
+
+Gmail.prototype.getAttachment = function( /*options*/ ) {};
 
 /**
  * Decrypts a message and replaces sets the decrypted plaintext as the message's body, html, or attachment, respectively.
@@ -366,6 +507,111 @@ Gmail.prototype.encrypt = function(options) {
     });
 };
 
+Gmail.prototype.refreshOutbox = function() {};
+
+
+//
+//
+// Event Handlers
+//
+//
+
+
+/**
+ * This handler should be invoked when navigator.onLine === true. It will try to connect to
+ * the gmail api. If the connection attempt was successful, it will
+ * update the locally available folders with the newly received folder listing.
+ */
+Gmail.prototype.onConnect = function() {
+    var self = this;
+
+    if (!self.isOnline()) {
+        // don't try to connect when navigator is offline
+        return new Promise(function(resolve) {
+            resolve();
+        });
+    }
+
+    self._account.loggingIn = true;
+
+    // get auth.oauthToken and auth.emailAddress
+    return self._gmailClient.login().then(function() {
+        // client is logged in
+        self._account.loggingIn = false;
+        // init folders
+        return self._updateFolders();
+
+    }).then(function() {
+        // set client to online after updating folders
+        self._account.online = true;
+
+        // by default, select the inbox (if there is one) after connecting the imap client.
+        // this avoids race conditions between the listening imap connection and the one where the work is done
+        var inbox = _.findWhere(self._account.folders, {
+            type: FOLDER_TYPE_INBOX
+        });
+
+        if (!inbox) {
+            // if there is no inbox, that's ok, too
+            return;
+        }
+
+        return self.openFolder({
+            folder: inbox
+        });
+    });
+};
+
+/**
+ * This handler should be invoked when navigator.onLine === false.
+ * It will discard the imap client and pgp mailer
+ */
+Gmail.prototype.onDisconnect = function() {
+    // logout of gmail-client
+    // ignore error, because it's not problem if logout fails
+    this._account.online = false;
+    this._gmailClient.stopListeningForChanges(function() {});
+    return this._gmailClient.logout();
+};
+
+Gmail.prototype._onSyncUpdate = function( /*options*/ ) {};
+
+
+//
+//
+// Internal API
+//
+//
+
+
+/**
+ * Updates the folder information from Gmail (if we're online). Adds/removes folders in account.folders,
+ * if we added/removed folder in Gmail. If we have an uninitialized folder that lacks folder.messages,
+ * all the locally available messages are loaded from memory.
+ */
+Gmail.prototype._updateFolders = function() {
+    var self = this;
+
+    self.busy(); // start the spinner
+
+    return self._gmailClient.listFolders().then(function(folders) {
+        self._account.folders = folders;
+
+        // TODO: set folder types for well known folders
+        var inbox = _.findWhere(self._account.folders, {
+            path: 'INBOX'
+        });
+        inbox.type = FOLDER_TYPE_INBOX;
+
+    }).then(function() {
+        self.done(); // stop the spinner
+
+    }).catch(function(err) {
+        self.done(); // stop the spinner
+        throw err;
+    });
+};
+
 Gmail.prototype._initFolders = function() {
     var self = this;
 
@@ -408,84 +654,10 @@ Gmail.prototype.done = function() {
 
 //
 //
-// Event Handlers
-//
-//
-
-
-/**
- * This handler should be invoked when navigator.onLine === true. It will try to connect to
- * the gmail api. If the connection attempt was successful, it will
- * update the locally available folders with the newly received folder listing.
- */
-Gmail.prototype.onConnect = function() {
-    var self = this;
-
-    if (!self.isOnline()) {
-        // don't try to connect when navigator is offline
-        return new Promise(function(resolve) {
-            resolve();
-        });
-    }
-
-    self._account.loggingIn = true;
-
-    // get auth.oauthToken and auth.emailAddress
-    return self._gmailClient.login().then(function() {
-        // set status to online
-        self._account.loggingIn = false;
-        self._account.online = true;
-    });
-};
-
-/**
- * This handler should be invoked when navigator.onLine === false.
- * It will discard the imap client and pgp mailer
- */
-Gmail.prototype.onDisconnect = function() {
-    // logout of gmail-client
-    // ignore error, because it's not problem if logout fails
-    this._account.online = false;
-    this._gmailClient.stopListeningForChanges(function() {});
-    return this._gmailClient.logout();
-};
-
-
-//
-//
-// Internal API
-//
-//
-
-
-
-//
-//
 // Gmail Api
 //
 //
 
-/**
- * Updates the folder information from Gmail (if we're online). Adds/removes folders in account.folders,
- * if we added/removed folder in Gmail. If we have an uninitialized folder that lacks folder.messages,
- * all the locally available messages are loaded from memory.
- */
-Gmail.prototype._updateFolders = function() {
-    var self = this;
-
-    self.busy(); // start the spinner
-
-    return self._gmailClient.listFolders().then(function(folders) {
-        self._account.folders = folders;
-
-    }).then(function() {
-        self.done(); // stop the spinner
-
-    }).catch(function(err) {
-        self.done(); // stop the spinner
-        throw err;
-    });
-};
 
 /**
  * Fetch messages from gmail api
@@ -500,42 +672,6 @@ Gmail.prototype._fetchMessages = function(options) {
 
     }).then(function() {
         return self._gmailClient.listMessageIds(folder);
-    });
-};
-
-/**
- * Get a message's headers, body and body structure. In case of a text/plain body only
- *   one http roundtrip is required. In case of a PGP/MIME message, the content body part
- *   will be fetched automatically in a second http roundtrip, but no other attachments
- *   for example for cleartext messages. Those must be fetched using the getAttachment api.
- * @param  {Object} options.message     The message object
- */
-Gmail.prototype.getBody = function(options) {
-    var self = this,
-        message = options.message;
-
-    return self._gmailClient.getMessage(message).then(function() {
-        // automatically fetch the message content body part for PGP/MIME
-        var encryptedBodyPart = _.findWhere(message.bodyParts, {
-            type: 'encrypted'
-        });
-        var signedBodyPart = _.findWhere(message.bodyParts, {
-            type: 'signed'
-        });
-
-        var pgpContentBodyPart = encryptedBodyPart || signedBodyPart;
-        if (!pgpContentBodyPart || !pgpContentBodyPart.attachmentId) {
-            // no body part to be fetched
-            return;
-        }
-
-        return self._gmailClient.getAttachment({
-            message: message,
-            attachmentId: pgpContentBodyPart.attachmentId
-        }).then(function() {
-            // extract body
-            return self._extractBody(message);
-        });
     });
 };
 
