@@ -195,7 +195,7 @@ describe('OAuth unit tests', function() {
 
         it('should fail due to expired token', function(done) {
             window.fetch.returns(fetchError(400, {
-                error_description: 'Invalid credentials!'
+                error_description: 'Invalid request!'
             }));
             oauth.accessToken = 'cachedToken';
 
