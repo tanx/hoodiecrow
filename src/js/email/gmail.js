@@ -1,7 +1,7 @@
 'use strict';
 
 var ngModule = angular.module('woEmail');
-ngModule.service('gmail', Gmail);
+ngModule.service('email', Gmail);
 module.exports = Gmail;
 
 var config = require('../app-config').config;

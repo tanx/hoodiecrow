@@ -6,11 +6,11 @@ module.exports = Account;
 
 var util = require('crypto-lib').util;
 
-function Account(appConfig, auth, accountStore, gmail, outbox, keychain, updateHandler, dialog) {
+function Account(appConfig, auth, accountStore, email, outbox, keychain, updateHandler, dialog) {
     this._appConfig = appConfig;
     this._auth = auth;
     this._accountStore = accountStore;
-    this._emailDao = gmail;
+    this._emailDao = email;
     this._outbox = outbox;
     this._keychain = keychain;
     this._updateHandler = updateHandler;
