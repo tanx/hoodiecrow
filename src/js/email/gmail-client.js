@@ -132,11 +132,11 @@ GmailClient.prototype.getAttachment = function(options) {
     return self._apiRequest({
         resource: 'messages/' + options.message.id + '/attachments/' + options.attachmentId
     }).then(function(attachment) {
+        // add body part content to the message
         var bodyPart = _.findWhere(options.message.bodyParts, {
             attachmentId: options.attachmentId
         });
-
-        // decode base64url encoded raw message
+        // decode base64url encoded body part data
         bodyPart.content = self._base64url.decode(attachment.data);
         delete bodyPart.partNumber;
         delete bodyPart.attachmentId;
