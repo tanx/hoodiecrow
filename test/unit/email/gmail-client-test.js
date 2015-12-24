@@ -18,9 +18,11 @@ describe('Gmail Client unit test', function() {
     describe('login', function() {
         it('should work', function(done) {
             authStub.getOAuthCredentials.returns(resolves());
+            authStub.storeCredentials.returns(resolves());
 
             client.login().then(function() {
                 expect(authStub.getOAuthCredentials.callCount).to.equal(1);
+                expect(authStub.storeCredentials.callCount).to.equal(1);
                 done();
             });
         });
@@ -29,6 +31,7 @@ describe('Gmail Client unit test', function() {
             authStub.getOAuthCredentials.returns(rejects({
                 code: 401
             }));
+            authStub.storeCredentials.returns(resolves());
 
             client.login().catch(function(err) {
                 expect(err.code).to.equal(401);
@@ -41,10 +44,23 @@ describe('Gmail Client unit test', function() {
             authStub.getOAuthCredentials.returns(rejects({
                 code: 400
             }));
+            authStub.storeCredentials.returns(resolves());
 
             client.login().catch(function(err) {
                 expect(err.code).to.equal(400);
                 expect(authStub.getOAuthCredentials.callCount).to.equal(1);
+                done();
+            });
+        });
+
+        it('should fail when storing credentials', function(done) {
+            authStub.getOAuthCredentials.returns(resolves());
+            authStub.storeCredentials.returns(rejects(new Error()));
+
+            client.login().catch(function(err) {
+                expect(err.code).to.not.exist;
+                expect(authStub.getOAuthCredentials.callCount).to.equal(1);
+                expect(authStub.storeCredentials.callCount).to.equal(1);
                 done();
             });
         });

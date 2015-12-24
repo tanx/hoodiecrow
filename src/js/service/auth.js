@@ -4,17 +4,10 @@ var ngModule = angular.module('woServices');
 ngModule.service('auth', Auth);
 module.exports = Auth;
 
-var axe = require('axe-logger'),
-    cfg = require('../app-config').config,
-    str = require('../app-config').string;
-
 var APP_CONFIG_DB_NAME = 'app-config';
 var EMAIL_ADDR_DB_KEY = 'emailaddress';
-var USERNAME_DB_KEY = 'username';
 var REALNAME_DB_KEY = 'realname';
-var PASSWD_DB_KEY = 'password';
-var IMAP_DB_KEY = 'imap';
-var SMTP_DB_KEY = 'smtp';
+var OAUTH_TOKEN_DB_KEY = 'oauthtoken';
 
 /**
  * The Auth BO handles the rough edges and gaps between user/password authentication
@@ -22,14 +15,12 @@ var SMTP_DB_KEY = 'smtp';
  * Typical usage:
  * var auth = new Auth(...);
  * auth.setCredentials(...); // during the account setup
- * auth.getEmailAddress(...); // called from the login controller to determine if there is already a user present on the device
  * auth.getCredentials(...); // called to gather all the information to connect to IMAP/SMTP,
  *                              username, password / oauth token, IMAP/SMTP server host names, ...
  */
-function Auth(appConfigStore, oauth, pgp) {
+function Auth(appConfigStore, oauth) {
     this._appConfigStore = appConfigStore;
     this._oauth = oauth;
-    this._pgp = pgp;
 
     this._initialized = false;
 }
@@ -39,7 +30,23 @@ function Auth(appConfigStore, oauth, pgp) {
  */
 Auth.prototype.init = function() {
     var self = this;
+
+    if (self._initialized) {
+        return new Promise(function(resolve) {
+            resolve();
+        });
+    }
+
+    // init app config database
     return self._appConfigStore.init(APP_CONFIG_DB_NAME).then(function() {
+        // load credentials from disk
+        return self._loadCredentials();
+    }).then(function() {
+        // set login hint if email address was already set previously
+        if (self.emailAddress) {
+            self._oauth._loginHint = self.emailAddress;
+        }
+
         self._initialized = true;
     });
 };
@@ -49,99 +56,6 @@ Auth.prototype.init = function() {
  */
 Auth.prototype.isInitialized = function() {
     return this._initialized;
-};
-
-/**
- * Retrieves credentials and IMAP/SMTP settings:
- * 1) Fetches the credentials from disk, then...
- * 2 a) ... in an oauth setting, retrieves a fresh oauth token from the Chrome Identity API.
- * 2 b) ... in a user/passwd setting, does not need to do additional work.
- * 3) Loads the intermediate certs from the configuration.
- */
-Auth.prototype.getCredentials = function() {
-    var self = this;
-
-    if (!self.emailAddress) {
-        // we're not yet initialized, so let's load our stuff from disk
-        return self._loadCredentials().then(chooseLogin);
-    }
-
-    return chooseLogin();
-
-    function chooseLogin() {
-        if (self.useOAuth(self.imap.host) && !self.password) {
-            // oauth login
-            return self.getOAuthToken().then(done);
-        }
-
-        if (self.passwordNeedsDecryption) {
-            // decrypt password
-            return self._pgp.decrypt(self.password, undefined).then(function(pt) {
-                if (!pt.signaturesValid) {
-                    throw new Error('Verifying PGP signature of encrypted password failed!');
-                }
-
-                self.passwordNeedsDecryption = false;
-                self.password = pt.decrypted;
-            }).then(done);
-        }
-
-        return done();
-    }
-
-    function done() {
-        return new Promise(function(resolve) {
-            var credentials = {
-                imap: {
-                    secure: self.imap.secure,
-                    requireTLS: self.imap.requireTLS,
-                    ignoreTLS: self.imap.ignoreTLS,
-                    port: self.imap.port,
-                    host: self.imap.host,
-                    ca: self.imap.ca,
-                    auth: {
-                        user: self.username,
-                        xoauth2: self.oauthToken, // password or oauthToken is undefined
-                        pass: self.password
-                    }
-                },
-                smtp: {
-                    secure: self.smtp.secure,
-                    requireTLS: self.smtp.requireTLS,
-                    ignoreTLS: self.smtp.ignoreTLS,
-                    port: self.smtp.port,
-                    host: self.smtp.host,
-                    ca: self.smtp.ca,
-                    auth: {
-                        user: self.username,
-                        xoauth2: self.oauthToken,
-                        pass: self.password // password or oauthToken is undefined
-                    }
-                }
-            };
-            resolve(credentials);
-        });
-    }
-};
-
-/**
- * Set the credentials
- *
- * @param {String} options.emailAddress The email address
- * @param {String} options.username The user name
- * @param {String} options.realname The user's real name
- * @param {String} options.password The password, only in user/passwd setting
- * @param {String} options.smtp The smtp settings (host, port, secure)
- * @param {String} options.imap The imap settings (host, port, secure)
- */
-Auth.prototype.setCredentials = function(options) {
-    this.credentialsDirty = true;
-    this.emailAddress = options.emailAddress;
-    this.username = options.username;
-    this.realname = options.realname ? options.realname : '';
-    this.password = options.password;
-    this.smtp = options.smtp; // host, port, secure, ca
-    this.imap = options.imap; // host, port, secure, ca
 };
 
 Auth.prototype.storeCredentials = function() {
@@ -155,75 +69,17 @@ Auth.prototype.storeCredentials = function() {
     }
 
     // persist the config
-    var storeSmtp = self._appConfigStore.storeList([self.smtp], SMTP_DB_KEY);
-    var storeImap = self._appConfigStore.storeList([self.imap], IMAP_DB_KEY);
     var storeEmailAddress = self._appConfigStore.storeList([self.emailAddress], EMAIL_ADDR_DB_KEY);
-    var storeUsername = self._appConfigStore.storeList([self.username], USERNAME_DB_KEY);
     var storeRealname = self._appConfigStore.storeList([self.realname], REALNAME_DB_KEY);
-    var storePassword = new Promise(function(resolve) {
-        if (!self.password) {
-            resolve();
-            return;
-        }
-
-        if (self.passwordNeedsDecryption) {
-            // password is not decrypted yet, so no need to re-encrypt it before storing...
-            return self._appConfigStore.storeList([self.password], PASSWD_DB_KEY).then(resolve);
-        }
-        return self._pgp.encrypt(self.password, undefined).then(function(ciphertext) {
-            return self._appConfigStore.storeList([ciphertext], PASSWD_DB_KEY).then(resolve);
-        });
-    });
+    var storeOAuthToken = self._appConfigStore.storeList([self.oauthToken], OAUTH_TOKEN_DB_KEY);
 
     return Promise.all([
-        storeSmtp,
-        storeImap,
         storeEmailAddress,
-        storeUsername,
         storeRealname,
-        storePassword
+        storeOAuthToken
     ]).then(function() {
         self.credentialsDirty = false;
     });
-};
-
-/**
- * Returns the email address. Loads it from disk, if necessary
- */
-Auth.prototype.getEmailAddress = function() {
-    var self = this;
-
-    if (self.emailAddress) {
-        return new Promise(function(resolve) {
-            resolve({
-                emailAddress: self.emailAddress,
-                realname: self.realname
-            });
-        });
-    }
-
-    return self._loadCredentials().then(function() {
-        return {
-            emailAddress: self.emailAddress,
-            realname: self.realname
-        };
-    });
-};
-
-/**
- * Check if the current platform and mail provider support OAuth.
- * @param  {String} hostname    The hostname of the mail server e.g. imap.gmail.com
- * @return {Boolean}            If oauth should be used
- */
-Auth.prototype.useOAuth = function(hostname) {
-    var regex = cfg.oauthDomains;
-    for (var i = 0; i < regex.length; i++) {
-        if (regex[i].test(hostname)) {
-            return true;
-        }
-    }
-
-    return false;
 };
 
 /**
@@ -233,10 +89,8 @@ Auth.prototype.flushOAuthToken = function() {
     this.oauthToken = undefined;
     this._oauth.flushToken();
 
-    // TODO: remove cached token from local storage
-    return new Promise(function(resolve) {
-        resolve();
-    });
+    // remove cached token from local storage
+    return self._appConfigStore.removeList(OAUTH_TOKEN_DB_KEY);
 };
 
 /**
@@ -253,20 +107,48 @@ Auth.prototype.flushOAuthToken = function() {
 Auth.prototype.getOAuthCredentials = function() {
     var self = this;
 
-    // get a fresh oauth token
-    return self._oauth.getOAuthToken(self.emailAddress).then(onToken);
+    return new Promise(function(resolve) {
+        resolve();
+    }).then(function() {
+        // make sure we've loaded cached credentials from disk
+        return self._loadCredentials();
 
-    function onToken(oauthToken) {
+    }).then(function() {
+        // if a stored token exists, check if it's still valid
+        if (self.oauthToken) {
+            return queryEmailAddress();
+        }
+
+        // if no oauth token exists fetch a fresh one
+        return self._oauth.getOAuthToken(self.emailAddress).then(function(oauthToken) {
+            self.oauthToken = oauthToken;
+        });
+
+    }).then(function() {
+        // at this point we can be fairly certain that we have a valid oauth token
+
         // shortcut if the email address is already known
         if (self.emailAddress) {
-            self.oauthToken = oauthToken;
             return;
         }
 
         // query the email address
-        return self._oauth.queryEmailAddress(oauthToken).then(function(emailAddress) {
-            self.oauthToken = oauthToken;
-            self.emailAddress = emailAddress;
+        return queryEmailAddress();
+
+    }).then(function() {
+        self.credentialsDirty = true;
+
+        return {
+            emailAddress: self.emailAddress,
+            realname: self.realname,
+            oauthToken: self.oauthToken
+        };
+    });
+
+    function queryEmailAddress() {
+        return self._oauth.queryEmailAddress(self.oauthToken).then(function(info) {
+            self.emailAddress = info.emailAddress;
+            self.realname = info.realname;
 
         }).catch(function(err) {
             if (err.code === 401) {
@@ -286,36 +168,23 @@ Auth.prototype.getOAuthCredentials = function() {
 Auth.prototype._loadCredentials = function() {
     var self = this;
 
-    if (self.initialized) {
+    if (self.loaded) {
         return new Promise(function(resolve) {
             resolve();
         });
     }
 
-    return loadFromDB(SMTP_DB_KEY).then(function(smtp) {
-        self.smtp = smtp;
-        return loadFromDB(IMAP_DB_KEY);
-
-    }).then(function(imap) {
-        self.imap = imap;
-        return loadFromDB(USERNAME_DB_KEY);
-
-    }).then(function(username) {
-        self.username = username;
-        return loadFromDB(REALNAME_DB_KEY);
-
-    }).then(function(realname) {
+    return loadFromDB(REALNAME_DB_KEY).then(function(realname) {
         self.realname = realname;
         return loadFromDB(EMAIL_ADDR_DB_KEY);
 
     }).then(function(emailAddress) {
         self.emailAddress = emailAddress;
-        return loadFromDB(PASSWD_DB_KEY);
+        return loadFromDB(OAUTH_TOKEN_DB_KEY);
 
-    }).then(function(password) {
-        self.password = password;
-        self.passwordNeedsDecryption = !!password;
-        self.initialized = true;
+    }).then(function(oauthToken) {
+        self.oauthToken = oauthToken;
+        self.loaded = true;
     });
 
     function loadFromDB(key) {
@@ -323,52 +192,6 @@ Auth.prototype._loadCredentials = function() {
             return cachedItems && cachedItems[0];
         });
     }
-};
-
-/**
- * Handles certificate updates and errors by notifying the user.
- * @param  {String}   component      Either imap or smtp
- * @param  {Function} callback       The error handler
- * @param  {[type]}   pemEncodedCert The PEM encoded SSL certificate
- */
-Auth.prototype.handleCertificateUpdate = function(component, reconnectCallback, callback, pemEncodedCert) {
-    var self = this;
-
-    axe.debug('new ssl certificate received: ' + pemEncodedCert);
-
-    if (!self[component].ca) {
-        // no previous ssl cert, trust on first use
-        self[component].ca = pemEncodedCert;
-        self.credentialsDirty = true;
-        self.storeCredentials().then(callback).catch(callback);
-        return;
-    }
-
-    if (self[component].ca === pemEncodedCert) {
-        // ignore multiple successive tls handshakes, e.g. for gmail
-        return;
-    }
-
-    // previous ssl cert known, does not match: query user and certificate
-    callback({
-        title: str.updateCertificateTitle,
-        message: str.updateCertificateMessage.replace('{0}', self[component].host),
-        positiveBtnStr: str.updateCertificatePosBtn,
-        negativeBtnStr: str.updateCertificateNegBtn,
-        showNegativeBtn: true,
-        faqLink: str.certificateFaqLink,
-        callback: function(granted) {
-            if (!granted) {
-                return;
-            }
-
-            self[component].ca = pemEncodedCert;
-            self.credentialsDirty = true;
-            self.storeCredentials().then(function() {
-                reconnectCallback(callback);
-            }).catch(callback);
-        }
-    });
 };
 
 /**
@@ -380,11 +203,12 @@ Auth.prototype.logout = function() {
     // clear app config db
     return self._appConfigStore.clear().then(function() {
         // clear in memory cache
-        self.setCredentials({});
-        self._oauth.flushToken();
+        self.emailAddress = undefined;
+        self.realname = undefined;
         self.oauthToken = undefined;
-        self.initialized = undefined;
+        self._oauth.flushToken();
+        self.loaded = undefined;
+        self._initialized = undefined;
         self.credentialsDirty = undefined;
-        self.passwordNeedsDecryption = undefined;
     });
 };

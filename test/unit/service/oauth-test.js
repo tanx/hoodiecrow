@@ -6,6 +6,7 @@ var OAuth = require('../../../src/js/service/oauth'),
 describe('OAuth unit tests', function() {
     var oauth, identityStub, getPlatformInfoStub, removeCachedStub,
         testEmail = 'safewithme.testuser@gmail.com',
+        testName = 'Test User',
         redirectUri = window.location.origin + '/test/unit/?grep=oauthCallback&oauth=true';
 
     beforeEach(function() {
@@ -164,11 +165,13 @@ describe('OAuth unit tests', function() {
 
         it('should work', function(done) {
             window.fetch.returns(fetchOk({
-                email: testEmail
+                email: testEmail,
+                name: testName
             }));
 
-            oauth.queryEmailAddress('token').then(function(emailAddress) {
-                expect(emailAddress).to.equal(testEmail);
+            oauth.queryEmailAddress('token').then(function(info) {
+                expect(info.emailAddress).to.equal(testEmail);
+                expect(info.realname).to.equal(testName);
                 done();
             });
         });

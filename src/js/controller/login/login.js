@@ -7,23 +7,23 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
     //
 
     $scope.init = function() {
-        // show login screen if no oauth token
-        if (!oauth.accessToken) {
-            return $scope.goTo('/add-account');
-        }
-
-        // initialize the app-config database
+        // initialize the auth module
         return auth.init().then(function() {
-            // get email address
-            return gmailClient.login();
 
-        }).then(function() {
-            // initiate the account by initializing the email dao and user storage
-            return account.init({
-                emailAddress: auth.emailAddress,
-                realname: auth.realname
-            }).then(function(availableKeys) {
-                return redirect(availableKeys);
+            // show login screen if no oauth token either stored locally or caught via oauthCallback
+            if (!auth.oauthToken && !oauth.accessToken) {
+                return $scope.goTo('/add-account');
+            }
+
+            // make sure we have valid credentials
+            return gmailClient.login().then(function() {
+                // initiate the account by initializing the email dao and user storage
+                return account.init({
+                    emailAddress: auth.emailAddress,
+                    realname: auth.realname
+                }).then(function(availableKeys) {
+                    return redirect(availableKeys);
+                });
             });
 
         }).catch(dialog.error);
