@@ -113,6 +113,12 @@ describe('Gmail Client unit test', function() {
                         }, {
                             name: "From",
                             value: "safewithme.testuser@gmail.com"
+                        }, {
+                            name: "To",
+                            value: "safewithme.testuser@gmail.com"
+                        }, {
+                            name: "Date",
+                            value: "Wed, 23 Dec 2015 21:50:16 -0500"
                         }],
                         body: {},
                         filename: "",
