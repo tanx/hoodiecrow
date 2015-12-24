@@ -90,7 +90,7 @@ Auth.prototype.flushOAuthToken = function() {
     this._oauth.flushToken();
 
     // remove cached token from local storage
-    return self._appConfigStore.removeList(OAUTH_TOKEN_DB_KEY);
+    return this._appConfigStore.removeList(OAUTH_TOKEN_DB_KEY);
 };
 
 /**
