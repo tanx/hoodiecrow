@@ -250,7 +250,7 @@ Auth.prototype.flushOAuthToken = function() {
  *    is android only, since the desktop chrome will query the user that is logged into chrome
  * 3) fetch the email address for the oauth token from the chrome identity api
  */
-Auth.prototype.getOAuthToken = function() {
+Auth.prototype.getOAuthCredentials = function() {
     var self = this;
 
     // get a fresh oauth token

@@ -21,10 +21,10 @@ function GmailClient(auth, base64url) {
 GmailClient.prototype.login = function() {
     var self = this;
     // get auth.oauthToken and auth.emailAddress
-    return self._auth.getOAuthToken().catch(function(err) {
+    return self._auth.getOAuthCredentials().catch(function(err) {
         if (err.code === 401) {
             // oauth token probably expired ... fetch new token and retry
-            return self._auth.getOAuthToken();
+            return self._auth.getOAuthCredentials();
         }
         throw err;
     });

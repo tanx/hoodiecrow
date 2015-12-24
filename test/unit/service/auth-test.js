@@ -176,7 +176,7 @@ describe('Auth unit tests', function() {
         });
     });
 
-    describe('#getOAuthToken', function() {
+    describe('#getOAuthCredentials', function() {
         beforeEach(function() {
             sinon.stub(auth, 'flushOAuthToken');
         });
@@ -185,7 +185,7 @@ describe('Auth unit tests', function() {
             auth.emailAddress = emailAddress;
             oauthStub.getOAuthToken.withArgs(emailAddress).returns(resolves(oauthToken));
 
-            auth.getOAuthToken().then(function() {
+            auth.getOAuthCredentials().then(function() {
                 expect(auth.emailAddress).to.equal(emailAddress);
                 expect(auth.oauthToken).to.equal(oauthToken);
                 expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
@@ -198,7 +198,7 @@ describe('Auth unit tests', function() {
             oauthStub.getOAuthToken.withArgs(undefined).returns(resolves(oauthToken));
             oauthStub.queryEmailAddress.withArgs(oauthToken).returns(resolves(emailAddress));
 
-            auth.getOAuthToken().then(function() {
+            auth.getOAuthCredentials().then(function() {
                 expect(auth.emailAddress).to.equal(emailAddress);
                 expect(auth.oauthToken).to.equal(oauthToken);
                 expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
@@ -212,7 +212,7 @@ describe('Auth unit tests', function() {
             oauthStub.getOAuthToken.returns(resolves(oauthToken));
             oauthStub.queryEmailAddress.returns(rejects(new Error()));
 
-            auth.getOAuthToken().catch(function(err) {
+            auth.getOAuthCredentials().catch(function(err) {
                 expect(err).to.exist;
                 expect(auth.emailAddress).to.not.exist;
                 expect(auth.oauthToken).to.not.exist;
@@ -230,7 +230,7 @@ describe('Auth unit tests', function() {
             }));
             auth.flushOAuthToken.returns(resolves());
 
-            auth.getOAuthToken().catch(function(err) {
+            auth.getOAuthCredentials().catch(function(err) {
                 expect(err.code).to.equal(401);
                 expect(auth.emailAddress).to.not.exist;
                 expect(auth.oauthToken).to.not.exist;
@@ -245,7 +245,7 @@ describe('Auth unit tests', function() {
         it('should fail when oauth fetch fails', function(done) {
             oauthStub.getOAuthToken.returns(rejects(new Error()));
 
-            auth.getOAuthToken().catch(function(err) {
+            auth.getOAuthCredentials().catch(function(err) {
                 expect(err).to.exist;
                 expect(auth.emailAddress).to.not.exist;
                 expect(auth.oauthToken).to.not.exist;

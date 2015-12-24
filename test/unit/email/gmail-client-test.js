@@ -17,34 +17,34 @@ describe('Gmail Client unit test', function() {
 
     describe('login', function() {
         it('should work', function(done) {
-            authStub.getOAuthToken.returns(resolves());
+            authStub.getOAuthCredentials.returns(resolves());
 
             client.login().then(function() {
-                expect(authStub.getOAuthToken.callCount).to.equal(1);
+                expect(authStub.getOAuthCredentials.callCount).to.equal(1);
                 done();
             });
         });
 
         it('should retry for expired oauth token', function(done) {
-            authStub.getOAuthToken.returns(rejects({
+            authStub.getOAuthCredentials.returns(rejects({
                 code: 401
             }));
 
             client.login().catch(function(err) {
                 expect(err.code).to.equal(401);
-                expect(authStub.getOAuthToken.callCount).to.equal(2);
+                expect(authStub.getOAuthCredentials.callCount).to.equal(2);
                 done();
             });
         });
 
         it('should retry ', function(done) {
-            authStub.getOAuthToken.returns(rejects({
+            authStub.getOAuthCredentials.returns(rejects({
                 code: 400
             }));
 
             client.login().catch(function(err) {
                 expect(err.code).to.equal(400);
-                expect(authStub.getOAuthToken.callCount).to.equal(1);
+                expect(authStub.getOAuthCredentials.callCount).to.equal(1);
                 done();
             });
         });
