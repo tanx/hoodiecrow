@@ -1,7 +1,7 @@
 'use strict';
 
-var AddAccountCtrl = function($scope, $location, $routeParams, $q, oauth, gmailClient, dialog) {
-    !$routeParams.dev && oauth.accessToken && $location.path('/'); // init app
+var AddAccountCtrl = function($scope, $location, $routeParams, $q, auth, gmailClient, dialog) {
+    !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.signInWithGoogle = function() {
         return $q(function(resolve) {
@@ -10,9 +10,7 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $q, oauth, gmailC
             resolve();
 
         }).then(function() {
-            // TODO: remove test email address after testing
-            oauth._loginHint = 'safewithme.testuser@gmail.com';
-            // get email address and oauth token
+            // get oauth credentials
             return gmailClient.login();
 
         }).catch(dialog.error);

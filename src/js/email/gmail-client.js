@@ -14,9 +14,8 @@ function GmailClient(auth, base64url) {
 }
 
 /**
- * This will check for a cached oauth token and if none is availabe It will try to connect to
- * the gmail api. If the connection attempt was successful, it will
- * update the locally available folders with the newly received folder listing.
+ * This will login to Google Mail using an OAuth 2.0 authentication flow.
+ * After successful login the OAuth token will be cached in local storage.
  */
 GmailClient.prototype.login = function() {
     var self = this;
@@ -27,6 +26,9 @@ GmailClient.prototype.login = function() {
             return self._auth.getOAuthCredentials();
         }
         throw err;
+    }).then(function() {
+        // cache the oauth credentials in local DB
+        return self._auth.storeCredentials();
     });
 };
 

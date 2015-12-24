@@ -1,16 +1,14 @@
 'use strict';
 
 var AddAccountCtrl = require('../../../../src/js/controller/login/add-account'),
-    OAuth = require('../../../../src/js/service/oauth'),
     Dialog = require('../../../../src/js/util/dialog'),
     GmailClient = require('../../../../src/js/email/gmail-client');
 
 describe('Add Account Controller unit test', function() {
-    var scope, location, ctrl, oauthStub, dialogStub, gmailClientStub;
+    var scope, location, ctrl, dialogStub, gmailClientStub;
 
     beforeEach(function() {
         // remember original module to restore later, then replace it
-        oauthStub = sinon.createStubInstance(OAuth);
         dialogStub = sinon.createStubInstance(Dialog);
         gmailClientStub = sinon.createStubInstance(GmailClient);
 
@@ -31,7 +29,6 @@ describe('Add Account Controller unit test', function() {
                 $scope: scope,
                 $routeParams: {},
                 $q: window.qMock,
-                oauth: oauthStub,
                 gmailClient: gmailClientStub,
                 dialog: dialogStub
             });

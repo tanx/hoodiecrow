@@ -62,11 +62,17 @@ describe('Login Controller unit test', function() {
 
     afterEach(function() {});
 
-    it('should redirect to /add-account', function() {
+    it('should redirect to /add-account', function(done) {
+        authMock.oauthToken = undefined;
         oauthStub.accessToken = undefined;
 
-        scope.init();
-        expect(goToStub.withArgs('/add-account').called).to.be.true;
+        authMock.init.returns(resolves());
+
+        scope.init().then(function() {
+            expect(authMock.init.calledOnce).to.be.true;
+            expect(goToStub.withArgs('/add-account').called).to.be.true;
+            done();
+        });
     });
 
     it('should fail for auth.init', function(done) {
@@ -127,7 +133,10 @@ describe('Login Controller unit test', function() {
         });
     });
 
-    it('should redirect to /account', function(done) {
+    it('should redirect to /account with stored oauth token', function(done) {
+        authMock.oauthToken = 'token';
+        oauthStub.accessToken = undefined;
+
         authMock.init.returns(resolves());
         gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves({

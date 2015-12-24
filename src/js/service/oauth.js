@@ -155,6 +155,9 @@ OAuth.prototype.queryEmailAddress = function(token) {
         });
 
     }).then(function(info) {
-        return info.email;
+        return {
+            emailAddress: info.email,
+            realname: info.name
+        };
     });
 };
