@@ -65,7 +65,8 @@ GmailClient.prototype.listMessageIds = function(folder) {
     return this._apiRequest({
         resource: 'messages',
         params: {
-            labelIds: folder.path
+            labelIds: folder.path,
+            maxResults: 100
         }
     }).then(function(response) {
         return response.messages;
@@ -97,17 +98,23 @@ GmailClient.prototype.getMessage = function(message) {
         // TODO: add the rest of the attributes
 
         // replyTo: message.envelope['reply-to'] || [],
-        // to: message.envelope.to || [],
-        // cc: message.envelope.cc || [],
-        // bcc: message.envelope.bcc || [],
+        message.to = [{
+            address: getHeader(gMsg.payload, 'To')
+        }];
+        message.cc = getHeader(gMsg.payload, 'Cc') ? [{
+            address: getHeader(gMsg.payload, 'Cc')
+        }] : [];
+        message.bcc = getHeader(gMsg.payload, 'Bcc') ? [{
+            address: getHeader(gMsg.payload, 'Bcc')
+        }] : [];
         // inReplyTo: (message.envelope['in-reply-to'] || '').replace(/[<>]/g, ''),
         // references: references ? references.split(/\s+/).map(function(reference) {
         //     return reference.replace(/[<>]/g, '');
         // }) : [],
-        // sentDate: message.envelope.date ? new Date(message.envelope.date) : new Date(),
-        // unread: (message.flags || []).indexOf('\\Seen') === -1,
-        // flagged: (message.flags || []).indexOf('\\Flagged') > -1,
-        // answered: (message.flags || []).indexOf('\\Answered') > -1,
+        message.sentDate = getHeader(gMsg.payload, 'Date') ? new Date(getHeader(gMsg.payload, 'Date')) : new Date();
+        message.unread = false;
+        message.flagged = false;
+        message.answered = false;
 
         // walk the mime tree to get the message mime type and body structure
         walkMimeTree((gMsg.payload || {}), message);
@@ -237,9 +244,10 @@ GmailClient.prototype._apiRequest = function(options) {
 
 
 function getHeader(node, name) {
-    return _.findWhere(node.headers, {
+    var header = _.findWhere(node.headers, {
         name: name
-    }).value;
+    });
+    return header ? header.value : undefined;
 }
 
 /*

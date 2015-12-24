@@ -20,10 +20,10 @@ var FOLDER_DB_TYPE = 'folders';
 
 // well known folders
 var FOLDER_TYPE_INBOX = 'Inbox';
-// var FOLDER_TYPE_SENT = 'Sent';
-// var FOLDER_TYPE_DRAFTS = 'Drafts';
-// var FOLDER_TYPE_TRASH = 'Trash';
-// var FOLDER_TYPE_FLAGGED = 'Flagged';
+var FOLDER_TYPE_SENT = 'Sent';
+var FOLDER_TYPE_DRAFTS = 'Drafts';
+var FOLDER_TYPE_TRASH = 'Trash';
+var FOLDER_TYPE_FLAGGED = 'Flagged';
 
 // var MSG_ATTR_UID = 'uid';
 // var MSG_ATTR_MODSEQ = 'modseq';
@@ -597,11 +597,72 @@ Gmail.prototype._updateFolders = function() {
     return self._gmailClient.listFolders().then(function(folders) {
         self._account.folders = folders;
 
-        // TODO: set folder types for well known folders
-        var inbox = _.findWhere(self._account.folders, {
-            path: 'INBOX'
+        // set folder types
+        setFolderType('INBOX', FOLDER_TYPE_INBOX);
+        setFolderType('SENT', FOLDER_TYPE_SENT);
+        setFolderType('DRAFT', FOLDER_TYPE_DRAFTS);
+        setFolderType('STARRED', FOLDER_TYPE_FLAGGED);
+        setFolderType('TRASH', FOLDER_TYPE_TRASH);
+
+        //
+        // by now, all the folders are up to date. now we need to find all the well known folders
+        //
+
+        // check for the well known folders to be displayed in the uppermost ui part
+        // in that order
+        var wellknownTypes = [
+            FOLDER_TYPE_INBOX,
+            FOLDER_TYPE_SENT,
+            config.outboxMailboxType,
+            FOLDER_TYPE_DRAFTS,
+            FOLDER_TYPE_TRASH,
+            FOLDER_TYPE_FLAGGED
+        ];
+
+        // make sure the well known folders are detected
+        wellknownTypes.forEach(function(mbxType) {
+            // check if there is a well known folder of this type
+            var wellknownFolder = _.findWhere(self._account.folders, {
+                type: mbxType,
+                wellknown: true
+            });
+
+            if (wellknownFolder) {
+                // well known folder found, no need to find a replacement
+                return;
+            }
+
+            // we have no folder of the respective type marked as wellknown, so find the
+            // next best folder of the respective type and flag it as wellknown so that
+            // we can display it properly
+            wellknownFolder = _.findWhere(self._account.folders, {
+                type: mbxType
+            });
+
+            if (!wellknownFolder) {
+                // no folder of that type, to mark as well known, nothing to do here
+                return;
+            }
+
+            wellknownFolder.wellknown = true;
         });
-        inbox.type = FOLDER_TYPE_INBOX;
+
+        // order folders
+        self._account.folders.sort(function(a, b) {
+            if (a.wellknown && b.wellknown) {
+                // well known folders should be ordered like the types in the wellknownTypes array
+                return wellknownTypes.indexOf(a.type) - wellknownTypes.indexOf(b.type);
+            } else if (a.wellknown && !b.wellknown) {
+                // wellknown folders should always appear BEFORE the other folders
+                return -1;
+            } else if (!a.wellknown && b.wellknown) {
+                // non-wellknown folders should always appear AFTER wellknown folders
+                return 1;
+            } else {
+                // non-wellknown folders should be sorted case-insensitive
+                return a.path.toLowerCase().localeCompare(b.path.toLowerCase());
+            }
+        });
 
     }).then(function() {
         self.done(); // stop the spinner
@@ -610,6 +671,15 @@ Gmail.prototype._updateFolders = function() {
         self.done(); // stop the spinner
         throw err;
     });
+
+    function setFolderType(path, type) {
+        var folder = _.findWhere(self._account.folders, {
+            path: path
+        });
+        if (folder) {
+            folder.type = type;
+        }
+    }
 };
 
 Gmail.prototype._initFolders = function() {
