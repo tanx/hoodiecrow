@@ -606,7 +606,6 @@ module.exports = function(grunt) {
                     basePath: 'dist/',
                     timestamp: true,
                     hash: true,
-                    cache: ['socket.io/socket.io.js'],
                     exclude: [
                         'appcache.manifest',
                         'manifest.webapp',
@@ -707,9 +706,6 @@ module.exports = function(grunt) {
                 // local changes from being picked up during the development cycle.
                 handleFetch: handleFetch,
                 logger: grunt.log.writeln,
-                dynamicUrlToDependencies: {
-                    'socket.io/socket.io.js': ['node_modules/socket.io/node_modules/socket.io-client/socket.io.js'],
-                },
                 staticFileGlobs: [
                     rootDir + '/*.html',
                     rootDir + '/tpl/*.html',
