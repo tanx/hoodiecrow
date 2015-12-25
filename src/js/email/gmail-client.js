@@ -11,6 +11,7 @@ module.exports = GmailClient;
 function GmailClient(auth, base64url) {
     this._auth = auth;
     this._base64url = base64url;
+    this._addressparser = require('wo-addressparser');
 }
 
 /**
@@ -91,29 +92,22 @@ GmailClient.prototype.getMessage = function(message) {
     }).then(function(gMsg) {
         // set message attributes
         message.uid = parseInt(gMsg.internalDate, 10);
-        message.from = [{
-            address: getHeader(gMsg.payload, 'From')
-        }];
         message.subject = getHeader(gMsg.payload, 'Subject') || '(no subject)';
+        message.from = self._addressparser.parse(getHeader(gMsg.payload, 'From'));
+        message.to = self._addressparser.parse(getHeader(gMsg.payload, 'To'));
+        message.cc = self._addressparser.parse(getHeader(gMsg.payload, 'Cc'));
+        message.bcc = self._addressparser.parse(getHeader(gMsg.payload, 'Bcc'));
+        message.sentDate = getHeader(gMsg.payload, 'Date') ? new Date(getHeader(gMsg.payload, 'Date')) : new Date();
+        message.body = gMsg.payload.body.data ? self._base64url.decode(gMsg.payload.body.data) : undefined;
         message.bodyParts = [];
 
         // TODO: add the rest of the attributes
 
         // replyTo: message.envelope['reply-to'] || [],
-        message.to = [{
-            address: getHeader(gMsg.payload, 'To')
-        }];
-        message.cc = getHeader(gMsg.payload, 'Cc') ? [{
-            address: getHeader(gMsg.payload, 'Cc')
-        }] : [];
-        message.bcc = getHeader(gMsg.payload, 'Bcc') ? [{
-            address: getHeader(gMsg.payload, 'Bcc')
-        }] : [];
         // inReplyTo: (message.envelope['in-reply-to'] || '').replace(/[<>]/g, ''),
         // references: references ? references.split(/\s+/).map(function(reference) {
         //     return reference.replace(/[<>]/g, '');
         // }) : [],
-        message.sentDate = getHeader(gMsg.payload, 'Date') ? new Date(getHeader(gMsg.payload, 'Date')) : new Date();
         message.unread = false;
         message.flagged = false;
         message.answered = false;

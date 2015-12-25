@@ -128,7 +128,7 @@ describe('Gmail Client unit test', function() {
                             value: "PGP/MIME send test"
                         }, {
                             name: "From",
-                            value: "safewithme.testuser@gmail.com"
+                            value: "safewithme testuser <safewithme.testuser@gmail.com>"
                         }, {
                             name: "To",
                             value: "safewithme.testuser@gmail.com"
@@ -168,6 +168,8 @@ describe('Gmail Client unit test', function() {
 
                 client.getMessage(message).then(function() {
                     expect(client._apiRequest.callCount).to.equal(1);
+                    expect(message.from[0].name).to.exist;
+                    expect(message.from[0].address).to.exist;
                     expect(message.subject).to.exist;
                     expect(message.bodyParts[0].type).to.equal('encrypted');
                     expect(message.bodyParts[0].attachmentId).to.equal('2');
