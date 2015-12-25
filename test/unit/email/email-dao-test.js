@@ -13,7 +13,7 @@ var mailreader = require('mailreader'),
     Dialog = require('../../../src/js/util/dialog');
 
 
-describe('Email DAO unit tests', function() {
+describe.skip('Email DAO unit tests', function() {
     // show the stack trace when an error occurred
     chai.config.includeStack = true;
 

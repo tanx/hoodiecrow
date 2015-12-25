@@ -4,7 +4,7 @@ var CreateAccountCtrl = require('../../../../src/js/controller/login/create-acco
     AdminDao = require('../../../../src/js/service/admin'),
     Auth = require('../../../../src/js/service/auth');
 
-describe('Create Account Controller unit test', function() {
+describe.skip('Create Account Controller unit test', function() {
     var scope, location, ctrl, authStub, adminStub;
 
     beforeEach(function() {

@@ -4,7 +4,7 @@ var ValidatePhoneCtrl = require('../../../../src/js/controller/login/validate-ph
     Auth = require('../../../../src/js/service/auth'),
     AdminDao = require('../../../../src/js/service/admin');
 
-describe('Validate Phone Controller unit test', function() {
+describe.skip('Validate Phone Controller unit test', function() {
     var scope, location, mailConfigMock, ctrl, authStub, adminStub;
 
     beforeEach(function() {
