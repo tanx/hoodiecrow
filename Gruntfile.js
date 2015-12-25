@@ -122,7 +122,7 @@ module.exports = function(grunt) {
         },
         csso: {
             options: {
-                banner: '/*! Copyright © 2013, Whiteout Networks GmbH. All rights reserved.*/\n'
+                banner: '/*! Copyright © 2016, Whiteout Project. All rights reserved.*/\n'
             },
             dist: {
                 files: {
@@ -425,7 +425,7 @@ module.exports = function(grunt) {
                 }
             },
             options: {
-                banner: '/*! Copyright © <%= grunt.template.today("yyyy") %>, Whiteout Networks GmbH.*/\n'
+                banner: '/*! Copyright © <%= grunt.template.today("yyyy") %>, Whiteout Project.*/\n'
             }
         },
 
