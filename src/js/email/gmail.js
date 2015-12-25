@@ -570,7 +570,6 @@ Gmail.prototype.onDisconnect = function() {
     // logout of gmail-client
     // ignore error, because it's not problem if logout fails
     this._account.online = false;
-    this._gmailClient.stopListeningForChanges(function() {});
     return this._gmailClient.logout();
 };
 
