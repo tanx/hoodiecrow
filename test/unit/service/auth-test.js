@@ -5,7 +5,7 @@ var Auth = require('../../../src/js/service/auth'),
     PGP = require('../../../src/js/crypto/pgp'),
     DeviceStorageDAO = require('../../../src/js/service/devicestorage');
 
-describe('Auth unit tests', function() {
+describe.skip('Auth unit tests', function() {
     // Constancts
     var EMAIL_ADDR_DB_KEY = 'emailaddress';
     var USERNAME_DB_KEY = 'username';

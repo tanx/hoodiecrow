@@ -4,7 +4,7 @@ var Auth = require('../../../../src/js/service/auth'),
     ConnectionDoctor = require('../../../../src/js/util/connection-doctor'),
     SetCredentialsCtrl = require('../../../../src/js/controller/login/login-set-credentials');
 
-describe('Login (Set Credentials) Controller unit test', function() {
+describe.skip('Login (Set Credentials) Controller unit test', function() {
     // Angular parameters
     var scope, location, provider;
 
