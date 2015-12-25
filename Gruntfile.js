@@ -674,54 +674,49 @@ module.exports = function(grunt) {
 
     });
 
-    // generate service-worker stasks
-    grunt.registerMultiTask('swPrecache', function() {
-        var fs = require('fs');
+    function writeServiceWorkerFile(rootDir, handleFetch, callback) {
+        var packageJson = require('./package.json');
         var path = require('path');
         var swPrecache = require('sw-precache');
-        var packageJson = require('./package.json');
 
+        var config = {
+            cacheId: packageJson.name,
+            // If handleFetch is false (i.e. because this is called from swPrecache:dev), then
+            // the service worker will precache resources but won't actually serve them.
+            // This allows you to test precaching behavior without worry about the cache preventing your
+            // local changes from being picked up during the development cycle.
+            handleFetch: handleFetch,
+            logger: grunt.log.writeln,
+            staticFileGlobs: [
+                rootDir + '/*.html',
+                rootDir + '/tpl/*.html',
+                rootDir + '/js/**/*.min.js',
+                rootDir + '/css/**/*.css',
+                rootDir + '/img/**/*.svg',
+                rootDir + '/img/*-universal.png',
+                rootDir + '/font/**.*',
+                rootDir + '/*.json'
+            ],
+            maximumFileSizeToCacheInBytes: 100 * 1024 * 1024,
+            stripPrefix: rootDir + '/',
+            // verbose defaults to false, but for the purposes of this demo, log more.
+            verbose: true
+        };
+
+        swPrecache.write(path.join(rootDir, 'service-worker.js'), config, callback);
+    }
+
+    grunt.registerMultiTask('swPrecache', function() {
         var done = this.async();
         var rootDir = this.data.rootDir;
         var handleFetch = this.data.handleFetch;
 
-        generateServiceWorkerFileContents(rootDir, handleFetch, function(error, serviceWorkerFileContents) {
+        writeServiceWorkerFile(rootDir, handleFetch, function(error) {
             if (error) {
                 grunt.fail.warn(error);
             }
-            fs.writeFile(path.join(rootDir, 'service-worker.js'), serviceWorkerFileContents, function(error) {
-                if (error) {
-                    grunt.fail.warn(error);
-                }
-                done();
-            });
+            done();
         });
-
-        function generateServiceWorkerFileContents(rootDir, handleFetch, callback) {
-            var config = {
-                cacheId: packageJson.name,
-                // If handleFetch is false (i.e. because this is called from swPrecache:dev), then
-                // the service worker will precache resources but won't actually serve them.
-                // This allows you to test precaching behavior without worry about the cache preventing your
-                // local changes from being picked up during the development cycle.
-                handleFetch: handleFetch,
-                logger: grunt.log.writeln,
-                staticFileGlobs: [
-                    rootDir + '/*.html',
-                    rootDir + '/tpl/*.html',
-                    rootDir + '/js/**/*.min.js',
-                    rootDir + '/css/**/*.css',
-                    rootDir + '/img/**/*.svg',
-                    rootDir + '/img/*-universal.png',
-                    rootDir + '/font/**.*',
-                    rootDir + '/*.json'
-                ],
-                maximumFileSizeToCacheInBytes: 100 * 1024 * 1024,
-                stripPrefix: path.join(rootDir, path.sep)
-            };
-
-            swPrecache(config, callback);
-        }
     });
 
     // Load the plugin(s)
