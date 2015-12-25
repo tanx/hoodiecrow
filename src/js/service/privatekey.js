@@ -4,7 +4,6 @@ var ngModule = angular.module('woServices');
 ngModule.service('privateKey', PrivateKey);
 module.exports = PrivateKey;
 
-var ImapClient = require('imap-client');
 var util = require('crypto-lib').util;
 
 var IMAP_KEYS_FOLDER = 'openpgp_keys';
@@ -25,23 +24,27 @@ function PrivateKey(auth, mailbuild, mailreader, appConfig, pgp, crypto, axe) {
  * Configure the local imap client used for key-sync with credentials from the auth module.
  */
 PrivateKey.prototype.init = function() {
-    var self = this;
-
-    return self._auth.getCredentials().then(function(credentials) {
-        // tls socket worker path for multithreaded tls in non-native tls environments
-        credentials.imap.tlsWorkerPath = self._appConfig.config.workerPath + '/tcp-socket-tls-worker.min.js';
-        self._imap = new ImapClient(credentials.imap);
-        self._imap.onError = self._axe.error;
-        // login to the imap server
-        return self._imap.login();
+    return new Promise(function(resolve) {
+        resolve();
     });
+
+    // var self = this;
+
+    // return self._auth.getCredentials().then(function(credentials) {
+    //     // tls socket worker path for multithreaded tls in non-native tls environments
+    //     credentials.imap.tlsWorkerPath = self._appConfig.config.workerPath + '/tcp-socket-tls-worker.min.js';
+    //     self._imap = new ImapClient(credentials.imap);
+    //     self._imap.onError = self._axe.error;
+    //     // login to the imap server
+    //     return self._imap.login();
+    // });
 };
 
 /**
  * Cleanup by logging out of the imap client.
  */
 PrivateKey.prototype.destroy = function() {
-    this._imap.logout();
+    // this._imap.logout();
     // don't wait for logout to complete
     return new Promise(function(resolve) {
         resolve();
@@ -180,17 +183,21 @@ PrivateKey.prototype.upload = function(options) {
  * Check if any private key is stored in IMAP.
  */
 PrivateKey.prototype.isSynced = function() {
-    var self = this;
-
-    return self._getFolder().then(function(path) {
-        return self._fetchMessage({
-            path: path
-        });
-    }).then(function(msg) {
-        return !!msg;
-    }).catch(function() {
-        return false;
+    return new Promise(function(resolve) {
+        resolve(true);
     });
+
+    // var self = this;
+
+    // return self._getFolder().then(function(path) {
+    //     return self._fetchMessage({
+    //         path: path
+    //     });
+    // }).then(function(msg) {
+    //     return !!msg;
+    // }).catch(function() {
+    //     return false;
+    // });
 };
 
 /**
