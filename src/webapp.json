@@ -3,6 +3,7 @@
   "short_name": "Whiteout",
   "start_url": "index.html",
   "display": "standalone",
+  "theme_color": "#00c6ff",
   "icons": [{
     "src": "img/icon-36-android.png",
     "sizes": "36x36",
