@@ -440,6 +440,13 @@ module.exports = function(grunt) {
             }
         },
 
+        'gh-pages': {
+            options: {
+                base: 'dist'
+            },
+            src: ['**']
+        },
+
         // Assets
 
         svgmin: {
@@ -742,6 +749,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-svgstore');
     grunt.loadNpmTasks('grunt-shell');
     grunt.loadNpmTasks('grunt-angular-templates');
+    grunt.loadNpmTasks('grunt-gh-pages');
     grunt.loadNpmTasks('assemble');
 
     // Build tasks
@@ -838,5 +846,7 @@ module.exports = function(grunt) {
     grunt.registerTask('release-test', ['dist', 'manifest-test', 'clean:release', 'swPrecache:prod', 'compress']);
     grunt.registerTask('release-prod', ['dist', 'manifest-prod', 'clean:release', 'swPrecache:prod', 'compress']);
     grunt.registerTask('default', ['release-dev']);
+    grunt.registerTask('deploy-gh-pages', ['release-prod', 'gh-pages']);
+
 
 };
