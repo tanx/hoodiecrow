@@ -15,6 +15,11 @@ ngModule.directive('listScroll', function($timeout) {
              * iterates over the mails in the mail list and loads their bodies if they are visible in the viewport
              */
             function loadVisibleBodies() {
+                var displayMessages = scope[model];
+                if (!displayMessages || !displayMessages.length) {
+                    return;
+                }
+
                 var listBorder = listEl.getBoundingClientRect(),
                     top = listBorder.top,
                     bottom = listBorder.bottom,
@@ -22,7 +27,6 @@ ngModule.directive('listScroll', function($timeout) {
                     inViewport = false,
                     listItem, message,
                     isPartiallyVisibleTop, isPartiallyVisibleBottom, isVisible,
-                    displayMessages = scope[model],
                     visible = [],
                     prefetchLowerBound = displayMessages.length, // lowest index where we need to start prefetching
                     prefetchUpperBound = 0; // highest index where we need to start prefetching
