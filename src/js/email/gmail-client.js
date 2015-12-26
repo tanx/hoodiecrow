@@ -56,14 +56,14 @@ GmailClient.prototype.logout = function() {
  */
 GmailClient.prototype.send = function(options) {
     return this._apiRequest({
+        baseUri: 'https://www.googleapis.com/upload/gmail/v1/users/',
         resource: 'messages/send',
         method: 'post',
+        type: 'message/rfc822',
         params: {
-            uploadType: 'multipart'
+            uploadType: 'media'
         },
-        payload: {
-            raw: this._base64url.encode(options.raw) // base64url encode the payload
-        }
+        payload: options.raw
     });
 };
 
