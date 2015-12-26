@@ -21,14 +21,20 @@ OAuth.prototype.flushToken = function() {
 
 /**
  * Start an OAuth2 web authentication flow including redirects from and to the current page.
+ * @param  {String}   options.loginHint     (optional) The user's email address
+ * @param  {String}   options.prompt        (optional) The type of prompt to show e.g. 'select_account'
  */
-OAuth.prototype.webAuthenticate = function() {
-    var uri = 'https://accounts.google.com/o/oauth2/v2/auth?response_type=token';
+OAuth.prototype.webAuthenticate = function(options) {
+    var uri = 'https://accounts.google.com/o/oauth2/v2/auth';
+    uri += '?response_type=token';
     uri += '&client_id=' + encodeURIComponent(this._clientId);
     uri += '&redirect_uri=' + encodeURIComponent(this._redirectUri);
     uri += '&scope=' + encodeURIComponent(this._scope);
-    if (this._loginHint) {
-        uri += '&login_hint=' + encodeURIComponent(this._loginHint);
+    if (options && options.loginHint) {
+        uri += '&login_hint=' + encodeURIComponent(options.loginHint);
+    }
+    if (options && options.prompt) {
+        uri += '&prompt=' + options.prompt;
     }
 
     // go to google account login
@@ -66,9 +72,9 @@ OAuth.prototype.oauthCallback = function() {
 
 /**
  * Request an OAuth token from chrome for gmail users
- * @param  {String}   emailAddress  The user's email address (optional)
+ * @param  {String}   options.loginHint     (optional) The user's email address
  */
-OAuth.prototype.getOAuthToken = function(emailAddress) {
+OAuth.prototype.getOAuthToken = function(options) {
     var self = this;
     return new Promise(function(resolve, reject) {
 
@@ -83,7 +89,7 @@ OAuth.prototype.getOAuthToken = function(emailAddress) {
         }
         // redirect to Google login page
         if (!(window.chrome && chrome.identity)) {
-            self.webAuthenticate();
+            self.webAuthenticate(options);
             return;
         }
 
@@ -102,9 +108,9 @@ OAuth.prototype.getOAuthToken = function(emailAddress) {
                 return;
             }
 
-            if (emailAddress && platformInfo.os.indexOf('android') !== -1) {
+            if (options && options.loginHint && platformInfo.os.indexOf('android') !== -1) {
                 // set accountHint so that native Android account picker does not show up each time
-                idOptions.accountHint = emailAddress;
+                idOptions.accountHint = options.loginHint;
             }
 
             // get OAuth Token from chrome

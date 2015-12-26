@@ -18,13 +18,13 @@ function GmailClient(auth, base64url) {
  * This will login to Google Mail using an OAuth 2.0 authentication flow.
  * After successful login the OAuth token will be cached in local storage.
  */
-GmailClient.prototype.login = function() {
+GmailClient.prototype.login = function(options) {
     var self = this;
     // get auth.oauthToken and auth.emailAddress
-    return self._auth.getOAuthCredentials().catch(function(err) {
+    return self._auth.getOAuthCredentials(options).catch(function(err) {
         if (err.code === 401) {
             // oauth token probably expired ... fetch new token and retry
-            return self._auth.getOAuthCredentials();
+            return self._auth.getOAuthCredentials(options);
         }
         throw err;
     }).then(function() {

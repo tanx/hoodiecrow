@@ -42,11 +42,6 @@ Auth.prototype.init = function() {
         // load credentials from disk
         return self._loadCredentials();
     }).then(function() {
-        // set login hint if email address was already set previously
-        if (self.emailAddress) {
-            self._oauth._loginHint = self.emailAddress;
-        }
-
         self._initialized = true;
     });
 };
@@ -104,7 +99,7 @@ Auth.prototype.flushOAuthToken = function() {
  *    is android only, since the desktop chrome will query the user that is logged into chrome
  * 3) fetch the email address for the oauth token from the chrome identity api
  */
-Auth.prototype.getOAuthCredentials = function() {
+Auth.prototype.getOAuthCredentials = function(options) {
     var self = this;
 
     return new Promise(function(resolve) {
@@ -119,8 +114,11 @@ Auth.prototype.getOAuthCredentials = function() {
             return queryEmailAddress();
         }
 
+        // set login hint if email address is known
+        options = options || {};
+        options.loginHint = self.emailAddress;
         // if no oauth token exists fetch a fresh one
-        return self._oauth.getOAuthToken(self.emailAddress).then(function(oauthToken) {
+        return self._oauth.getOAuthToken(options).then(function(oauthToken) {
             self.oauthToken = oauthToken;
         });
 

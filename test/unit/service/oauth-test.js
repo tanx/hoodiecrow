@@ -12,7 +12,6 @@ describe('OAuth unit tests', function() {
     beforeEach(function() {
         oauth = new OAuth(appConfig);
         oauth._redirectUri += oauthRedirectQuery;
-        oauth._loginHint = testEmail;
 
         window.chrome = window.chrome || {};
 
@@ -46,7 +45,9 @@ describe('OAuth unit tests', function() {
                 return;
             }
 
-            oauth.webAuthenticate();
+            oauth.webAuthenticate({
+                loginHint: testEmail
+            });
         });
     });
 
@@ -74,7 +75,9 @@ describe('OAuth unit tests', function() {
         it('should return cached oauth token', function(done) {
             oauth.accessToken = 'token';
 
-            oauth.getOAuthToken(testEmail).then(function(token) {
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            }).then(function(token) {
                 expect(token).to.equal('token');
                 done();
             });
@@ -85,7 +88,9 @@ describe('OAuth unit tests', function() {
             window.chrome.identity = undefined;
             sinon.stub(oauth, 'webAuthenticate');
 
-            oauth.getOAuthToken(testEmail);
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            });
             expect(oauth.webAuthenticate.calledOnce).to.be.true;
         });
 
@@ -94,7 +99,9 @@ describe('OAuth unit tests', function() {
             window.chrome = undefined;
             sinon.stub(oauth, 'webAuthenticate');
 
-            oauth.getOAuthToken(testEmail);
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            });
             expect(oauth.webAuthenticate.calledOnce).to.be.true;
         });
 
@@ -121,7 +128,9 @@ describe('OAuth unit tests', function() {
                 accountHint: testEmail
             }).yields('token');
 
-            oauth.getOAuthToken(testEmail).then(function(token) {
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            }).then(function(token) {
                 expect(token).to.equal('token');
                 done();
             });
@@ -135,7 +144,9 @@ describe('OAuth unit tests', function() {
                 interactive: true
             }).yields('token');
 
-            oauth.getOAuthToken(testEmail).then(function(token) {
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            }).then(function(token) {
                 expect(token).to.equal('token');
                 done();
             });
@@ -147,7 +158,9 @@ describe('OAuth unit tests', function() {
             });
             identityStub.yields();
 
-            oauth.getOAuthToken(testEmail).catch(function(err) {
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            }).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });

@@ -11,7 +11,9 @@ var AddAccountCtrl = function($scope, $location, $routeParams, $q, auth, gmailCl
 
         }).then(function() {
             // get oauth credentials
-            return gmailClient.login();
+            return gmailClient.login({
+                prompt: 'select_account'
+            });
 
         }).catch(dialog.error);
     };

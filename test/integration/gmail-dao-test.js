@@ -78,7 +78,6 @@ describe.skip('Gmail DAO integration tests', function() {
             auth = accountService._auth;
             oauth = auth._oauth;
             oauth._redirectUri += oauthRedirectQuery;
-            oauth._loginHint = testAccount.user;
             gmail = accountService._emailDao;
 
             // try to catch oauth token
