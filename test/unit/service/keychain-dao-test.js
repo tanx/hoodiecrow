@@ -494,7 +494,7 @@ describe('Keychain DAO unit tests', function() {
         });
     });
 
-    describe.skip('get user key pair', function() {
+    describe('get user key pair', function() {
         it('should work if local keys are already present', function(done) {
             lawnchairDaoStub.list.returns(resolves([{
                 _id: '12345',
