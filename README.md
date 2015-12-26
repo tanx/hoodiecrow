@@ -109,7 +109,7 @@ You can limit incoming and outgoing connections to the socket.io proxy by settin
 
 To start the server in development mode (no forced HTTPS, iframe loads http content), run `node server.js --dev`
 
-## Open Source License
+## License
 
 See the `LICENSE.txt` file.
 
