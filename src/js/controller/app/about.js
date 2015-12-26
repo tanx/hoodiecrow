@@ -16,7 +16,8 @@ var AboutCtrl = function($scope, appConfig) {
     // scope variables
     //
 
-    $scope.version = appConfig.config.appVersion;
+    // reference the appConfig object since the version will be updated asynchronously after startup
+    $scope.appConfig = appConfig;
     $scope.date = new Date();
 
 };

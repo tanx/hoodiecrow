@@ -7,11 +7,11 @@ describe('OAuth unit tests', function() {
     var oauth, identityStub, getPlatformInfoStub, removeCachedStub,
         testEmail = 'safewithme.testuser@gmail.com',
         testName = 'Test User',
-        redirectUri = window.location.origin + '/test/unit/?grep=oauthCallback&oauth=true';
+        oauthRedirectQuery = '?grep=oauthCallback&oauth=true';
 
     beforeEach(function() {
         oauth = new OAuth(appConfig);
-        oauth._redirectUri = redirectUri;
+        oauth._redirectUri += oauthRedirectQuery;
         oauth._loginHint = testEmail;
 
         window.chrome = window.chrome || {};

@@ -8,7 +8,7 @@ describe.skip('Gmail DAO integration tests', function() {
     this.timeout(100000);
 
     var accountService, gmail, auth, oauth, userStorage,
-        redirectUri = window.location.origin + '/test/integration/?grep=Gmail';
+        oauthRedirectQuery = '?grep=Gmail';
 
     var testAccount = {
         user: 'safewithme.testuser@gmail.com',
@@ -77,7 +77,7 @@ describe.skip('Gmail DAO integration tests', function() {
             userStorage = accountService._accountStore;
             auth = accountService._auth;
             oauth = auth._oauth;
-            oauth._redirectUri = redirectUri;
+            oauth._redirectUri += oauthRedirectQuery;
             oauth._loginHint = testAccount.user;
             gmail = accountService._emailDao;
 

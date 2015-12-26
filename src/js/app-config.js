@@ -3,7 +3,13 @@
 var appCfg = {};
 
 var ngModule = angular.module('woAppConfig', []);
-ngModule.factory('appConfig', function() {
+ngModule.factory('appConfig', function($timeout) {
+    $timeout(function() {
+        return window.fetch(appCfg.config.baseUrl + 'manifest.json');
+    }).then(function(response) {
+        return response.json();
+    }).then(setConfigParams);
+
     return appCfg;
 });
 module.exports = appCfg;
@@ -14,7 +20,7 @@ module.exports = appCfg;
 appCfg.config = {
     oauthClientId: '440907777130-bnk8b12nsqmpcf5cdbnhpskefhfhfgu1.apps.googleusercontent.com',
     oauthScopes: ['https://mail.google.com/', 'email'],
-    oauthRedirectUrl: window.location.origin + window.location.pathname,
+    baseUrl: window.location.origin + window.location.pathname,
     pgpComment: 'Whiteout Mail - https://whiteout.io',
     hkpUrl: 'https://keyserver.ubuntu.com',
     adminUrl: 'https://admin-node.whiteout.io',
@@ -55,14 +61,11 @@ appCfg.config = {
 // parse manifest to get configurations for current runtime
 if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifest) {
     setConfigParams(chrome.runtime.getManifest());
-} else if (typeof $ !== 'undefined' && $.get) {
-    $.get(window.location.pathname + 'manifest.json', setConfigParams, 'json');
 }
 
 function setConfigParams(manifest) {
-    var cfg = appCfg.config;
-    // get the app version
-    cfg.appVersion = manifest.version;
+    // set the app version
+    appCfg.config.appVersion = manifest.version;
 }
 
 /**

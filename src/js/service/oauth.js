@@ -7,7 +7,7 @@ module.exports = OAuth;
 function OAuth(appConfig) {
     this._clientId = appConfig.config.oauthClientId;
     this._scope = appConfig.config.oauthScopes.join(' ');
-    this._redirectUri = appConfig.config.oauthRedirectUrl;
+    this._redirectUri = appConfig.config.baseUrl;
 }
 
 /**

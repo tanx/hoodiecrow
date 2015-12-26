@@ -137,7 +137,7 @@ Account.prototype.logout = function() {
             chrome.runtime.reload();
         } else {
             // navigate to login
-            window.location.href = '/';
+            window.location.href = self._appConfig.config.baseUrl;
         }
     });
 };
