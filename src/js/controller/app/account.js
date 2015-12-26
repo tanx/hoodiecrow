@@ -1,6 +1,6 @@
 'use strict';
 
-var AccountCtrl = function($scope, $q, auth, keychain, pgp, appConfig, download, dialog) {
+var AccountCtrl = function($scope, $q, $timeout, $location, auth, keychain, pgp, appConfig, download, dialog, privateKey, email) {
     var userId = auth.emailAddress;
     if (!userId) {
         return;
@@ -48,6 +48,41 @@ var AccountCtrl = function($scope, $q, auth, keychain, pgp, appConfig, download,
                 content: keys.publicKey.publicKey + '\r\n' + keys.privateKey.encryptedKey,
                 filename: file + '.asc',
                 contentType: 'text/plain'
+            });
+
+        }).catch(dialog.error);
+    };
+
+    $scope.checkKeySyncStatus = function() {
+        return $q(function(resolve) {
+            resolve();
+
+        }).then(function() {
+            // check key sync status
+            return privateKey.isSynced();
+
+        }).then(function(synced) {
+            if (synced) {
+                return;
+            }
+
+            dialog.confirm({
+                title: 'Key backup',
+                message: 'Your encryption key is not backed up. Back up now?',
+                positiveBtnStr: 'Backup',
+                negativeBtnStr: 'Not now',
+                showNegativeBtn: true,
+                callback: function(granted) {
+                    if (granted) {
+                        // logout of the current session
+                        email.onDisconnect().then(function() {
+                            // send to key upload screen
+                            $timeout(function() {
+                                $location.path('/login-privatekey-upload');
+                            });
+                        });
+                    }
+                }
             });
 
         }).catch(dialog.error);

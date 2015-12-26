@@ -5,11 +5,10 @@ var NavigationCtrl = require('../../../../src/js/controller/app/navigation'),
     Account = require('../../../../src/js/email/account'),
     Outbox = require('../../../../src/js/email/outbox'),
     Dialog = require('../../../../src/js/util/dialog'),
-    Notif = require('../../../../src/js/util/notification'),
-    PrivateKey = require('../../../../src/js/service/privatekey');
+    Notif = require('../../../../src/js/util/notification');
 
 describe('Navigation Controller unit test', function() {
-    var scope, ctrl, emailDaoMock, accountMock, notificationStub, privateKeyStub, dialogStub, outboxBoMock, outboxFolder;
+    var scope, ctrl, emailDaoMock, accountMock, notificationStub, dialogStub, outboxBoMock, outboxFolder;
 
     beforeEach(function() {
         var account = {
@@ -30,7 +29,6 @@ describe('Navigation Controller unit test', function() {
         outboxBoMock.startChecking.returns();
         dialogStub = sinon.createStubInstance(Dialog);
         notificationStub = sinon.createStubInstance(Notif);
-        privateKeyStub = sinon.createStubInstance(PrivateKey);
         accountMock = sinon.createStubInstance(Account);
         accountMock.list.returns([account]);
         accountMock.isLoggedIn.returns(true);
@@ -48,8 +46,7 @@ describe('Navigation Controller unit test', function() {
                 email: emailDaoMock,
                 outbox: outboxBoMock,
                 notification: notificationStub,
-                dialog: dialogStub,
-                privateKey: privateKeyStub
+                dialog: dialogStub
             });
         });
     });
@@ -89,22 +86,6 @@ describe('Navigation Controller unit test', function() {
                 expect(emailDaoMock.refreshOutbox.calledOnce).to.be.true;
                 done();
             });
-        });
-    });
-
-    describe('checkKeySyncStatus', function() {
-        it('should work', function(done) {
-            privateKeyStub.init.returns(resolves());
-            privateKeyStub.isSynced.returns(resolves());
-            privateKeyStub.destroy.returns(resolves());
-
-            scope.checkKeySyncStatus().then(done);
-        });
-
-        it('should fail silently', function(done) {
-            privateKeyStub.init.returns(rejects());
-
-            scope.checkKeySyncStatus().then(done);
         });
     });
 });
