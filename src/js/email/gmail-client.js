@@ -42,6 +42,14 @@ GmailClient.prototype.logout = function() {
     return this._auth.flushOAuthToken();
 };
 
+
+//
+//
+// Send/Upload Message
+//
+//
+
+
 /**
  * Sends an email message.
  * @param {String} options.raw  The raw RFC822 message payload to be sent.
@@ -58,6 +66,49 @@ GmailClient.prototype.send = function(options) {
         }
     });
 };
+
+/**
+ * Directly inserts a message into the user's mailbox similar to IMAP APPEND,
+ *   bypassing most scanning and classification.
+ * @param {String} options.raw      The raw RFC822 message payload to be sent
+ * @param {String} options.path     The folder path to be uploaded to
+ */
+GmailClient.prototype.insertMessage = function(options) {
+    var metadata = JSON.stringify({
+        labelIds: [options.path]
+    });
+
+    var payload = '--foo_bar_baz\r\n' +
+        'Content-Type: application/json; charset=UTF-8\r\n' +
+        '\r\n' +
+        metadata + '\r\n' +
+        '\r\n' +
+        '--foo_bar_baz\r\n' +
+        'Content-Type: message/rfc822\r\n' +
+        '\r\n' +
+        options.raw + '\r\n' +
+        '\r\n' +
+        '--foo_bar_baz--';
+
+    return this._apiRequest({
+        baseUri: 'https://www.googleapis.com/upload/gmail/v1/users/',
+        resource: 'messages',
+        method: 'post',
+        type: 'multipart/related; boundary="foo_bar_baz"',
+        params: {
+            uploadType: 'multipart'
+        },
+        payload: payload
+    });
+};
+
+
+//
+//
+// List/Read Messages
+//
+//
+
 
 /**
  * Get a list of message ids for a given folder (gmail label)
@@ -79,7 +130,7 @@ GmailClient.prototype.listMessageIds = function(folder) {
 /**
  * Get a message's headers and body structure. In case of a text/plain mimeType the
  *   message's body is fetched in the same http roundtrip.
- * @param  {Object} message     The message object
+ * @param  {Object} message     The message object to be enriched with headers and body structure
  */
 GmailClient.prototype.getMessage = function(message) {
     var self = this;
@@ -131,7 +182,6 @@ GmailClient.prototype.getMessage = function(message) {
  */
 GmailClient.prototype.getAttachment = function(options) {
     var self = this;
-
     return self._apiRequest({
         resource: 'messages/' + options.message.id + '/attachments/' + options.attachmentId
     }).then(function(attachment) {
@@ -147,12 +197,37 @@ GmailClient.prototype.getAttachment = function(options) {
 };
 
 /**
+ * Get the entire RFC 2822 message.
+ * @param  {Object} message     The message object to be enriched a raw bodypart
+ */
+GmailClient.prototype.getRawMessage = function(message) {
+    var self = this;
+    return self._apiRequest({
+        resource: 'messages/' + message.id,
+        params: {
+            format: 'raw'
+        }
+    }).then(function(response) {
+        message.bodyParts = [{
+            raw: self._base64url.decode(response.raw)
+        }];
+    });
+};
+
+
+//
+//
+// Folders
+//
+//
+
+
+/**
  * Fetch a list of the user's Gmail labels. The labels will be converted to the local
  *   folder model.
  * @return {Array<Object>}  A list of the user's folders
  */
 GmailClient.prototype.listFolders = function() {
-    // fetch list from the server
     return this._apiRequest({
         resource: 'labels'
     }).then(function(response) {
@@ -167,6 +242,28 @@ GmailClient.prototype.listFolders = function() {
     });
 };
 
+/**
+ * Create a label/folder for the user.
+ * @param  {String} options.name        The folder's display name
+ * @param  {Boolean} options.hidden     If the folder should be hidden or display in the user's folder list
+ */
+GmailClient.prototype.createFolder = function(options) {
+    return this._apiRequest({
+        resource: 'labels',
+        method: 'post',
+        payload: {
+            name: options.name,
+            labelListVisibility: options.hidden ? 'labelHide' : 'labelShow',
+            messageListVisibility: options.hidden ? 'hide' : 'show'
+        }
+    }).then(function(label) {
+        return {
+            name: label.name,
+            path: label.id
+        };
+    });
+};
+
 
 //
 //
@@ -178,15 +275,18 @@ GmailClient.prototype.listFolders = function() {
 /**
  * Make an HTTP request to the Gmail REST api via the window.fetch function.
  * @param  {String} options.resource    The api resource e.g. 'messages'
+ * @param  {String} options.baseUri     (optional) The base uri of the rest endpoint
  * @param  {String} options.method      (optional) The HTTP method to be used depending on the CRUD
  *                                      operation e.g. 'get' or 'post'. If not specified it defaults to 'get'.
+ * @param  {String} options.type        (optional) The mime type of the payload. If not set defaults to
+ *                                      'application/json'.
  * @param  {Array} options.params       A list of query parameters e.g. [{name: 'value'}]
  * @param  {Object} options.payload     (optional) The request's payload for create/update operations
  * @return {Promise<Object>}            A promise containing the response's parsed JSON object
  */
 GmailClient.prototype._apiRequest = function(options) {
     var self = this;
-    var uri = 'https://www.googleapis.com/gmail/v1/users/';
+    var uri = options.baseUri || 'https://www.googleapis.com/gmail/v1/users/';
     uri += encodeURIComponent(self._auth.emailAddress) + '/';
     uri += options.resource;
 
@@ -203,10 +303,10 @@ GmailClient.prototype._apiRequest = function(options) {
         method: options.method ? options.method : 'get',
         headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json',
+            'Content-Type': options.type || 'application/json',
             'Authorization': 'Bearer ' + self._auth.oauthToken
         },
-        body: options.payload ? JSON.stringify(options.payload) : undefined
+        body: (options.payload && !options.type) ? JSON.stringify(options.payload) : options.payload
     }).then(function(response) {
         if (response.status >= 200 && response.status <= 299) {
             // success ... parse response

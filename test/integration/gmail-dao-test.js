@@ -117,7 +117,38 @@ describe.skip('Gmail DAO integration tests', function() {
         gmail.isOnline.restore();
     });
 
-    describe('sendEncrypted', function() {
+    describe('create folder', function() {
+        it('should work', function(done) {
+            gmail._gmailClient.createFolder({
+                name: 'NEW TEST FOLDER'
+            }).then(function(folder) {
+                expect(folder.path).to.exist;
+                done();
+            }).catch(done);
+        });
+    });
+
+    describe('insert Message', function() {
+        it('should work', function(done) {
+            var raw = "Subject: D64A7BD57F2D6EDF\r\nFrom: safewithme.testuser@gmail.com\r\nTo: safewithme.testuser@gmail.com\r\nContent-Type: application/x.encrypted-pgp-key; charset=us-ascii\r\nContent-Transfer-Encoding: base64\r\nDate: Fri, 25 Dec 2015 08:24:08 +0000\r\nMessage-Id: <1451031848162-47983a88-9976a4bf-4866235b@gmail.com>\r\nMIME-Version: 1.0\r\n\r\n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";
+
+            gmail._gmailClient.listFolders().then(function(folders) {
+                var testFolder = _.findWhere(folders, {
+                    name: 'NEW TEST FOLDER'
+                });
+
+                return gmail._gmailClient.insertMessage({
+                    path: testFolder.path,
+                    raw: raw
+                }).then(function(res) {
+                    expect(res).to.exist;
+                    done();
+                });
+            });
+        });
+    });
+
+    describe.skip('sendEncrypted', function() {
         var email = {
             from: [testAccount.user],
             to: [testAccount.user],
@@ -172,6 +203,32 @@ describe.skip('Gmail DAO integration tests', function() {
                 expect(msg.body).to.exist;
                 expect(msg.encrypted).to.be.true;
                 expect(msg.decrypted).to.be.true;
+                done();
+            });
+
+        });
+    });
+
+    describe('getRawMessage', function() {
+        it('should work', function(done) {
+            var msg;
+
+            gmail._gmailClient.listFolders().then(function(folders) {
+                var keysFolder = _.findWhere(folders, {
+                    name: 'openpgp_keys'
+                });
+                return gmail._gmailClient.listMessageIds(keysFolder);
+
+            }).then(function(messages) {
+                expect(messages && messages.length).to.exist;
+
+                msg = messages[0];
+
+                // get first message body
+                return gmail._gmailClient.getRawMessage(msg);
+
+            }).then(function() {
+                expect(msg.bodyParts[0].raw).to.exist;
                 done();
             });
 

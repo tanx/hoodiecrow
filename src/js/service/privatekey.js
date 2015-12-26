@@ -10,7 +10,7 @@ var IMAP_KEYS_FOLDER = 'openpgp_keys';
 var MIME_TYPE = 'application/x.encrypted-pgp-key';
 var MSG_PART_TYPE_ATTACHMENT = 'attachment';
 
-function PrivateKey(auth, mailbuild, mailreader, appConfig, pgp, crypto, axe) {
+function PrivateKey(auth, mailbuild, mailreader, appConfig, pgp, crypto, axe, gmailClient) {
     this._auth = auth;
     this._Mailbuild = mailbuild;
     this._mailreader = mailreader;
@@ -18,34 +18,22 @@ function PrivateKey(auth, mailbuild, mailreader, appConfig, pgp, crypto, axe) {
     this._pgp = pgp;
     this._crypto = crypto;
     this._axe = axe;
+    this._gmailClient = gmailClient;
 }
 
 /**
  * Configure the local imap client used for key-sync with credentials from the auth module.
  */
 PrivateKey.prototype.init = function() {
-    return new Promise(function(resolve) {
-        resolve();
-    });
-
-    // var self = this;
-
-    // return self._auth.getCredentials().then(function(credentials) {
-    //     // tls socket worker path for multithreaded tls in non-native tls environments
-    //     credentials.imap.tlsWorkerPath = self._appConfig.config.workerPath + '/tcp-socket-tls-worker.min.js';
-    //     self._imap = new ImapClient(credentials.imap);
-    //     self._imap.onError = self._axe.error;
-    //     // login to the imap server
-    //     return self._imap.login();
-    // });
+    // make sure we have a valid oauth token
+    return this._gmailClient.login();
 };
 
 /**
  * Cleanup by logging out of the imap client.
  */
 PrivateKey.prototype.destroy = function() {
-    // this._imap.logout();
-    // don't wait for logout to complete
+    // logout not required for oauth session
     return new Promise(function(resolve) {
         resolve();
     });
@@ -122,10 +110,11 @@ PrivateKey.prototype.upload = function(options) {
 
             // create imap folder
             self._axe.debug('Folder not found, creating imap folder.');
-            return self._imap.createFolder({
-                path: IMAP_KEYS_FOLDER
-            }).then(function(fullPath) {
-                path = fullPath;
+            return self._gmailClient.createFolder({
+                name: IMAP_KEYS_FOLDER,
+                hidden: true
+            }).then(function(folder) {
+                path = folder.path;
                 self._axe.debug('Successfully created imap folder ' + path);
             }).catch(function(err) {
                 var prettyErr = new Error('Creating imap folder ' + IMAP_KEYS_FOLDER + ' failed: ' + err.message);
@@ -134,13 +123,12 @@ PrivateKey.prototype.upload = function(options) {
             });
         });
 
-    }).then(createMessage).then(function(message) {
-
-        // upload to imap folder
+    }).then(createMessage).then(function(rawMessage) {
+        // upload the to the folder
         self._axe.debug('Uploading key...');
-        return self._imap.uploadMessage({
+        return self._gmailClient.insertMessage({
             path: path,
-            message: message
+            raw: rawMessage
         });
     });
 
@@ -183,21 +171,17 @@ PrivateKey.prototype.upload = function(options) {
  * Check if any private key is stored in IMAP.
  */
 PrivateKey.prototype.isSynced = function() {
-    return new Promise(function(resolve) {
-        resolve(true);
+    var self = this;
+
+    return self._getFolder().then(function(path) {
+        return self._fetchMessage({
+            path: path
+        });
+    }).then(function(msg) {
+        return !!msg;
+    }).catch(function() {
+        return false;
     });
-
-    // var self = this;
-
-    // return self._getFolder().then(function(path) {
-    //     return self._fetchMessage({
-    //         path: path
-    //     });
-    // }).then(function(msg) {
-    //     return !!msg;
-    // }).catch(function() {
-    //     return false;
-    // });
 };
 
 /**
@@ -221,11 +205,7 @@ PrivateKey.prototype.download = function() {
         });
     }).then(function() {
         // get the body for the message
-        return self._imap.getBodyParts({
-            path: path,
-            uid: message.uid,
-            bodyParts: message.bodyParts
-        });
+        return self._gmailClient.getRawMessage(message);
 
     }).then(function() {
         // parse the message
@@ -316,35 +296,22 @@ PrivateKey.prototype.decrypt = function(options) {
 PrivateKey.prototype._getFolder = function() {
     var self = this;
 
-    return self._imap.listWellKnownFolders().then(function(wellKnownFolders) {
-        var paths = []; // gathers paths
-
-        // extract the paths from the folder arrays
-        for (var folderType in wellKnownFolders) {
-            if (wellKnownFolders.hasOwnProperty(folderType) && Array.isArray(wellKnownFolders[folderType])) {
-                paths = paths.concat(_.pluck(wellKnownFolders[folderType], 'path'));
-            }
-        }
-
-        paths = paths.filter(function(path) {
-            // find a folder that ends with IMAP_KEYS_FOLDER
-            var lastIndex = path.lastIndexOf(IMAP_KEYS_FOLDER);
-            return (lastIndex !== -1) && (lastIndex + IMAP_KEYS_FOLDER.length === path.length);
+    return self._gmailClient.listFolders().then(function(folders) {
+        var keysFolder = _.findWhere(folders, {
+            name: IMAP_KEYS_FOLDER
         });
 
-        if (paths.length > 1) {
-            self._axe.warn('Multiple folders matching path ' + IMAP_KEYS_FOLDER + ' found, PGP key target folder unclear. Picking first one: ' + paths.join(', '));
+        if (!keysFolder) {
+            throw new Error('Folder ' + IMAP_KEYS_FOLDER + ' does not exist for key sync!');
         }
 
-        if (paths.length === 0) {
-            throw new Error('Imap folder ' + IMAP_KEYS_FOLDER + ' does not exist for key sync!');
-        }
-
-        return paths[0];
+        return keysFolder.path;
     });
 };
 
 PrivateKey.prototype._fetchMessage = function(options) {
+    var self = this;
+
     if (!options.path) {
         return new Promise(function() {
             throw new Error('Incomplete arguments!');
@@ -352,7 +319,7 @@ PrivateKey.prototype._fetchMessage = function(options) {
     }
 
     // get the metadata for the message
-    return this._imap.listMessages({
+    return self._gmailClient.listMessageIds({
         path: options.path
     }).then(function(messages) {
         if (!messages.length) {
@@ -360,6 +327,17 @@ PrivateKey.prototype._fetchMessage = function(options) {
             return;
         }
 
+        var jobs = [];
+        messages.forEach(function(message) {
+            var job = self._gmailClient.getMessage(message);
+            jobs.push(job);
+        });
+
+        return Promise.all(jobs).then(function() {
+            return messages;
+        });
+
+    }).then(function(messages) {
         // get matching private key if multiple keys uloaded
         if (options.keyId) {
             return _.findWhere(messages, {
