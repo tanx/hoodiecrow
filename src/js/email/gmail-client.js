@@ -300,7 +300,7 @@ GmailClient.prototype._apiRequest = function(options) {
     }
 
     return window.fetch(uri, {
-        method: options.method ? options.method : 'get',
+        method: options.method || 'get',
         headers: {
             'Accept': 'application/json',
             'Content-Type': options.type || 'application/json',
