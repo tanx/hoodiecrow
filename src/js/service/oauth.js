@@ -143,6 +143,10 @@ OAuth.prototype.queryEmailAddress = function(token) {
         var uri = 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=' + token;
         return window.fetch(uri);
 
+    }).catch(function(err) {
+        err.code = 42; // error code for offline
+        throw err;
+
     }).then(function(response) {
         if (response.status === 200) {
             // success ... parse response

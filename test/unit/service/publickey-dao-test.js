@@ -20,10 +20,10 @@ describe('Public Key DAO unit tests', function() {
 
     describe('get', function() {
         it('should fail', function(done) {
-            hkpStub.lookup.returns(rejects(42));
+            hkpStub.lookup.returns(rejects(new Error()));
 
             pubkeyDao.get('id').catch(function(err) {
-                expect(err).to.exist;
+                expect(err.code).to.equal(42);
                 expect(hkpStub.lookup.calledOnce).to.be.true;
                 done();
             });
@@ -50,6 +50,8 @@ describe('Public Key DAO unit tests', function() {
 
             pubkeyDao.get(keyId).catch(function(err) {
                 expect(err).to.exist;
+                expect(err.code).to.not.exist;
+                expect(err.message).to.match(/key does not match/);
                 expect(hkpStub.lookup.calledOnce).to.be.true;
                 done();
             });
@@ -78,10 +80,10 @@ describe('Public Key DAO unit tests', function() {
 
     describe('get by userId', function() {
         it('should fail on hkp error', function(done) {
-            hkpStub.lookup.returns(rejects(42));
+            hkpStub.lookup.returns(rejects(new Error()));
 
             pubkeyDao.getByUserId('userId').catch(function(err) {
-                expect(err).to.exist;
+                expect(err.code).to.equal(42);
                 expect(hkpStub.lookup.calledOnce).to.be.true;
                 done();
             });
@@ -114,13 +116,26 @@ describe('Public Key DAO unit tests', function() {
     });
 
     describe('put', function() {
-        it('should fail', function(done) {
+        it('should work', function(done) {
             hkpStub.upload.returns(resolves());
 
             pubkeyDao.put({
                 _id: '12345',
                 publicKey: 'asdf'
             }).then(function() {
+                expect(hkpStub.upload.calledOnce).to.be.true;
+                done();
+            });
+        });
+
+        it('should fail', function(done) {
+            hkpStub.upload.returns(rejects(new Error()));
+
+            pubkeyDao.put({
+                _id: '12345',
+                publicKey: 'asdf'
+            }).catch(function(err) {
+                expect(err.code).to.equal(42);
                 expect(hkpStub.upload.calledOnce).to.be.true;
                 done();
             });

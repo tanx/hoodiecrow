@@ -221,6 +221,17 @@ describe('OAuth unit tests', function() {
                 done();
             });
         });
+
+        it('should fail due to offline case', function(done) {
+            window.fetch.returns(rejects(new Error('Offline!')));
+            oauth.accessToken = 'cachedToken';
+
+            oauth.queryEmailAddress('token').catch(function(err) {
+                expect(err.code).to.equal(42);
+                expect(oauth.accessToken).to.equal('cachedToken');
+                done();
+            });
+        });
     });
 
 });

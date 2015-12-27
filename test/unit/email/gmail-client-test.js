@@ -289,6 +289,21 @@ describe('Gmail Client unit test', function() {
                 done();
             });
         });
+
+        it('should fail with 42 for offline case', function(done) {
+            window.fetch.returns(rejects(new Error('Offline!')));
+
+            var opt = {
+                resource: 'messages/0'
+            };
+
+            client._apiRequest(opt).catch(function(err) {
+                expect(err.code).to.equal(42);
+                expect(err.message).to.match(/Offline/);
+                expect(authStub.flushOAuthToken.callCount).to.equal(0);
+                done();
+            });
+        });
     });
 
 });

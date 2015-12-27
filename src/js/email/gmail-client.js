@@ -307,6 +307,11 @@ GmailClient.prototype._apiRequest = function(options) {
             'Authorization': 'Bearer ' + self._auth.oauthToken
         },
         body: (options.payload && !options.type) ? JSON.stringify(options.payload) : options.payload
+
+    }).catch(function(err) {
+        err.code = 42;  // error code for offline
+        throw err;
+
     }).then(function(response) {
         if (response.status >= 200 && response.status <= 299) {
             // success ... parse response
