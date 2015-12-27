@@ -7,7 +7,7 @@ var AccountCtrl = require('../../../../src/js/controller/app/account'),
     Auth = require('../../../../src/js/service/auth'),
     Dialog = require('../../../../src/js/util/dialog'),
     PrivateKey = require('../../../../src/js/service/privatekey'),
-    Email = require('../../../../src/js/email/email');
+    Email = require('../../../../src/js/email/gmail');
 
 describe('Account Controller unit test', function() {
     var scope, accountCtrl,

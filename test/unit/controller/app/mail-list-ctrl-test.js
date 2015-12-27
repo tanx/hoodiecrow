@@ -1,7 +1,7 @@
 'use strict';
 
 var MailListCtrl = require('../../../../src/js/controller/app/mail-list'),
-    EmailDAO = require('../../../../src/js/email/email'),
+    EmailDAO = require('../../../../src/js/email/gmail'),
     KeychainDAO = require('../../../../src/js/service/keychain'),
     Status = require('../../../../src/js/util/status'),
     Dialog = require('../../../../src/js/util/dialog'),

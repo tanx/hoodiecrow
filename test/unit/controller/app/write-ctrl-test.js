@@ -1,7 +1,7 @@
 'use strict';
 
 var WriteCtrl = require('../../../../src/js/controller/app/write'),
-    Email = require('../../../../src/js/email/email'),
+    Email = require('../../../../src/js/email/gmail'),
     Outbox = require('../../../../src/js/email/outbox'),
     Keychain = require('../../../../src/js/service/keychain'),
     Auth = require('../../../../src/js/service/auth'),

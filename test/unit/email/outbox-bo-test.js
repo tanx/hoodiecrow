@@ -2,7 +2,7 @@
 
 var OutboxBO = require('../../../src/js/email/outbox'),
     KeychainDAO = require('../../../src/js/service/keychain'),
-    EmailDAO = require('../../../src/js/email/email'),
+    EmailDAO = require('../../../src/js/email/gmail'),
     DeviceStorageDAO = require('../../../src/js/service/devicestorage');
 
 describe('Outbox unit test', function() {

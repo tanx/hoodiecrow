@@ -4,7 +4,7 @@ var Account = require('../../../src/js/email/account'),
     appConfig = require('../../../src/js/app-config'),
     Auth = require('../../../src/js/service/auth'),
     DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
-    Email = require('../../../src/js/email/email'),
+    Email = require('../../../src/js/email/gmail'),
     Outbox = require('../../../src/js/email/outbox'),
     Keychain = require('../../../src/js/service/keychain'),
     UpdateHandler = require('../../../src/js/util/update/update-handler'),
@@ -253,11 +253,11 @@ describe('Account Service unit test', function() {
 
             account.logout().catch(function(err) {
                 expect(err.message).to.match(/asdf/);
-   
+
                 expect(emailStub.onDisconnect.calledOnce).to.be.true;
                 expect(authStub.logout.calledOnce).to.be.true;
                 expect(devicestorageStub.clear.calledOnce).to.be.true;
-   
+
                 done();
             });
         });

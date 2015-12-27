@@ -5,7 +5,6 @@ process.chdir(__dirname);
 var cluster = require('cluster');
 var config = require('config');
 var log = require('npmlog');
-var os = require('os');
 
 log.level = config.log.level;
 
@@ -50,8 +49,6 @@ var express = require('express');
 var compression = require('compression');
 var app = express();
 var server = require('http').Server(app);
-var io = require('socket.io')(server);
-var net = require('net');
 
 // Setup logger. Stream all http logs to general logger
 app.use(require('morgan')(config.log.http, {
@@ -114,79 +111,6 @@ app.use(compression());
 
 // server static files
 app.use(express.static(__dirname + '/dist'));
-
-//
-// Socket.io proxy
-//
-
-io.on('connection', function(socket) {
-    log.info('io', 'New connection [%s] from %s', socket.conn.id, socket.conn.remoteAddress);
-
-    socket.on('open', function(data, fn) {
-        if (!development && config.server.outboundPorts.indexOf(data.port) < 0) {
-            log.info('io', 'Open request to %s:%s was rejected, closing [%s]', data.host, data.port, socket.conn.id);
-            socket.disconnect();
-            return;
-        }
-
-        log.verbose('io', 'Open request to %s:%s [%s]', data.host, data.port, socket.conn.id);
-        var tcp = net.connect(data.port, data.host, function() {
-            log.verbose('io', 'Opened tcp connection to %s:%s [%s]', data.host, data.port, socket.conn.id);
-
-            tcp.on('data', function(chunk) {
-                log.silly('io', 'Received %s bytes from %s:%s [%s]', chunk.length, data.host, data.port, socket.conn.id);
-                socket.emit('data', chunk);
-            });
-
-            tcp.on('error', function(err) {
-                log.verbose('io', 'Error for %s:%s [%s]: %s', data.host, data.port, socket.conn.id, err.message);
-                socket.emit('error', err.message);
-            });
-
-            tcp.on('end', function() {
-                socket.emit('end');
-            });
-
-            tcp.on('close', function() {
-                log.verbose('io', 'Closed tcp connection to %s:%s [%s]', data.host, data.port, socket.conn.id);
-                socket.emit('close');
-
-                socket.removeAllListeners('data');
-                socket.removeAllListeners('end');
-            });
-
-            socket.on('data', function(chunk, fn) {
-                if (!chunk || !chunk.length) {
-                    if (typeof fn === 'function') {
-                        fn();
-                    }
-                    return;
-                }
-                log.silly('io', 'Sending %s bytes to %s:%s [%s]', chunk.length, data.host, data.port, socket.conn.id);
-                tcp.write(chunk, function() {
-                    if (typeof fn === 'function') {
-                        fn();
-                    }
-                });
-            });
-
-            socket.on('end', function() {
-                log.verbose('io', 'Received request to close connection to %s:%s [%s]', data.host, data.port, socket.conn.id);
-                tcp.end();
-            });
-
-            if (typeof fn === 'function') {
-                fn(os.hostname());
-            }
-
-            socket.on('disconnect', function() {
-                log.verbose('io', 'Closed connection [%s], closing connection to %s:%s ', socket.conn.id, data.host, data.port);
-                tcp.end();
-                socket.removeAllListeners();
-            });
-        });
-    });
-});
 
 //
 // start server

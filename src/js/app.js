@@ -41,18 +41,6 @@ app.config(function($routeProvider, $animateProvider) {
         templateUrl: 'tpl/add-account.html',
         controller: require('./controller/login/add-account')
     });
-    $routeProvider.when('/create-account', {
-        templateUrl: 'tpl/create-account.html',
-        controller: require('./controller/login/create-account')
-    });
-    $routeProvider.when('/validate-phone', {
-        templateUrl: 'tpl/validate-phone.html',
-        controller: require('./controller/login/validate-phone')
-    });
-    $routeProvider.when('/login-set-credentials', {
-        templateUrl: 'tpl/login-set-credentials.html',
-        controller: require('./controller/login/login-set-credentials')
-    });
     $routeProvider.when('/login-privatekey-upload', {
         templateUrl: 'tpl/login-privatekey-upload.html',
         controller: require('./controller/login/login-privatekey-upload')

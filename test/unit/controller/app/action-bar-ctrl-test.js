@@ -1,6 +1,6 @@
 'use strict';
 
-var Email = require('../../../../src/js/email/email'),
+var Email = require('../../../../src/js/email/gmail'),
     Dialog = require('../../../../src/js/util/dialog'),
     Status = require('../../../../src/js/util/status'),
     ActionBarCtrl = require('../../../../src/js/controller/app/action-bar');

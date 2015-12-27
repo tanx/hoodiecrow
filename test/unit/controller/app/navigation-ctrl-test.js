@@ -1,7 +1,7 @@
 'use strict';
 
 var NavigationCtrl = require('../../../../src/js/controller/app/navigation'),
-    Email = require('../../../../src/js/email/email'),
+    Email = require('../../../../src/js/email/gmail'),
     Account = require('../../../../src/js/email/account'),
     Outbox = require('../../../../src/js/email/outbox'),
     Dialog = require('../../../../src/js/util/dialog'),

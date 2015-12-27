@@ -8,8 +8,7 @@ var Auth = require('../../../src/js/service/auth'),
     appConfig = require('../../../src/js/app-config'),
     util = require('crypto-lib').util,
     Mailbuild = require('mailbuild'),
-    mailreader = require('mailreader'),
-    ImapClient = require('imap-client');
+    mailreader = require('mailreader');
 
 describe.skip('Private Key DAO unit tests', function() {
 
@@ -26,7 +25,6 @@ describe.skip('Private Key DAO unit tests', function() {
         pgpStub = sinon.createStubInstance(PGP);
         cryptoStub = sinon.createStubInstance(Crypto);
         privkeyDao = new PrivateKey(authStub, Mailbuild, mailreader, appConfig, pgpStub, cryptoStub, axe);
-        imapClientStub = sinon.createStubInstance(ImapClient);
         privkeyDao._imap = imapClientStub;
     });
 

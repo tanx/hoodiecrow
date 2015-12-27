@@ -1,7 +1,7 @@
 'use strict';
 
 var LoginCtrl = require('../../../../src/js/controller/login/login'),
-    Email = require('../../../../src/js/email/email'),
+    Email = require('../../../../src/js/email/gmail'),
     Account = require('../../../../src/js/email/account'),
     Dialog = require('../../../../src/js/util/dialog'),
     UpdateHandler = require('../../../../src/js/util/update/update-handler'),
