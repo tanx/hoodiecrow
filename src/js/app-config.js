@@ -28,7 +28,7 @@ appCfg.config = {
     asymKeySize: 2048,
     workerPath: 'js',
     iconPath: '/img/icon-128-chrome.png',
-    dbVersion: 6,
+    dbVersion: 7,
     appVersion: undefined,
     outboxMailboxPath: 'OUTBOX',
     outboxMailboxName: 'Outbox',
