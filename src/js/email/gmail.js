@@ -544,21 +544,6 @@ Gmail.prototype.onConnect = function() {
     }).then(function() {
         // set client to online after updating folders
         self._account.online = true;
-
-        // by default, select the inbox (if there is one) after connecting the imap client.
-        // this avoids race conditions between the listening imap connection and the one where the work is done
-        var inbox = _.findWhere(self._account.folders, {
-            type: FOLDER_TYPE_INBOX
-        });
-
-        if (!inbox) {
-            // if there is no inbox, that's ok, too
-            return;
-        }
-
-        return self.openFolder({
-            folder: inbox
-        });
     });
 };
 

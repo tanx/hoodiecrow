@@ -258,7 +258,6 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
         return $timeout(function() {
             if (isOnline) {
                 status.update('Online');
-                return openCurrentFolder();
             } else {
                 status.update('Offline mode');
             }

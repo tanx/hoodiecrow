@@ -119,8 +119,7 @@ GmailClient.prototype.listMessageIds = function(folder) {
     return this._apiRequest({
         resource: 'messages',
         params: {
-            labelIds: folder.path,
-            maxResults: 100
+            labelIds: folder.path
         }
     }).then(function(response) {
         return response.messages;
@@ -309,7 +308,7 @@ GmailClient.prototype._apiRequest = function(options) {
         body: (options.payload && !options.type) ? JSON.stringify(options.payload) : options.payload
 
     }).catch(function(err) {
-        err.code = 42;  // error code for offline
+        err.code = 42; // error code for offline
         throw err;
 
     }).then(function(response) {
