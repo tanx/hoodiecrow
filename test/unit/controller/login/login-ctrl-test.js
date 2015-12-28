@@ -62,8 +62,19 @@ describe('Login Controller unit test', function() {
 
     afterEach(function() {});
 
+    it('should fail for auth.init', function(done) {
+        authMock.init.returns(rejects(new Error()));
+
+        scope.init().then(function() {
+            expect(authMock.init.calledOnce).to.be.true;
+            expect(accountMock.init.called).to.be.false;
+            expect(dialogMock.error.calledOnce).to.be.true;
+            done();
+        });
+    });
+
     it('should redirect to /add-account', function(done) {
-        authMock.oauthToken = undefined;
+        authMock.emailAddress = undefined;
         oauthStub.accessToken = undefined;
 
         authMock.init.returns(resolves());
@@ -75,21 +86,13 @@ describe('Login Controller unit test', function() {
         });
     });
 
-    it('should fail for auth.init', function(done) {
-        authMock.init.returns(rejects(new Error()));
-        gmailClientStub.login.returns(resolves());
+    it('should gmailClient.login before fail for account init', function(done) {
+        authMock.emailAddress = undefined;
+        oauthStub.accessToken = 'token';
 
-        scope.init().then(function() {
-            expect(authMock.init.calledOnce).to.be.true;
-            expect(gmailClientStub.login.called).to.be.false;
-            expect(dialogMock.error.calledOnce).to.be.true;
-            done();
-        });
-    });
-
-    it('should fail for auth.getEmailAddress', function(done) {
         authMock.init.returns(resolves());
-        gmailClientStub.login.returns(rejects(new Error()));
+        gmailClientStub.login.returns(resolves());
+        accountMock.init.returns(rejects(new Error()));
 
         scope.init().then(function() {
             expect(updateHandlerMock.checkForUpdate.calledOnce).to.be.true;
@@ -102,7 +105,6 @@ describe('Login Controller unit test', function() {
 
     it('should redirect to /login-existing', function(done) {
         authMock.init.returns(resolves());
-        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves({
             publicKey: 'publicKey',
             privateKey: 'privateKey'
@@ -119,7 +121,6 @@ describe('Login Controller unit test', function() {
 
     it('should fail for auth.storeCredentials', function(done) {
         authMock.init.returns(resolves());
-        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves({
             publicKey: 'publicKey',
             privateKey: 'privateKey'
@@ -134,11 +135,9 @@ describe('Login Controller unit test', function() {
     });
 
     it('should redirect to /account with stored oauth token', function(done) {
-        authMock.oauthToken = 'token';
         oauthStub.accessToken = undefined;
 
         authMock.init.returns(resolves());
-        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves({
             publicKey: 'publicKey',
             privateKey: 'privateKey'
@@ -155,7 +154,6 @@ describe('Login Controller unit test', function() {
 
     it('should redirect to /login-privatekey-download', function(done) {
         authMock.init.returns(resolves());
-        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves());
         privateKeyMock.init.returns(resolves());
         privateKeyMock.isSynced.returns(resolves(true));
@@ -171,7 +169,6 @@ describe('Login Controller unit test', function() {
 
     it('should redirect to /login-initial', function(done) {
         authMock.init.returns(resolves());
-        gmailClientStub.login.returns(resolves());
         accountMock.init.returns(resolves());
         privateKeyMock.init.returns(resolves());
         privateKeyMock.isSynced.returns(resolves(false));
