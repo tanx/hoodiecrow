@@ -176,7 +176,7 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
         return openCurrentFolder();
     });
 
-    $scope.watchMessages = $scope.$watchCollection('state.nav.currentFolder.messages', function(messages) {
+    $scope.watchMessages = $scope.$watch('state.nav.currentFolder.messages', function(messages) {
         if (!messages) {
             return;
         }

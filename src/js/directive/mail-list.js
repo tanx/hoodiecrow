@@ -97,7 +97,7 @@ ngModule.directive('listScroll', function($timeout) {
             };
 
             // load the visible message bodies, when the list is re-initialized and when scrolling stopped
-            scope.$watchCollection(model, function() {
+            scope.$watch(model, function() {
                 scope.loadVisibleBodies();
             });
         }
