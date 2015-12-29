@@ -544,6 +544,17 @@ Gmail.prototype.onConnect = function() {
     }).then(function() {
         // set client to online after updating folders
         self._account.online = true;
+
+    }).then(function() {
+        // retry fetching messages after user is online
+        var inbox = _.findWhere(self._account.folders, {
+            type: FOLDER_TYPE_INBOX
+        });
+        if (inbox) {
+            return self.openFolder({
+                folder: inbox
+            });
+        }
     });
 };
 
@@ -578,8 +589,11 @@ Gmail.prototype._updateFolders = function() {
 
     self.busy(); // start the spinner
 
-    return self._gmailClient.listFolders().then(function(folders) {
-        self._account.folders = folders;
+    return self._gmailClient.listFolders().then(function(gFolders) {
+        var foldersChanged = false; // indicates if we need to persist anything to disk
+
+        // initialize the folders to something meaningful if that hasn't already happened
+        self._account.folders = self._account.folders || [];
 
         // set folder types
         setFolderType('INBOX', FOLDER_TYPE_INBOX);
@@ -587,6 +601,45 @@ Gmail.prototype._updateFolders = function() {
         setFolderType('DRAFT', FOLDER_TYPE_DRAFTS);
         setFolderType('STARRED', FOLDER_TYPE_FLAGGED);
         setFolderType('TRASH', FOLDER_TYPE_TRASH);
+
+        function setFolderType(path, type) {
+            var folder = _.findWhere(gFolders, {
+                path: path
+            });
+            if (folder) {
+                folder.type = type;
+            }
+        }
+
+        // smuggle the outbox into the well known folders, which is obv not present on gmail
+        gFolders.push({
+            name: config.outboxMailboxName,
+            type: config.outboxMailboxType,
+            path: config.outboxMailboxPath
+        });
+
+        // find out all the gmail paths that are new/removed
+        var gmailFolderPaths = _.pluck(gFolders, 'path'),
+            localFolderPaths = _.pluck(self._account.folders, 'path'),
+            newFolderPaths = _.difference(gmailFolderPaths, localFolderPaths),
+            removedFolderPaths = _.difference(localFolderPaths, gmailFolderPaths);
+
+        // folders need updating if there are new/removed folders
+        foldersChanged = !!newFolderPaths.length || !!removedFolderPaths.length;
+
+        // remove all the remotely deleted folders
+        removedFolderPaths.forEach(function(removedPath) {
+            self._account.folders.splice(self._account.folders.indexOf(_.findWhere(self._account.folders, {
+                path: removedPath
+            })), 1);
+        });
+
+        // add all the new gmail folders
+        newFolderPaths.forEach(function(newPath) {
+            self._account.folders.push(_.findWhere(gFolders, {
+                path: newPath
+            }));
+        });
 
         //
         // by now, all the folders are up to date. now we need to find all the well known folders
@@ -629,6 +682,7 @@ Gmail.prototype._updateFolders = function() {
             }
 
             wellknownFolder.wellknown = true;
+            foldersChanged = true;
         });
 
         // order folders
@@ -648,6 +702,14 @@ Gmail.prototype._updateFolders = function() {
             }
         });
 
+        // if folders have not changed, can fill them with messages directly
+        if (foldersChanged) {
+            return self._localStoreFolders();
+        }
+
+    }).then(function() {
+        return self._initFolders();
+
     }).then(function() {
         self.done(); // stop the spinner
 
@@ -655,44 +717,14 @@ Gmail.prototype._updateFolders = function() {
         self.done(); // stop the spinner
         throw err;
     });
-
-    function setFolderType(path, type) {
-        var folder = _.findWhere(self._account.folders, {
-            path: path
-        });
-        if (folder) {
-            folder.type = type;
-        }
-    }
 };
 
 Gmail.prototype._initFolders = function() {
     var self = this;
 
     self._account.folders.forEach(function(folder) {
-        folder.modseq = folder.modseq || 0;
         folder.count = folder.count || 0;
-        folder.uids = folder.uids || []; // attach an empty uids array to the folder
-        folder.uids.sort(function(a, b) {
-            return a - b;
-        });
-        folder.messages = folder.messages || folder.uids.map(function(uid) {
-            // fill the messages array with dummy messages, messages will be fetched later
-            return {
-                uid: uid
-            };
-        });
     });
-
-    var inbox = _.findWhere(self._account.folders, {
-        type: FOLDER_TYPE_INBOX
-    });
-    if (inbox && inbox.messages.length) {
-        return self.getBody({
-            folder: inbox,
-            messages: inbox.messages.slice(-30)
-        }).catch(self._dialog.error);
-    }
 };
 
 Gmail.prototype.busy = function() {
@@ -747,7 +779,6 @@ Gmail.prototype._localStoreFolders = function() {
             name: folder.name,
             path: folder.path,
             type: folder.type,
-            modseq: folder.modseq,
             wellknown: !!folder.wellknown,
             uids: folder.uids
         };
