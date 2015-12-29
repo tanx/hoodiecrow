@@ -2,6 +2,10 @@
 <html ng-csp manifest="appcache.manifest">
   <head>
     <meta charset="utf-8">
+
+    <!-- Protect against XSS in case HTTP headers cannot be set e.g. GitHub pages -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; connect-src *; style-src 'self' 'unsafe-inline'; img-src *">
+
     <title>Whiteout Mail</title>
 
     <!-- iOS homescreen link -->
