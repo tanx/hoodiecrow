@@ -122,7 +122,8 @@ GmailClient.prototype.listMessageIds = function(folder) {
             labelIds: folder.path
         }
     }).then(function(response) {
-        return response.messages;
+        // return empty array when the folder has no messages
+        return response.messages || [];
     });
 };
 
