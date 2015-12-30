@@ -181,8 +181,6 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
             return;
         }
 
-        // sort message by uid
-        messages.sort(byUidDescending);
         // Unselect message if it has been deleted from the messages array
         if (messages.indexOf(currentMessage()) === -1) {
             $scope.select();
@@ -350,19 +348,5 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
         $scope.pendingNotifications.push(note);
     };
 };
-
-//
-// helper functions
-//
-
-function byUidDescending(a, b) {
-    if (a.uid < b.uid) {
-        return 1;
-    } else if (b.uid < a.uid) {
-        return -1;
-    } else {
-        return 0;
-    }
-}
 
 module.exports = MailListCtrl;

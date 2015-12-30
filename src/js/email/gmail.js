@@ -546,15 +546,19 @@ Gmail.prototype.onConnect = function() {
         self._account.online = true;
 
     }).then(function() {
-        // retry fetching messages after user is online
+        // by default, select the inbox (if there is one) after connecting.
         var inbox = _.findWhere(self._account.folders, {
             type: FOLDER_TYPE_INBOX
         });
-        if (inbox) {
-            return self.openFolder({
-                folder: inbox
-            });
+
+        if (!inbox) {
+            // if there is no inbox, that's ok, too
+            return;
         }
+
+        return self.openFolder({
+            folder: inbox
+        });
     });
 };
 
