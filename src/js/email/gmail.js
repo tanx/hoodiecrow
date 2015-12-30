@@ -4,7 +4,8 @@ var ngModule = angular.module('woEmail');
 ngModule.service('email', Gmail);
 module.exports = Gmail;
 
-var config = require('../app-config').config;
+var config = require('../app-config').config,
+    axe = require('axe-logger');
 
 //
 //
@@ -21,6 +22,7 @@ var FOLDER_TYPE_DRAFTS = 'Drafts';
 var FOLDER_TYPE_TRASH = 'Trash';
 var FOLDER_TYPE_FLAGGED = 'Flagged';
 
+var MSG_ATTR_ID = 'id';
 var MSG_PART_ATTR_CONTENT = 'content';
 var MSG_PART_TYPE_ATTACHMENT = 'attachment';
 var MSG_PART_TYPE_ENCRYPTED = 'encrypted';
@@ -193,9 +195,7 @@ Gmail.prototype.openFolder = function(options) {
             return;
         }
 
-        return self._fetchMessages({
-            folder: folder
-        }).then(function(messages) {
+        return self._gmailClient.listMessageIds(folder).then(function(messages) {
             folder.messages = messages;
         });
     });
@@ -216,7 +216,8 @@ Gmail.prototype.moveMessage = function( /*options*/ ) {};
  */
 Gmail.prototype.getBody = function(options) {
     var self = this,
-        messages = options.messages;
+        messages = options.messages,
+        folder = options.folder;
 
     messages = messages.filter(function(message) {
         // the message either already has a body or is fetching it right now, so no need to become active here
@@ -235,20 +236,73 @@ Gmail.prototype.getBody = function(options) {
 
     self.busy();
 
-    return new Promise(function(resolve) {
-        resolve();
+    var loadedMessages;
+
+    // load the message from disk
+    return self._localListMessages({
+        folder: folder,
+        id: _.pluck(messages, MSG_ATTR_ID)
+    }).then(function(localMessages) {
+        loadedMessages = localMessages;
+
+        // find out which messages are not available on disk (ids not included in disk roundtrip)
+        var localIds = _.pluck(localMessages, MSG_ATTR_ID);
+        var needsGmailFetch = messages.filter(function(msg) {
+            return !_.contains(localIds, msg.id);
+        });
+        return needsGmailFetch;
+
+    }).then(function(needsGmailFetch) {
+        // get the missing messages from gmail
+
+        if (!needsGmailFetch.length) {
+            // no gmail roundtrip needed, we're done
+            return loadedMessages;
+        }
+
+        // do the gmail roundtrip
+        return self._fetchMessages({
+            messages: needsGmailFetch,
+            folder: folder
+        }).then(function(gMessages) {
+            // add the messages from gmail to the loaded messages
+            loadedMessages = loadedMessages.concat(gMessages);
+
+        }).catch(function(err) {
+            axe.error('Can not fetch messages from IMAP. Reason: ' + err.message + (err.stack ? ('\n' + err.stack) : ''));
+
+            // stop the loading spinner for those messages we can't fetch
+            needsGmailFetch.forEach(function(message) {
+                message.loadingBody = false;
+            });
+
+            // we can't fetch from gmail, just continue with what we have
+            messages = _.difference(messages, needsGmailFetch);
+        });
 
     }).then(function() {
-        // fetch each message body
+        // enhance dummy messages with content
+        messages.forEach(function(message) {
+            var loadedMessage = _.findWhere(loadedMessages, {
+                id: message.id
+            });
+
+            // enhance the dummy message with the loaded content
+            _.extend(message, loadedMessage);
+        });
+
+    }).then(function() {
+        // extract the message body
         var jobs = [];
 
         messages.forEach(function(message) {
-            var job = fetchSingleBody(message);
+            var job = self._extractBody(message).catch(function(err) {
+                axe.error('Can extract body for message id ' + message.id + ' . Reason: ' + err.message + (err.stack ? ('\n' + err.stack) : ''));
+            });
             jobs.push(job);
         });
 
         return Promise.all(jobs);
-
     }).then(function() {
         done();
 
@@ -262,32 +316,6 @@ Gmail.prototype.getBody = function(options) {
         done();
         throw err;
     });
-
-    function fetchSingleBody(message) {
-        return self._gmailClient.getMessage(message).then(function() {
-            // automatically fetch the message content body part for PGP/MIME
-            var encryptedBodyPart = _.findWhere(message.bodyParts, {
-                type: 'encrypted'
-            });
-            var signedBodyPart = _.findWhere(message.bodyParts, {
-                type: 'signed'
-            });
-
-            var pgpContentBodyPart = encryptedBodyPart || signedBodyPart;
-            if (!pgpContentBodyPart || !pgpContentBodyPart.attachmentId) {
-                // no body part to be fetched
-                return;
-            }
-
-            return self._gmailClient.getAttachment({
-                message: message,
-                attachmentId: pgpContentBodyPart.attachmentId
-            }).then(function() {
-                // extract body
-                return self._extractBody(message);
-            });
-        });
-    }
 
     function done() {
         messages.forEach(function(message) {
@@ -449,7 +477,7 @@ Gmail.prototype.sendPlaintext = function(options) {
 };
 
 /**
- * This funtion wraps error handling for sending via pgpMailer and uploading to imap.
+ * This funtion wraps error handling for sending via pgpMailer and uploading to gmail.
  * @param {Object} options.email The message to be sent
  */
 Gmail.prototype._sendGeneric = function(options) {
@@ -558,7 +586,7 @@ Gmail.prototype.onConnect = function() {
 
 /**
  * This handler should be invoked when navigator.onLine === false.
- * It will discard the imap client and pgp mailer
+ * It will discard the gmail client and pgp mailer
  */
 Gmail.prototype.onDisconnect = function() {
     // logout of gmail-client
@@ -748,14 +776,101 @@ Gmail.prototype.done = function() {
  */
 Gmail.prototype._fetchMessages = function(options) {
     var self = this,
+        messages = options.messages,
         folder = options.folder;
+
+    function fetchSingleBody(message) {
+        return self._gmailClient.getMessage(message).then(function() {
+            // automatically fetch the message content body part for PGP/MIME
+            var encryptedBodyPart = _.findWhere(message.bodyParts, {
+                type: 'encrypted'
+            });
+            var signedBodyPart = _.findWhere(message.bodyParts, {
+                type: 'signed'
+            });
+
+            var pgpContentBodyPart = encryptedBodyPart || signedBodyPart;
+            if (!pgpContentBodyPart || !pgpContentBodyPart.attachmentId) {
+                // no body part to be fetched
+                return;
+            }
+
+            return self._gmailClient.getAttachment({
+                message: message,
+                attachmentId: pgpContentBodyPart.attachmentId
+            }).then(function() {
+                // extract body
+                return self._extractBody(message);
+            });
+        });
+    }
 
     return new Promise(function(resolve) {
         self.checkOnline();
         resolve();
 
     }).then(function() {
-        return self._gmailClient.listMessageIds(folder);
+        // fetch all the metadata at once
+        return self._gmailClient.listMessages({
+            path: folder.path,
+            ids: _.pluck(messages, MSG_ATTR_ID)
+        });
+
+    }).then(function(msgs) {
+        messages = msgs;
+        // displays the clip in the UI if the message contains attachments
+        messages.forEach(function(message) {
+            message.attachments = message.bodyParts.filter(function(bodyPart) {
+                return bodyPart.type === MSG_PART_TYPE_ATTACHMENT;
+            });
+        });
+
+        // get the bodies from gmail (individual roundtrips per msg)
+        var jobs = [];
+
+        messages.forEach(function(message) {
+            // fetch only the content for non-attachment body parts (encrypted, signed, text, html, resources referenced from the html)
+            var contentParts = message.bodyParts.filter(function(bodyPart) {
+                return bodyPart.type !== MSG_PART_TYPE_ATTACHMENT || (bodyPart.type === MSG_PART_TYPE_ATTACHMENT && bodyPart.id);
+            });
+            var attachmentParts = message.bodyParts.filter(function(bodyPart) {
+                return bodyPart.type === MSG_PART_TYPE_ATTACHMENT && !bodyPart.id;
+            });
+
+            if (!contentParts.length) {
+                return;
+            }
+
+            // do the gmail roundtrip
+            var job = self._getBodyParts({
+                folder: folder,
+                id: message.id,
+                bodyParts: contentParts
+            }).then(function(parsedBodyParts) {
+                // concat parsed bodyparts and the empty attachment parts
+                message.bodyParts = parsedBodyParts.concat(attachmentParts);
+
+                // store fetched message
+                return self._localStoreMessages({
+                    folder: folder,
+                    emails: [message]
+                });
+            }).catch(function(err) {
+                // ignore errors with err.hide, throw otherwise
+                if (err.hide) {
+                    return;
+                } else {
+                    throw err;
+                }
+            });
+
+            jobs.push(job);
+        });
+
+        return Promise.all(jobs);
+    }).then(function() {
+        updateUnreadCount(folder); // update the unread count
+        return messages;
     });
 };
 
