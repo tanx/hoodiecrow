@@ -121,7 +121,7 @@ describe('Gmail Client unit test', function() {
                     historyId: "797943",
                     id: "151cce38cb790ee1",
                     internalDate: "1450841443000",
-                    labelIds: [],
+                    labelIds: ["INBOX", "STARRED", "UNREAD"],
                     payload: {
                         headers: [{
                             name: "Subject",
@@ -171,6 +171,8 @@ describe('Gmail Client unit test', function() {
                     expect(message.from[0].name).to.exist;
                     expect(message.from[0].address).to.exist;
                     expect(message.subject).to.exist;
+                    expect(message.unread).to.be.true;
+                    expect(message.flagged).to.be.true;
                     expect(message.bodyParts[0].type).to.equal('encrypted');
                     expect(message.bodyParts[0].attachmentId).to.equal('2');
                     done();

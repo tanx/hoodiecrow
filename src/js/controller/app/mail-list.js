@@ -36,21 +36,20 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
             // early return if message has not finished loading yet
             return;
         }
-        $location.search('uid', message.uid);
+        $location.search('id', message.id);
     };
 
     $scope.loc = $location;
-    $scope.$watch('(loc.search()).uid', function(uid) {
-        uid = parseInt(uid, 10);
-        if (isNaN(uid)) {
-            // no (or nonsensical) uid specified in url... select no message
+    $scope.$watch('(loc.search()).id', function(id) {
+        if (!id) {
+            // no (or nonsensical) id specified in url... select no message
             $scope.select();
             return;
         }
 
-        // select the message specified by the uid in the url
+        // select the message specified by the id in the url
         $scope.select(_.findWhere(currentFolder().messages, {
-            uid: uid
+            id: id
         }));
     });
 
@@ -340,7 +339,7 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
                 }
                 // open the message
                 $scope.navigate(_.findWhere(currentFolder().messages, {
-                    uid: unreadMsgs[0].uid
+                    id: unreadMsgs[0].id
                 }));
             },
             timeout: NOTIFICATION_INBOX_TIMEOUT

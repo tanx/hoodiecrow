@@ -14,10 +14,6 @@ var config = require('../app-config').config;
 
 var FOLDER_DB_TYPE = 'folders';
 
-// var SYNC_TYPE_NEW = 'new';
-// var SYNC_TYPE_DELETED = 'deleted';
-// var SYNC_TYPE_MSGS = 'messages';
-
 // well known folders
 var FOLDER_TYPE_INBOX = 'Inbox';
 var FOLDER_TYPE_SENT = 'Sent';
@@ -25,8 +21,6 @@ var FOLDER_TYPE_DRAFTS = 'Drafts';
 var FOLDER_TYPE_TRASH = 'Trash';
 var FOLDER_TYPE_FLAGGED = 'Flagged';
 
-// var MSG_ATTR_UID = 'uid';
-// var MSG_ATTR_MODSEQ = 'modseq';
 var MSG_PART_ATTR_CONTENT = 'content';
 var MSG_PART_TYPE_ATTACHMENT = 'attachment';
 var MSG_PART_TYPE_ENCRYPTED = 'encrypted';
@@ -783,8 +777,7 @@ Gmail.prototype._localStoreFolders = function() {
             name: folder.name,
             path: folder.path,
             type: folder.type,
-            wellknown: !!folder.wellknown,
-            uids: folder.uids
+            wellknown: !!folder.wellknown
         };
     });
 
@@ -796,21 +789,21 @@ Gmail.prototype._localStoreFolders = function() {
  * or "email_[FOLDER PATH]", respectively
  *
  * @param {Object} options.folder The folder for which to list the content
- * @param {Object} options.uid A specific uid to look up locally in the folder
+ * @param {Object} options.id A specific id to look up locally in the folder
  */
 Gmail.prototype._localListMessages = function(options) {
     var query;
 
     var needsExactMatch = typeof options.exactmatch === 'undefined' ? true : options.exactmatch;
 
-    if (Array.isArray(options.uid)) {
+    if (Array.isArray(options.id)) {
         // batch list
-        query = options.uid.map(function(uid) {
-            return 'email_' + options.folder.path + (uid ? '_' + uid : '');
+        query = options.id.map(function(id) {
+            return 'email_' + options.folder.path + (id ? '_' + id : '');
         });
     } else {
         // single list
-        query = 'email_' + options.folder.path + (options.uid ? '_' + options.uid : '');
+        query = 'email_' + options.folder.path + (options.id ? '_' + options.id : '');
     }
 
     return this._devicestorage.listItems(query, needsExactMatch);
@@ -835,16 +828,15 @@ Gmail.prototype._localStoreMessages = function(options) {
  */
 Gmail.prototype._localDeleteMessage = function(options) {
     var path = options.folder.path,
-        uid = options.uid,
         id = options.id;
 
-    if (!path || !(uid || id)) {
+    if (!path || !id) {
         return new Promise(function() {
             throw new Error('Invalid options!');
         });
     }
 
-    var dbType = 'email_' + path + '_' + (uid || id);
+    var dbType = 'email_' + path + '_' + id;
     return this._devicestorage.removeList(dbType);
 };
 

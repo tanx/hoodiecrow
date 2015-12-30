@@ -41,7 +41,7 @@ var NavigationCtrl = function($scope, $location, $q, $timeout, account, email, o
      * Close read mode and go to folder
      */
     $scope.navigate = function(folderIndex) {
-        $location.search('uid', null); // close the read mode
+        $location.search('id', null); // close the read mode
         $location.search('folder', folderIndex); // open the n-th folder
     };
 

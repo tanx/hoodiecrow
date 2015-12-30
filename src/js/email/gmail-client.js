@@ -141,28 +141,20 @@ GmailClient.prototype.getMessage = function(message) {
             format: 'full'
         }
     }).then(function(gMsg) {
-        // set message attributes
-        message.uid = parseInt(gMsg.internalDate, 10);
+        // headers
+        message.internalDate = gMsg.internalDate; // internal creation timestamp (epoch ms), determines ordering
         message.subject = getHeader(gMsg.payload, 'Subject') || '(no subject)';
         message.from = self._addressparser.parse(getHeader(gMsg.payload, 'From'));
         message.to = self._addressparser.parse(getHeader(gMsg.payload, 'To'));
         message.cc = self._addressparser.parse(getHeader(gMsg.payload, 'Cc'));
         message.bcc = self._addressparser.parse(getHeader(gMsg.payload, 'Bcc'));
         message.sentDate = getHeader(gMsg.payload, 'Date') ? new Date(getHeader(gMsg.payload, 'Date')) : new Date();
+        // flags
+        message.unread = _.contains(gMsg.labelIds, 'UNREAD');
+        message.flagged = _.contains(gMsg.labelIds, 'STARRED');
+        // body
         message.body = gMsg.payload.body.data ? self._base64url.decode(gMsg.payload.body.data) : undefined;
         message.bodyParts = [];
-
-        // TODO: add the rest of the attributes
-
-        // replyTo: message.envelope['reply-to'] || [],
-        // inReplyTo: (message.envelope['in-reply-to'] || '').replace(/[<>]/g, ''),
-        // references: references ? references.split(/\s+/).map(function(reference) {
-        //     return reference.replace(/[<>]/g, '');
-        // }) : [],
-        message.unread = false;
-        message.flagged = false;
-        message.answered = false;
-
         // walk the mime tree to get the message mime type and body structure
         walkMimeTree((gMsg.payload || {}), message);
         message.encrypted = message.bodyParts.filter(function(bodyPart) {

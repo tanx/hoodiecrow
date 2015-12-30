@@ -30,14 +30,14 @@ var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, k
 
     // read state url watcher
     $scope.loc = $location;
-    $scope.$watch('(loc.search()).uid', function(uid) {
+    $scope.$watch('(loc.search()).id', function(id) {
         // synchronize the url to the scope state
-        $scope.state.read.toggle(!!uid);
+        $scope.state.read.toggle(!!id);
     });
     $scope.$watch('state.read.open', function(value) {
         // close read mode by navigating to folder view
         if (!value) {
-            $location.search('uid', null);
+            $location.search('id', null);
         }
     });
 
@@ -129,7 +129,7 @@ var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, k
         }).then(function() {
             return email.getAttachment({
                 folder: folder,
-                uid: message.uid,
+                id: message.id,
                 attachment: attachment
             });
 
