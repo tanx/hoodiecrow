@@ -1,15 +1,17 @@
 'use strict';
 
 var OAuth = require('../../../src/js/service/oauth'),
-    RestDAO = require('../../../src/js/service/rest');
+    appConfig = require('../../../src/js/app-config');
 
 describe('OAuth unit tests', function() {
-    var oauth, googleApiStub, identityStub, getPlatformInfoStub, removeCachedStub,
-        testEmail = 'test@example.com';
+    var oauth, identityStub, getPlatformInfoStub, removeCachedStub,
+        testEmail = 'safewithme.testuser@gmail.com',
+        testName = 'Test User',
+        oauthRedirectQuery = '?grep=oauthCallback&oauth=true';
 
     beforeEach(function() {
-        googleApiStub = sinon.createStubInstance(RestDAO);
-        oauth = new OAuth(googleApiStub);
+        oauth = new OAuth(appConfig);
+        oauth._redirectUri += oauthRedirectQuery;
 
         window.chrome = window.chrome || {};
 
@@ -37,66 +39,72 @@ describe('OAuth unit tests', function() {
         removeCachedStub.restore();
     });
 
-    describe('isSupported', function() {
+    describe('webAuthenticate', function() {
         it('should work', function() {
-            expect(oauth.isSupported()).to.be.true;
+            if (window.location.search.indexOf('oauth=true') < 0) {
+                return;
+            }
+
+            oauth.webAuthenticate({
+                loginHint: testEmail
+            });
         });
     });
 
-    describe('refreshToken', function() {
-        var getOAuthTokenStub;
+    describe('oauthCallback', function() {
+        it('should work', function(done) {
+            if (window.location.search.indexOf('oauth=true') < 0) {
+                done();
+                return;
+            }
 
-        beforeEach(function() {
-            getOAuthTokenStub = sinon.stub(oauth, 'getOAuthToken');
-        });
-        afterEach(function() {
-            getOAuthTokenStub.restore();
-        });
+            oauth.oauthCallback();
+            expect(oauth.accessToken).to.exist;
+            expect(oauth.tokenType).to.exist;
+            expect(oauth.expiresIn).to.exist;
 
-        it('should work', function() {
-            removeCachedStub.withArgs({
-                token: 'oldToken'
-            }).returns(resolves());
-
-            getOAuthTokenStub.withArgs(testEmail).returns(resolves());
-
-            oauth.refreshToken({
-                oldToken: 'oldToken',
-                emailAddress: testEmail
-            }).then(function() {
-                expect(removeCachedStub.calledOnce).to.be.true;
-                expect(getOAuthTokenStub.calledOnce).to.be.true;
-            });
-        });
-
-        it('should work without email', function() {
-            removeCachedStub.withArgs({
-                token: 'oldToken'
-            }).returns(resolves());
-
-            getOAuthTokenStub.withArgs(undefined).returns(resolves());
-
-            oauth.refreshToken({
-                oldToken: 'oldToken',
-            }).then(function() {
-                expect(removeCachedStub.calledOnce).to.be.true;
-                expect(getOAuthTokenStub.calledOnce).to.be.true;
-                expect(getOAuthTokenStub.calledWith(undefined)).to.be.true;
-            });
-        });
-
-        it('should fail without all options', function() {
-            oauth.refreshToken({
-                emailAddress: testEmail
-            }).catch(function(err) {
-                expect(err).to.exist;
-                expect(removeCachedStub.called).to.be.false;
-                expect(getOAuthTokenStub.called).to.be.false;
+            oauth.queryEmailAddress(oauth.accessToken).then(function(emailAddress) {
+                expect(emailAddress).to.exist;
+                console.log(emailAddress);
+                done();
             });
         });
     });
 
     describe('getOAuthToken', function() {
+        it('should return cached oauth token', function(done) {
+            oauth.accessToken = 'token';
+
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            }).then(function(token) {
+                expect(token).to.equal('token');
+                done();
+            });
+        });
+
+        it('should work for chrome browser (not chrome app)', function() {
+            oauth.accessToken = undefined;
+            window.chrome.identity = undefined;
+            sinon.stub(oauth, 'webAuthenticate');
+
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            });
+            expect(oauth.webAuthenticate.calledOnce).to.be.true;
+        });
+
+        it('should work for non-chrome browsers', function() {
+            oauth.accessToken = undefined;
+            window.chrome = undefined;
+            sinon.stub(oauth, 'webAuthenticate');
+
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            });
+            expect(oauth.webAuthenticate.calledOnce).to.be.true;
+        });
+
         it('should work for empty emailAddress', function(done) {
             getPlatformInfoStub.yields({
                 os: 'android'
@@ -120,7 +128,9 @@ describe('OAuth unit tests', function() {
                 accountHint: testEmail
             }).yields('token');
 
-            oauth.getOAuthToken(testEmail).then(function(token) {
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            }).then(function(token) {
                 expect(token).to.equal('token');
                 done();
             });
@@ -134,7 +144,9 @@ describe('OAuth unit tests', function() {
                 interactive: true
             }).yields('token');
 
-            oauth.getOAuthToken(testEmail).then(function(token) {
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            }).then(function(token) {
                 expect(token).to.equal('token');
                 done();
             });
@@ -146,7 +158,9 @@ describe('OAuth unit tests', function() {
             });
             identityStub.yields();
 
-            oauth.getOAuthToken(testEmail).catch(function(err) {
+            oauth.getOAuthToken({
+                loginHint: testEmail
+            }).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -154,15 +168,23 @@ describe('OAuth unit tests', function() {
     });
 
     describe('queryEmailAddress', function() {
+        beforeEach(function() {
+            sinon.stub(window, 'fetch');
+        });
+
+        afterEach(function() {
+            window.fetch.restore();
+        });
+
         it('should work', function(done) {
-            googleApiStub.get.withArgs({
-                uri: '/oauth2/v3/userinfo?access_token=token'
-            }).returns(resolves({
-                email: 'asdf@example.com'
+            window.fetch.returns(fetchOk({
+                email: testEmail,
+                name: testName
             }));
 
-            oauth.queryEmailAddress('token').then(function(emailAddress) {
-                expect(emailAddress).to.equal('asdf@example.com');
+            oauth.queryEmailAddress('token').then(function(info) {
+                expect(info.emailAddress).to.equal(testEmail);
+                expect(info.realname).to.equal(testName);
                 done();
             });
         });
@@ -174,13 +196,39 @@ describe('OAuth unit tests', function() {
             });
         });
 
-        it('should fail due to error in rest api', function(done) {
-            googleApiStub.get.withArgs({
-                uri: '/oauth2/v3/userinfo?access_token=token'
-            }).yields(new Error());
+        it('should fail due to expired token', function(done) {
+            window.fetch.returns(fetchError(401, {
+                error_description: 'Invalid credentials!'
+            }));
+            oauth.accessToken = 'cachedToken';
 
             oauth.queryEmailAddress('token').catch(function(err) {
-                expect(err).to.exist;
+                expect(err.code).to.equal(401);
+                expect(oauth.accessToken).to.be.undefined;
+                done();
+            });
+        });
+
+        it('should fail due to expired token', function(done) {
+            window.fetch.returns(fetchError(400, {
+                error_description: 'Invalid request!'
+            }));
+            oauth.accessToken = 'cachedToken';
+
+            oauth.queryEmailAddress('token').catch(function(err) {
+                expect(err.code).to.equal(400);
+                expect(oauth.accessToken).to.equal('cachedToken');
+                done();
+            });
+        });
+
+        it('should fail due to offline case', function(done) {
+            window.fetch.returns(rejects(new Error('Offline!')));
+            oauth.accessToken = 'cachedToken';
+
+            oauth.queryEmailAddress('token').catch(function(err) {
+                expect(err.code).to.equal(42);
+                expect(oauth.accessToken).to.equal('cachedToken');
                 done();
             });
         });

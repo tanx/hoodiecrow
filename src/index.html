@@ -2,7 +2,11 @@
 <html ng-csp manifest="appcache.manifest">
   <head>
     <meta charset="utf-8">
-    <title>Whiteout Mail</title>
+
+    <!-- Protect against XSS in case HTTP headers cannot be set e.g. GitHub pages -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; connect-src *; style-src 'self' 'unsafe-inline'; img-src *">
+
+    <title>Hoodiecrow</title>
 
     <!-- iOS homescreen link -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -34,7 +38,6 @@
     <link rel="stylesheet" media="all" href="css/all.min.css" type="text/css">
 
     <!-- The Scripts -->
-    <script src="socket.io/socket.io.js"></script>
     <script src="js/openpgp.min.js"></script>
     <script src="js/forge.min.js"></script>
     <script src="js/app.min.js"></script>

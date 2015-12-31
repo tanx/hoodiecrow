@@ -43,8 +43,6 @@ module.exports = function(grunt) {
                     'node_modules/mocha/mocha.js',
                     'node_modules/chai/chai.js',
                     'node_modules/sinon/pkg/sinon.js',
-                    'node_modules/browsercrow/src/*.js',
-                    'node_modules/browsersmtp/src/*.js',
                     'node_modules/openpgp/dist/openpgp.min.js',
                     'node_modules/openpgp/dist/openpgp.worker.min.js',
                     'src/lib/forge/forge.min.js',
@@ -122,7 +120,7 @@ module.exports = function(grunt) {
         },
         csso: {
             options: {
-                banner: '/*! Copyright © 2013, Whiteout Networks GmbH. All rights reserved.*/\n'
+                banner: '/*! Copyright © 2016, Hoodiecrow Project. All rights reserved.*/\n'
             },
             dist: {
                 files: {
@@ -165,30 +163,15 @@ module.exports = function(grunt) {
                 },
                 options: browserifyOpt
             },
-            tlsWorker: {
-                files: {
-                    'dist/js/tcp-socket-tls-worker.browserified.js': ['node_modules/tcp-socket/src/tcp-socket-tls-worker.js']
-                },
-                options: browserifyOpt
-            },
-            compressionWorker: {
-                files: {
-                    'dist/js/browserbox-compression-worker.browserified.js': ['node_modules/imap-client/node_modules/browserbox/src/browserbox-compression-worker.js']
-                },
-                options: browserifyOpt
-            },
             unitTest: {
                 files: {
                     'test/unit/index.browserified.js': [
                         'test/main.js',
                         'test/unit/util/dialog-test.js',
-                        'test/unit/util/connection-doctor-test.js',
                         'test/unit/util/update-handler-test.js',
                         'test/unit/util/status-display-test.js',
                         'test/unit/crypto/pgp-test.js',
                         'test/unit/crypto/crypto-test.js',
-                        'test/unit/service/rest-dao-test.js',
-                        'test/unit/service/admin-dao-test.js',
                         'test/unit/service/auth-test.js',
                         'test/unit/service/oauth-test.js',
                         'test/unit/service/publickey-dao-test.js',
@@ -196,23 +179,19 @@ module.exports = function(grunt) {
                         'test/unit/service/lawnchair-dao-test.js',
                         'test/unit/service/keychain-dao-test.js',
                         'test/unit/service/devicestorage-dao-test.js',
-                        'test/unit/service/mail-config-service-test.js',
                         'test/unit/service/invitation-dao-test.js',
                         'test/unit/service/publickey-verifier-test.js',
                         'test/unit/email/outbox-bo-test.js',
-                        'test/unit/email/email-dao-test.js',
+                        'test/unit/email/gmail-client-test.js',
                         'test/unit/email/account-test.js',
                         'test/unit/email/search-test.js',
                         'test/unit/controller/login/add-account-ctrl-test.js',
-                        'test/unit/controller/login/create-account-ctrl-test.js',
-                        'test/unit/controller/login/validate-phone-ctrl-test.js',
                         'test/unit/controller/login/login-existing-ctrl-test.js',
                         'test/unit/controller/login/login-initial-ctrl-test.js',
                         'test/unit/controller/login/login-new-device-ctrl-test.js',
                         'test/unit/controller/login/login-privatekey-download-ctrl-test.js',
                         'test/unit/controller/login/login-privatekey-upload-ctrl-test.js',
                         'test/unit/controller/login/login-verify-public-key-ctrl-test.js',
-                        'test/unit/controller/login/login-set-credentials-ctrl-test.js',
                         'test/unit/controller/login/login-ctrl-test.js',
                         'test/unit/controller/app/dialog-ctrl-test.js',
                         'test/unit/controller/app/publickey-import-ctrl-test.js',
@@ -232,7 +211,7 @@ module.exports = function(grunt) {
                 files: {
                     'test/integration/index.browserified.js': [
                         'test/main.js',
-                        'test/integration/email-dao-test.js'
+                        'test/integration/gmail-dao-test.js'
                     ]
                 },
                 options: browserifyOpt
@@ -293,9 +272,6 @@ module.exports = function(grunt) {
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
-                    'src/lib/phonenumber/PhoneNumberMetadata.js',
-                    'src/lib/phonenumber/PhoneNumberNormalizer.js',
-                    'src/lib/phonenumber/PhoneNumber.js',
                     'dist/js/app.browserified.js',
                     '<%= ngtemplates.mail.dest %>'
                 ],
@@ -320,14 +296,6 @@ module.exports = function(grunt) {
                 src: ['dist/js/mailreader-parser-worker.browserified.js'],
                 dest: 'dist/js/mailreader-parser-worker.min.js'
             },
-            tlsWorker: {
-                src: ['dist/js/tcp-socket-tls-worker.browserified.js'],
-                dest: 'dist/js/tcp-socket-tls-worker.min.js'
-            },
-            compressionWorker: {
-                src: ['dist/js/browserbox-compression-worker.browserified.js'],
-                dest: 'dist/js/browserbox-compression-worker.min.js'
-            },
             unitTest: {
                 src: [
                     'node_modules/whatwg-fetch/fetch.js',
@@ -339,9 +307,6 @@ module.exports = function(grunt) {
                     'src/lib/lawnchair/lawnchair-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-webkit-sqlite-git.js',
                     'src/lib/lawnchair/lawnchair-adapter-indexed-db-git.js',
-                    'src/lib/phonenumber/PhoneNumberMetadata.js',
-                    'src/lib/phonenumber/PhoneNumberNormalizer.js',
-                    'src/lib/phonenumber/PhoneNumber.js',
                     'test/unit/index.browserified.js'
                 ],
                 dest: 'test/unit/index.js',
@@ -404,26 +369,8 @@ module.exports = function(grunt) {
                     sourceMapName: 'dist/js/mailreader-parser-worker.min.js.map'
                 }
             },
-            tlsWorker: {
-                files: {
-                    'dist/js/tcp-socket-tls-worker.min.js': ['dist/js/tcp-socket-tls-worker.min.js']
-                },
-                options: {
-                    sourceMap: true,
-                    sourceMapName: 'dist/js/tcp-socket-tls-worker.min.js.map'
-                }
-            },
-            compressionWorker: {
-                files: {
-                    'dist/js/browserbox-compression-worker.min.js': ['dist/js/browserbox-compression-worker.min.js']
-                },
-                options: {
-                    sourceMap: true,
-                    sourceMapName: 'dist/js/browserbox-compression-worker.min.js.map'
-                }
-            },
             options: {
-                banner: '/*! Copyright © <%= grunt.template.today("yyyy") %>, Whiteout Networks GmbH.*/\n'
+                banner: '/*! Copyright © <%= grunt.template.today("yyyy") %>, Hoodiecrow Project.*/\n'
             }
         },
 
@@ -436,6 +383,13 @@ module.exports = function(grunt) {
                     ]
                 }
             }
+        },
+
+        'gh-pages': {
+            options: {
+                base: 'dist'
+            },
+            src: ['**']
         },
 
         // Assets
@@ -573,7 +527,7 @@ module.exports = function(grunt) {
             main: {
                 options: {
                     mode: 'zip',
-                    archive: 'release/whiteout-mail_' + zipName + '.zip'
+                    archive: 'release/hoodiecrow_' + zipName + '.zip'
                 },
                 expand: true,
                 cwd: 'dist/',
@@ -597,10 +551,8 @@ module.exports = function(grunt) {
                     basePath: 'dist/',
                     timestamp: true,
                     hash: true,
-                    cache: ['socket.io/socket.io.js'],
                     exclude: [
                         'appcache.manifest',
-                        'manifest.webapp',
                         'manifest.mobile.json',
                         'background.js',
                         'service-worker.js',
@@ -617,10 +569,6 @@ module.exports = function(grunt) {
                         'js/read-sandbox.min.js.map',
                         'js/mailreader-parser-worker.browserified.js',
                         'js/mailreader-parser-worker.min.js.map',
-                        'js/tcp-socket-tls-worker.browserified.js',
-                        'js/tcp-socket-tls-worker.min.js.map',
-                        'js/browserbox-compression-worker.browserified.js',
-                        'js/browserbox-compression-worker.min.js.map',
                         'img/icon-100-ios.png',
                         'img/icon-114-ios.png',
                         'img/icon-120-ios.png',
@@ -698,9 +646,6 @@ module.exports = function(grunt) {
                 // local changes from being picked up during the development cycle.
                 handleFetch: handleFetch,
                 logger: grunt.log.writeln,
-                dynamicUrlToDependencies: {
-                    'socket.io/socket.io.js': ['node_modules/socket.io/node_modules/socket.io-client/socket.io.js'],
-                },
                 staticFileGlobs: [
                     rootDir + '/*.html',
                     rootDir + '/tpl/*.html',
@@ -740,6 +685,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-svgstore');
     grunt.loadNpmTasks('grunt-shell');
     grunt.loadNpmTasks('grunt-angular-templates');
+    grunt.loadNpmTasks('grunt-gh-pages');
     grunt.loadNpmTasks('assemble');
 
     // Build tasks
@@ -836,5 +782,7 @@ module.exports = function(grunt) {
     grunt.registerTask('release-test', ['dist', 'manifest-test', 'clean:release', 'swPrecache:prod', 'compress']);
     grunt.registerTask('release-prod', ['dist', 'manifest-prod', 'clean:release', 'swPrecache:prod', 'compress']);
     grunt.registerTask('default', ['release-dev']);
+    grunt.registerTask('deploy-gh-pages', ['release-prod', 'gh-pages']);
+
 
 };

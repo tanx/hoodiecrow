@@ -72,10 +72,10 @@ Dummy.prototype.listFolders = function() {
 };
 
 Dummy.prototype.listMails = function() {
-    var uid = 1000000;
+    var id = 1000000;
 
     var Email = function(unread, attachments, answered) {
-        this.uid = uid--;
+        this.id = id-- + '';
         this.from = [{
             name: 'Whiteout Support',
             address: 'support@whiteout.io'

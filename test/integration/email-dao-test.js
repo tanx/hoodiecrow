@@ -9,7 +9,7 @@ var ImapClient = require('imap-client'),
     mailreader = require('mailreader'),
     PgpMailer = require('pgpmailer');
 
-describe('Email DAO integration tests', function() {
+describe.skip('Email DAO integration tests', function() {
     this.timeout(100000);
 
     var accountService, emailDao, imapClient, pgpMailer, imapMessages, imapFolders, imapServer, smtpServer, smtpClient, userStorage, auth,
@@ -207,6 +207,8 @@ describe('Email DAO integration tests', function() {
         angular.mock.module('email-integration-test');
         angular.mock.inject(function($injector) {
             accountService = $injector.get('account');
+            // use email dao not gmail dao for these tests
+            accountService._emailDao = $injector.get('email');
             initAccountService();
         });
 

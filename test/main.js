@@ -64,3 +64,23 @@ window.rejects = function(val) {
         rej(val);
     });
 };
+
+window.fetchOk = function(body) {
+    var mockResponse = new window.Response(JSON.stringify(body), {
+        status: 200,
+        headers: {
+            'Content-type': 'application/json'
+        }
+    });
+    return resolves(mockResponse);
+};
+
+window.fetchError = function(status, body) {
+    var mockResponse = new window.Response(JSON.stringify(body), {
+        status: status,
+        headers: {
+            'Content-type': 'application/json'
+        }
+    });
+    return resolves(mockResponse);
+};

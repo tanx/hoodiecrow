@@ -11,7 +11,8 @@ var axe = require('axe-logger'),
     updateV3 = require('./update-v3'),
     updateV4 = require('./update-v4'),
     updateV5 = require('./update-v5'),
-    updateV6 = require('./update-v6');
+    updateV6 = require('./update-v6'),
+    updateV7 = require('./update-v7');
 
 /**
  * Handles database migration
@@ -19,7 +20,7 @@ var axe = require('axe-logger'),
 function UpdateHandler(appConfigStore, accountStore, auth, dialog) {
     this._appConfigStorage = appConfigStore;
     this._userStorage = accountStore;
-    this._updateScripts = [updateV1, updateV2, updateV3, updateV4, updateV5, updateV6];
+    this._updateScripts = [updateV1, updateV2, updateV3, updateV4, updateV5, updateV6, updateV7];
     this._auth = auth;
     this._dialog = dialog;
 }

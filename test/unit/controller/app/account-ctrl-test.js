@@ -5,20 +5,24 @@ var AccountCtrl = require('../../../../src/js/controller/app/account'),
     Download = require('../../../../src/js/util/download'),
     Keychain = require('../../../../src/js/service/keychain'),
     Auth = require('../../../../src/js/service/auth'),
-    Dialog = require('../../../../src/js/util/dialog');
+    Dialog = require('../../../../src/js/util/dialog'),
+    PrivateKey = require('../../../../src/js/service/privatekey'),
+    Email = require('../../../../src/js/email/gmail');
 
 describe('Account Controller unit test', function() {
     var scope, accountCtrl,
         dummyFingerprint, expectedFingerprint,
         dummyKeyId, expectedKeyId,
-        emailAddress, keySize, pgpStub, keychainStub, authStub, dialogStub, downloadStub;
+        emailAddress, keySize, pgpStub, keychainStub, authStub, dialogStub, downloadStub, privateKeyStub, emailDaoMock;
 
     beforeEach(function() {
+        emailDaoMock = sinon.createStubInstance(Email);
         pgpStub = sinon.createStubInstance(PGP);
         authStub = sinon.createStubInstance(Auth);
         keychainStub = sinon.createStubInstance(Keychain);
         dialogStub = sinon.createStubInstance(Dialog);
         downloadStub = sinon.createStubInstance(Download);
+        privateKeyStub = sinon.createStubInstance(PrivateKey);
 
         dummyFingerprint = '3A2D39B4E1404190B8B949DE7D7E99036E712926';
         expectedFingerprint = '3A2D 39B4 E140 4190 B8B9 49DE 7D7E 9903 6E71 2926';
@@ -48,7 +52,9 @@ describe('Account Controller unit test', function() {
                 keychain: keychainStub,
                 pgp: pgpStub,
                 download: downloadStub,
-                dialog: dialogStub
+                dialog: dialogStub,
+                privateKey: privateKeyStub,
+                email: emailDaoMock
             });
         });
     });
@@ -63,6 +69,7 @@ describe('Account Controller unit test', function() {
             expect(scope.keysize).to.equal(keySize);
         });
     });
+
     describe('export to key file', function() {
         it('should work', function(done) {
             keychainStub.getUserKeyPair.withArgs(emailAddress).returns(resolves({
@@ -95,4 +102,22 @@ describe('Account Controller unit test', function() {
             });
         });
     });
+
+    describe('checkKeySyncStatus', function() {
+        it('should work', function(done) {
+            privateKeyStub.isSynced.returns(resolves());
+
+            scope.checkKeySyncStatus().then(done);
+        });
+
+        it('should fail silently', function(done) {
+            privateKeyStub.isSynced.returns(rejects(new Error()));
+
+            scope.checkKeySyncStatus().then(function() {
+                expect(dialogStub.error.calledOnce).to.be.true;
+                done();
+            });
+        });
+    });
+
 });

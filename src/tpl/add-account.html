@@ -1,30 +1,22 @@
 <section class="page">
   <div class="page__canvas">
     <header class="page__header">
-      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+      <img src="img/icon.svg" alt="Hoodiecrow">
     </header>
     <main class="page__main">
-      <h2 class="typo-title">Connect your email account</h2>
-      <p class="typo-paragraph">Connect the Whiteout Mail client to any existing email account via IMAP for easy to use end-to-end encryption. We cannot read your password or messages. <a href="https://github.com/whiteout-io/mail-html5/wiki/FAQ#email-account-login" target="_blank">Learn more</a></p>
+      <h2 class="typo-title">Encrypt your Google Mail</h2>
+      <p class="typo-paragraph">Connect Hoodiecrow to your Gmail or Google Apps account for easy to use end-to-end encryption. This app connects directly to the Google Mail servers. None of your data or passwords ever pass our servers. <a href="https://github.com/tanx/hoodiecrow/wiki/FAQ#email-account-login" target="_blank">Learn more</a></p>
 
       <form class="form" name="form">
         <p class="form__error-message" ng-show="errMsg">{{errMsg}}</p>
-        <div class="form__row">
-          <input type="email" ng-model="emailAddress" placeholder="Enter email address" required tabindex="1"
-            class="input-text input-text--big" ng-class="{'input-text--error': errMsg}"
-            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-        </div>
         <div class="spinner-block" ng-show="busy">
           <span class="spinner spinner--big"></span>
         </div>
         <div class="form__row">
-          <button class="btn btn--big" type="submit" ng-click="getAccountSettings()">Connect</button>
+          <button class="btn btn--big" type="submit" ng-click="signInWithGoogle()">Sign in with Google</button>
         </div>
       </form>
 
-      <p class="typo-paragraph">
-        Or sign up for an encrypted <a href="#create-account">Whiteout Mailbox</a>.
-      </p>
     </main>
     <div ng-include="'tpl/page-footer.html'"></div>
   </div>

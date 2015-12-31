@@ -23,6 +23,8 @@
         "Promise",
         "resolves",
         "rejects",
+        "fetchOk",
+        "fetchError",
         "self",
         "importScripts",
         "console",
@@ -47,7 +49,9 @@
         "_",
         "openpgp",
         "PhoneNumber",
-        "DOMPurify"
+        "DOMPurify",
+        "escape",
+        "unescape"
     ],
 
     "globals": {}

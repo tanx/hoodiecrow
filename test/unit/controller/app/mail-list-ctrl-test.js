@@ -1,7 +1,7 @@
 'use strict';
 
 var MailListCtrl = require('../../../../src/js/controller/app/mail-list'),
-    EmailDAO = require('../../../../src/js/email/email'),
+    EmailDAO = require('../../../../src/js/email/gmail'),
     KeychainDAO = require('../../../../src/js/service/keychain'),
     Status = require('../../../../src/js/util/status'),
     Dialog = require('../../../../src/js/util/dialog'),
@@ -136,7 +136,7 @@ describe('Mail List controller unit test', function() {
 
         it('should succeed for single mail', function(done) {
             var mail = {
-                uid: 123,
+                id: 123,
                 from: [{
                     address: 'asd'
                 }],
@@ -165,21 +165,21 @@ describe('Mail List controller unit test', function() {
 
         it('should succeed for multiple mails', function(done) {
             var mails = [{
-                uid: 1,
+                id: 1,
                 from: [{
                     address: 'asd'
                 }],
                 subject: 'this is the subject!',
                 unread: true
             }, {
-                uid: 2,
+                id: 2,
                 from: [{
                     address: 'qwe'
                 }],
                 subject: 'this is the other subject!',
                 unread: true
             }, {
-                uid: 3,
+                id: 3,
                 from: [{
                     address: 'qwe'
                 }],

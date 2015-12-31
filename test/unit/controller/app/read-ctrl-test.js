@@ -2,7 +2,7 @@
 
 var Keychain = require('../../../../src/js/service/keychain'),
     InvitationDAO = require('../../../../src/js/service/invitation'),
-    Email = require('../../../../src/js/email/email'),
+    Email = require('../../../../src/js/email/gmail'),
     PGP = require('../../../../src/js/crypto/pgp'),
     ReadCtrl = require('../../../../src/js/controller/app/read'),
     Outbox = require('../../../../src/js/email/outbox'),

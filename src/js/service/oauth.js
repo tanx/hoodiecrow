@@ -4,24 +4,99 @@ var ngModule = angular.module('woServices');
 ngModule.service('oauth', OAuth);
 module.exports = OAuth;
 
-function OAuth(oauthRestDao) {
-    this._googleApi = oauthRestDao;
+function OAuth(appConfig) {
+    this._clientId = appConfig.config.oauthClientId;
+    this._scope = appConfig.config.oauthScopes.join(' ');
+    this._redirectUri = appConfig.config.baseUrl;
 }
 
 /**
- * Check if chrome.identity api is supported
- * @return {Boolean} If is supported
+ * Delete the locally cached oauth token.
  */
-OAuth.prototype.isSupported = function() {
-    return !!(window.chrome && chrome.identity);
+OAuth.prototype.flushToken = function() {
+    this.accessToken = undefined;
+    this.tokenType = undefined;
+    this.expiresIn = undefined;
+};
+
+/**
+ * Start an OAuth2 web authentication flow including redirects from and to the current page.
+ * @param  {String}   options.loginHint     (optional) The user's email address
+ * @param  {String}   options.prompt        (optional) The type of prompt to show e.g. 'select_account'
+ */
+OAuth.prototype.webAuthenticate = function(options) {
+    var uri = 'https://accounts.google.com/o/oauth2/v2/auth';
+    uri += '?response_type=token';
+    uri += '&client_id=' + encodeURIComponent(this._clientId);
+    uri += '&redirect_uri=' + encodeURIComponent(this._redirectUri);
+    uri += '&scope=' + encodeURIComponent(this._scope);
+    if (options && options.loginHint) {
+        uri += '&login_hint=' + encodeURIComponent(options.loginHint);
+    }
+    if (options && options.prompt) {
+        uri += '&prompt=' + options.prompt;
+    }
+
+    // go to google account login
+    window.location.href = uri;
+};
+
+/**
+ * Catch the OAuth2 token and other parameters.
+ */
+OAuth.prototype.oauthCallback = function() {
+    function getHashParams() {
+        var hashParams = {};
+        var e,
+            a = /\+/g, // Regex for replacing addition symbol with a space
+            r = /([^&;=]+)=?([^&;]*)/g,
+            d = function(s) {
+                return decodeURIComponent(s.replace(a, " "));
+            },
+            q = window.location.hash.substring(1);
+
+        e = r.exec(q);
+        while (e) {
+            hashParams[d(e[1])] = d(e[2]);
+            e = r.exec(q);
+        }
+
+        return hashParams;
+    }
+
+    var params = getHashParams();
+    this.accessToken = params.access_token;
+    this.tokenType = params.token_type;
+    this.expiresIn = params.expires_in;
 };
 
 /**
  * Request an OAuth token from chrome for gmail users
- * @param  {String}   emailAddress  The user's email address (optional)
+ * @param  {String}   options.loginHint     (optional) The user's email address
  */
-OAuth.prototype.getOAuthToken = function(emailAddress) {
+OAuth.prototype.getOAuthToken = function(options) {
+    var self = this;
     return new Promise(function(resolve, reject) {
+
+        //
+        // Web oauth flow
+        //
+
+        // check for cached access token (from webmail redirect)
+        if (self.accessToken) {
+            resolve(self.accessToken);
+            return;
+        }
+        // redirect to Google login page
+        if (!(window.chrome && chrome.identity)) {
+            self.webAuthenticate(options);
+            return;
+        }
+
+        //
+        // Chrome App Oauth flow
+        //
+
         var idOptions = {
             interactive: true
         };
@@ -33,9 +108,9 @@ OAuth.prototype.getOAuthToken = function(emailAddress) {
                 return;
             }
 
-            if (emailAddress && platformInfo.os.indexOf('android') !== -1) {
+            if (options && options.loginHint && platformInfo.os.indexOf('android') !== -1) {
                 // set accountHint so that native Android account picker does not show up each time
-                idOptions.accountHint = emailAddress;
+                idOptions.accountHint = options.loginHint;
             }
 
             // get OAuth Token from chrome
@@ -52,28 +127,6 @@ OAuth.prototype.getOAuthToken = function(emailAddress) {
 };
 
 /**
- * Remove an old OAuth token and get a new one.
- * @param  {String}   options.oldToken      The old token to be removed
- * @param  {String}   options.emailAddress  The user's email address (optional)
- */
-OAuth.prototype.refreshToken = function(options) {
-    var self = this;
-    return new Promise(function(resolve) {
-        if (!options.oldToken) {
-            throw new Error('oldToken option not set!');
-        }
-
-        // remove cached token
-        chrome.identity.removeCachedAuthToken({
-            token: options.oldToken
-        }, function() {
-            // get a new token
-            self.getOAuthToken(options.emailAddress).then(resolve);
-        });
-    });
-};
-
-/**
  * Get email address from google api
  * @param  {String}   token    The oauth token
  */
@@ -83,20 +136,38 @@ OAuth.prototype.queryEmailAddress = function(token) {
         if (!token) {
             throw new Error('Invalid OAuth token!');
         }
-
         resolve();
 
     }).then(function() {
         // fetch gmail user's email address from the Google Authorization Server
-        return self._googleApi.get({
-            uri: '/oauth2/v3/userinfo?access_token=' + token
+        var uri = 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=' + token;
+        return window.fetch(uri);
+
+    }).catch(function(err) {
+        err.code = 42; // error code for offline
+        throw err;
+
+    }).then(function(response) {
+        if (response.status === 200) {
+            // success ... parse response
+            return response.json();
+        }
+
+        if (response.status === 401) {
+            // the oauth token has probably expired
+            self.flushToken();
+        }
+
+        return response.json().then(function(res) {
+            var error = new Error('Error looking up email address on Google api: ' + res.error_description);
+            error.code = response.status;
+            throw error;
         });
 
     }).then(function(info) {
-        if (!info || !info.email) {
-            throw new Error('Error looking up email address on google api!');
-        }
-
-        return info.email;
+        return {
+            emailAddress: info.email,
+            realname: info.name
+        };
     });
 };

@@ -34,11 +34,11 @@ PublicKey.prototype.getByUserId = function(userId) {
 
 PublicKey.prototype._get = function(options) {
     var self = this;
-
     return self._hkp.lookup(options).then(function(publicKeyArmored) {
         if (!publicKeyArmored) {
             return;
         }
+
         var keyParams = self._pgp.getKeyParams(publicKeyArmored);
         return {
             _id: keyParams._id,
@@ -47,6 +47,10 @@ PublicKey.prototype._get = function(options) {
             publicKey: publicKeyArmored,
             source: self._hkp._baseUrl.split('://')[1]
         };
+
+    }).catch(function(err) {
+        err.code = 42;  // error code for offline
+        throw err;
     });
 };
 
@@ -54,5 +58,8 @@ PublicKey.prototype._get = function(options) {
  * Persist the user's publc key
  */
 PublicKey.prototype.put = function(pubkey) {
-    return this._hkp.upload(pubkey.publicKey);
+    return this._hkp.upload(pubkey.publicKey).catch(function(err) {
+        err.code = 42;  // error code for offline
+        throw err;
+    });
 };

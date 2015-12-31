@@ -4,7 +4,7 @@
       <a class="toolbar__label" href="#" wo-touch="$event.preventDefault(); goBack()"><svg><use xlink:href="#icon-back" /></svg> Back</a>
     </div>
     <header class="page__header">
-      <img src="img/whiteout_logo.svg" alt="whiteout.io">
+      <img src="img/icon.svg" alt="Hoodiecrow">
     </header>
 
     <main class="page__main">
@@ -26,6 +26,12 @@
             <button class="btn btn--big" type="submit" ng-click="goForward()">Continue</button>
           </div>
         </form>
+
+        <p class="typo-paragraph">
+          <a href="#login-verify-public-key">
+            Or skip this step
+          </a>
+        </p>
       </div>
 
       <div ng-show="step === 2">

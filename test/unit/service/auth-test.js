@@ -5,7 +5,7 @@ var Auth = require('../../../src/js/service/auth'),
     PGP = require('../../../src/js/crypto/pgp'),
     DeviceStorageDAO = require('../../../src/js/service/devicestorage');
 
-describe('Auth unit tests', function() {
+describe.skip('Auth unit tests', function() {
     // Constancts
     var EMAIL_ADDR_DB_KEY = 'emailaddress';
     var USERNAME_DB_KEY = 'username';
@@ -154,34 +154,38 @@ describe('Auth unit tests', function() {
     });
 
     describe('#useOAuth', function() {
-        it('should not recommend oauth for unsupported platorm', function() {
-            oauthStub.isSupported.returns(false);
-
-            var res = auth.useOAuth('imap.gmail.com');
-            expect(res).to.be.false;
-        });
-
         it('should recommend oauth for whitelisted host', function() {
-            oauthStub.isSupported.returns(true);
-
             var res = auth.useOAuth('imap.gmail.com');
             expect(res).to.be.true;
         });
 
         it('should not recommend oauth for other hosts', function() {
-            oauthStub.isSupported.returns(true);
-
             var res = auth.useOAuth('imap.ggmail.com');
             expect(res).to.be.false;
         });
     });
 
-    describe('#getOAuthToken', function() {
+    describe('#flushOAuthToken', function() {
+        it('should work', function() {
+            auth.oauthToken = 'cachedToken';
+
+            auth.flushOAuthToken().then(function() {
+                expect(auth.oauthToken).to.be.undefined;
+                expect(oauthStub.flushToken.called).to.be.true;
+            });
+        });
+    });
+
+    describe('#getOAuthCredentials', function() {
+        beforeEach(function() {
+            sinon.stub(auth, 'flushOAuthToken');
+        });
+
         it('should fetch token with known email address', function(done) {
             auth.emailAddress = emailAddress;
             oauthStub.getOAuthToken.withArgs(emailAddress).returns(resolves(oauthToken));
 
-            auth.getOAuthToken().then(function() {
+            auth.getOAuthCredentials().then(function() {
                 expect(auth.emailAddress).to.equal(emailAddress);
                 expect(auth.oauthToken).to.equal(oauthToken);
                 expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
@@ -194,7 +198,7 @@ describe('Auth unit tests', function() {
             oauthStub.getOAuthToken.withArgs(undefined).returns(resolves(oauthToken));
             oauthStub.queryEmailAddress.withArgs(oauthToken).returns(resolves(emailAddress));
 
-            auth.getOAuthToken().then(function() {
+            auth.getOAuthCredentials().then(function() {
                 expect(auth.emailAddress).to.equal(emailAddress);
                 expect(auth.oauthToken).to.equal(oauthToken);
                 expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
@@ -208,7 +212,7 @@ describe('Auth unit tests', function() {
             oauthStub.getOAuthToken.returns(resolves(oauthToken));
             oauthStub.queryEmailAddress.returns(rejects(new Error()));
 
-            auth.getOAuthToken().catch(function(err) {
+            auth.getOAuthCredentials().catch(function(err) {
                 expect(err).to.exist;
                 expect(auth.emailAddress).to.not.exist;
                 expect(auth.oauthToken).to.not.exist;
@@ -219,10 +223,29 @@ describe('Auth unit tests', function() {
             });
         });
 
+        it('should fail when oauth token expires', function(done) {
+            oauthStub.getOAuthToken.returns(resolves(oauthToken));
+            oauthStub.queryEmailAddress.returns(rejects({
+                code: 401
+            }));
+            auth.flushOAuthToken.returns(resolves());
+
+            auth.getOAuthCredentials().catch(function(err) {
+                expect(err.code).to.equal(401);
+                expect(auth.emailAddress).to.not.exist;
+                expect(auth.oauthToken).to.not.exist;
+                expect(auth.flushOAuthToken.calledOnce).to.be.true;
+                expect(oauthStub.getOAuthToken.calledOnce).to.be.true;
+                expect(oauthStub.queryEmailAddress.calledOnce).to.be.true;
+
+                done();
+            });
+        });
+
         it('should fail when oauth fetch fails', function(done) {
             oauthStub.getOAuthToken.returns(rejects(new Error()));
 
-            auth.getOAuthToken().catch(function(err) {
+            auth.getOAuthCredentials().catch(function(err) {
                 expect(err).to.exist;
                 expect(auth.emailAddress).to.not.exist;
                 expect(auth.oauthToken).to.not.exist;
@@ -372,6 +395,7 @@ describe('Auth unit tests', function() {
             auth.logout().then(function() {
                 expect(auth.password).to.be.undefined;
                 expect(auth.initialized).to.be.undefined;
+                expect(auth.oauthToken).to.be.undefined;
                 expect(auth.credentialsDirty).to.be.undefined;
                 expect(auth.passwordNeedsDecryption).to.be.undefined;
                 done();

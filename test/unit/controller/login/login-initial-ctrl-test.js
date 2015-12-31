@@ -3,7 +3,7 @@
 var Auth = require('../../../../src/js/service/auth'),
     PublicKeyVerifier = require('../../../../src/js/service/publickey-verifier'),
     LoginInitialCtrl = require('../../../../src/js/controller/login/login-initial'),
-    Email = require('../../../../src/js/email/email');
+    Email = require('../../../../src/js/email/gmail');
 
 describe('Login (initial user) Controller unit test', function() {
     var scope, ctrl, location, emailMock, authMock, verifierMock,

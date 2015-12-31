@@ -69,7 +69,7 @@ Outbox.prototype.put = function(mail) {
     }
 
     mail.publicKeysArmored = []; // gather the public keys
-    mail.uid = mail.id = util.UUID(); // the mail needs a random id & uid for storage in the database
+    mail.id = util.UUID(); // the mail needs a random id for storage in the database
 
     // do not encrypt mails with a bcc recipient, due to a possible privacy leak
     if (mail.bcc.length > 0) {
@@ -181,7 +181,7 @@ Outbox.prototype._processOutbox = function(callback) {
             }
 
             // removes the mail object from disk after successfully sending it
-            return self._devicestorage.removeList(outboxDb + '_' + mail.uid);
+            return self._devicestorage.removeList(outboxDb + '_' + mail.id);
         }
 
         function sendFailed(err) {

@@ -107,10 +107,8 @@ DeviceStorage.prototype.clear = function() {
 function createKey(i, type) {
     var key;
 
-    // put uid in key if available... for easy querying
-    if (i.uid) {
-        key = type + '_' + i.uid;
-    } else if (i.id) {
+    // put id in key if available... for easy querying
+    if (i.id) {
         key = type + '_' + i.id;
     } else {
         key = type;
