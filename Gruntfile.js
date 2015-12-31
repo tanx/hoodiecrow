@@ -120,7 +120,7 @@ module.exports = function(grunt) {
         },
         csso: {
             options: {
-                banner: '/*! Copyright © 2016, Whiteout Project. All rights reserved.*/\n'
+                banner: '/*! Copyright © 2016, Hoodiecrow Project. All rights reserved.*/\n'
             },
             dist: {
                 files: {
@@ -370,7 +370,7 @@ module.exports = function(grunt) {
                 }
             },
             options: {
-                banner: '/*! Copyright © <%= grunt.template.today("yyyy") %>, Whiteout Project.*/\n'
+                banner: '/*! Copyright © <%= grunt.template.today("yyyy") %>, Hoodiecrow Project.*/\n'
             }
         },
 
@@ -527,7 +527,7 @@ module.exports = function(grunt) {
             main: {
                 options: {
                     mode: 'zip',
-                    archive: 'release/whiteout-mail_' + zipName + '.zip'
+                    archive: 'release/hoodiecrow_' + zipName + '.zip'
                 },
                 expand: true,
                 cwd: 'dist/',

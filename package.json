@@ -1,8 +1,8 @@
 {
-  "name": "whiteout-mail",
+  "name": "hoodiecrow",
   "description": "Mail App with integrated OpenPGP encryption.",
-  "author": "Whiteout Networks",
-  "homepage": "https://whiteout.io",
+  "author": "Tankred Hase",
+  "homepage": "https://hoodiecrow.com",
   "engines": {
     "node": ">=0.10"
   },

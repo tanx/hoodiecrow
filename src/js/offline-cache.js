@@ -16,7 +16,7 @@
 
 'use strict';
 
-var UPDATE_MSG = 'A new version of Whiteout Mail is available. Restart the app to update?';
+var UPDATE_MSG = 'A new version of Hoodiecrow is available. Restart the app to update?';
 
 if ('serviceWorker' in navigator &&
     // See http://www.chromium.org/Home/chromium-security/prefer-secure-origins-for-powerful-new-features
