@@ -4,39 +4,22 @@ var ngModule = angular.module('woServices');
 ngModule.service('publicKey', PublicKey);
 module.exports = PublicKey;
 
-function PublicKey(publicKeyRestDao) {
-    this._restDao = publicKeyRestDao;
+function PublicKey(pgp) {
+    this._pgp = pgp;
+    this._hkp = pgp.getHKPClient();
 }
-
-/**
- * Verify the public key behind the given uuid
- */
-PublicKey.prototype.verify = function(uuid) {
-    return this._restDao.get({
-        uri: '/verify/' + uuid,
-        type: 'text'
-    }).catch(function(err) {
-        if (err.code === 400) {
-            // there was an attempt to verify a non-existing public key
-            return;
-        }
-
-        throw err;
-    });
-};
 
 /**
  * Find the user's corresponding public key
  */
 PublicKey.prototype.get = function(keyId) {
-    return this._restDao.get({
-        uri: '/publickey/key/' + keyId
-    }).catch(function(err) {
-        if (err.code === 404) {
-            return;
+    return this._get({
+        keyId: keyId
+    }).then(function(key) {
+        if (key && key._id !== keyId) {
+            throw new Error('Key ID of fetched public key does not match!');
         }
-
-        throw err;
+        return key;
     });
 };
 
@@ -44,27 +27,26 @@ PublicKey.prototype.get = function(keyId) {
  * Find the user's corresponding public key by email
  */
 PublicKey.prototype.getByUserId = function(userId) {
-    return this._restDao.get({
-        uri: '/publickey/user/' + userId
-    }).then(function(keys) {
-        if (!keys || keys.length < 1) {
-            // 'No public key for that user!'
+    return this._get({
+        query: userId
+    });
+};
+
+PublicKey.prototype._get = function(options) {
+    var self = this;
+
+    return self._hkp.lookup(options).then(function(publicKeyArmored) {
+        if (!publicKeyArmored) {
             return;
         }
-
-        if (keys.length > 1) {
-            throw new Error('That user has multiple public keys!');
-        }
-
-        return keys[0];
-
-    }).catch(function(err) {
-        // not found
-        if (err.code === 404) {
-            return;
-        }
-
-        throw err;
+        var keyParams = self._pgp.getKeyParams(publicKeyArmored);
+        return {
+            _id: keyParams._id,
+            userId: keyParams.userId,
+            userIds: keyParams.userIds,
+            publicKey: publicKeyArmored,
+            source: self._hkp._baseUrl.split('://')[1]
+        };
     });
 };
 
@@ -72,14 +54,5 @@ PublicKey.prototype.getByUserId = function(userId) {
  * Persist the user's publc key
  */
 PublicKey.prototype.put = function(pubkey) {
-    var uri = '/publickey/user/' + pubkey.userId + '/key/' + pubkey._id;
-    return this._restDao.put(pubkey, uri);
-};
-
-/**
- * Delete the public key from the cloud storage service
- */
-PublicKey.prototype.remove = function(keyId) {
-    var uri = '/publickey/key/' + keyId;
-    return this._restDao.remove(uri);
+    return this._hkp.upload(pubkey.publicKey);
 };

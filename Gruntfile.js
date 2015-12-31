@@ -140,7 +140,7 @@ module.exports = function(grunt) {
         // JavaScript
 
         jshint: {
-            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/*-test.js', 'test/integration/*-test.js'],
+            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/**/*-test.js', 'test/integration/**/*-test.js'],
             options: {
                 jshintrc: '.jshintrc'
             }
@@ -196,7 +196,6 @@ module.exports = function(grunt) {
                         'test/unit/service/lawnchair-dao-test.js',
                         'test/unit/service/keychain-dao-test.js',
                         'test/unit/service/devicestorage-dao-test.js',
-                        'test/unit/service/newsletter-service-test.js',
                         'test/unit/service/mail-config-service-test.js',
                         'test/unit/service/invitation-dao-test.js',
                         'test/unit/service/publickey-verifier-test.js',
@@ -233,8 +232,7 @@ module.exports = function(grunt) {
                 files: {
                     'test/integration/index.browserified.js': [
                         'test/main.js',
-                        'test/integration/email-dao-test.js',
-                        'test/integration/publickey-verifier-test.js'
+                        'test/integration/email-dao-test.js'
                     ]
                 },
                 options: browserifyOpt
@@ -282,6 +280,7 @@ module.exports = function(grunt) {
             },
             app: {
                 src: [
+                    'node_modules/whatwg-fetch/fetch.js',
                     'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
@@ -331,6 +330,7 @@ module.exports = function(grunt) {
             },
             unitTest: {
                 src: [
+                    'node_modules/whatwg-fetch/fetch.js',
                     'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
@@ -351,6 +351,7 @@ module.exports = function(grunt) {
             },
             integrationTest: {
                 src: [
+                    'node_modules/whatwg-fetch/fetch.js',
                     'src/lib/underscore/underscore.js',
                     'node_modules/jquery/dist/jquery.min.js',
                     'src/lib/angular/angular.js',
@@ -806,8 +807,7 @@ module.exports = function(grunt) {
 
         patchManifest({
             version: version,
-            deleteKey: true,
-            keyServer: 'https://keys.whiteout.io/'
+            deleteKey: true
         });
     });
 
@@ -824,10 +824,6 @@ module.exports = function(grunt) {
         }
         if (options.client_id) {
             manifest.oauth2.client_id = options.client_id;
-        }
-        if (options.keyServer) {
-            var ksIndex = manifest.permissions.indexOf('https://keys-test.whiteout.io/');
-            manifest.permissions[ksIndex] = options.keyServer;
         }
         if (options.deleteKey) {
             delete manifest.key;

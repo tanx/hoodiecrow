@@ -17,6 +17,15 @@ function PGP() {
 }
 
 /**
+ * Get an instance of the OpenPGP.js HKP client.
+ * @return {HKP} The HKP client
+ */
+PGP.prototype.getHKPClient = function() {
+    openpgp.config.keyserver = config.hkpUrl;
+    return new openpgp.HKP();
+};
+
+/**
  * Generate a key pair for the user
  * @return {Promise}
  */

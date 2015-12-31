@@ -7,9 +7,7 @@ var ImapClient = require('imap-client'),
     LawnchairDAO = require('../../src/js/service/lawnchair'),
     DeviceStorageDAO = require('../../src/js/service/devicestorage'),
     mailreader = require('mailreader'),
-    PgpMailer = require('pgpmailer'),
-    config = require('../../src/js/app-config').config,
-    str = require('../../src/js/app-config').string;
+    PgpMailer = require('pgpmailer');
 
 describe('Email DAO integration tests', function() {
     this.timeout(100000);
@@ -650,7 +648,7 @@ describe('Email DAO integration tests', function() {
                 expect(messages[0].signed).to.be.true;
                 expect(messages[0].signaturesValid).to.be.true;
                 expect(messages[0].attachments.length).to.equal(0);
-                expect(messages[0].body).to.equal(expectedBody + str.signature + config.keyServerUrl + '/' + testAccount.user);
+                expect(messages[0].body).to.equal(expectedBody);
                 done();
             };
 

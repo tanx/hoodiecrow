@@ -5,7 +5,6 @@ ngModule.service('email', Email);
 module.exports = Email;
 
 var config = require('../app-config').config,
-    str = require('../app-config').string,
     axe = require('axe-logger'),
     PgpMailer = require('pgpmailer'),
     ImapClient = require('imap-client');
@@ -700,8 +699,6 @@ Email.prototype.sendEncrypted = function(options, mailer) {
  * @param {Object} mailer an instance of the pgpmailer to be used for testing purposes only
  */
 Email.prototype.sendPlaintext = function(options, mailer) {
-    // add suffix to plaintext mail
-    options.email.body += str.signature + config.keyServerUrl + '/' + this._account.emailAddress;
     // mime encode, sign and send email via smtp
     return this._sendGeneric({
         smtpclient: options.smtpclient, // filled solely in the integration test, undefined in normal usage

@@ -6,18 +6,18 @@ var LoginCtrl = require('../../../../src/js/controller/login/login'),
     Dialog = require('../../../../src/js/util/dialog'),
     UpdateHandler = require('../../../../src/js/util/update/update-handler'),
     Auth = require('../../../../src/js/service/auth'),
-    Keychain = require('../../../../src/js/service/keychain');
+    PrivateKey = require('../../../../src/js/service/privatekey');
 
 describe('Login Controller unit test', function() {
     var scope, location, ctrl,
-        emailMock, keychainMock, authMock, accountMock, dialogMock, updateHandlerMock, goToStub,
+        emailMock, privateKeyMock, authMock, accountMock, dialogMock, updateHandlerMock, goToStub,
         emailAddress = 'fred@foo.com';
 
     beforeEach(function() {
         emailMock = sinon.createStubInstance(Email);
         accountMock = sinon.createStubInstance(Account);
         authMock = sinon.createStubInstance(Auth);
-        keychainMock = sinon.createStubInstance(Keychain);
+        privateKeyMock = sinon.createStubInstance(PrivateKey);
         dialogMock = sinon.createStubInstance(Dialog);
         updateHandlerMock = sinon.createStubInstance(UpdateHandler);
 
@@ -41,7 +41,7 @@ describe('Login Controller unit test', function() {
                 account: accountMock,
                 auth: authMock,
                 email: emailMock,
-                keychain: keychainMock,
+                privateKey: privateKeyMock,
                 dialog: dialogMock,
                 appConfig: {
                     preventAutoStart: true
@@ -153,12 +153,14 @@ describe('Login Controller unit test', function() {
         authMock.getEmailAddress.returns(resolves({
             emailAddress: emailAddress
         }));
-        accountMock.init.returns(resolves({
-            publicKey: 'publicKey'
-        }));
+        accountMock.init.returns(resolves());
+        privateKeyMock.init.returns(resolves());
+        privateKeyMock.isSynced.returns(resolves(true));
+        privateKeyMock.destroy.returns(resolves());
 
         scope.init().then(function() {
             expect(goToStub.withArgs('/login-privatekey-download').called).to.be.true;
+            expect(privateKeyMock.isSynced.calledOnce).to.be.true;
             expect(goToStub.calledOnce).to.be.true;
             done();
         });
@@ -169,10 +171,14 @@ describe('Login Controller unit test', function() {
         authMock.getEmailAddress.returns(resolves({
             emailAddress: emailAddress
         }));
-        accountMock.init.returns(resolves({}));
+        accountMock.init.returns(resolves());
+        privateKeyMock.init.returns(resolves());
+        privateKeyMock.isSynced.returns(resolves(false));
+        privateKeyMock.destroy.returns(resolves());
 
         scope.init().then(function() {
             expect(goToStub.withArgs('/login-initial').called).to.be.true;
+            expect(privateKeyMock.isSynced.calledOnce).to.be.true;
             expect(goToStub.calledOnce).to.be.true;
             done();
         });

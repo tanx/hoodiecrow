@@ -46,14 +46,6 @@ Keychain.prototype.requestPermissionForKeyUpdate = function(params, callback) {
 };
 
 /**
- * Verifies the public key of a user o nthe public key store
- * @param {String} uuid The uuid to verify the key
- */
-Keychain.prototype.verifyPublicKey = function(uuid) {
-    return this._publicKeyDao.verify(uuid);
-};
-
-/**
  * Checks for public key updates of a given user id
  * @param {String} options.userId The user id (email address) for which to check the key
  * @param {String} options.overridePermission (optional) Indicates if the update should happen automatically (true) or with the user being queried (false). Defaults to false
@@ -214,7 +206,7 @@ Keychain.prototype.getUserKeyPair = function(userId) {
             userId: userId
         });
 
-        if (pubkey && pubkey._id && !pubkey.source) {
+        if (pubkey && !pubkey.source) {
             // that user's public key is already in local storage...
             // sync keypair to the cloud
             return syncKeypair(pubkey._id);
@@ -223,7 +215,7 @@ Keychain.prototype.getUserKeyPair = function(userId) {
         // no public key by that user id in storage
         // find from cloud by email address
         return self._publicKeyDao.getByUserId(userId).then(function(cloudPubkey) {
-            if (cloudPubkey && cloudPubkey._id && !cloudPubkey.source) {
+            if (cloudPubkey && !cloudPubkey.source) {
                 // there is a public key for that user already in the cloud...
                 // sync keypair to local storage
                 return syncKeypair(cloudPubkey._id);

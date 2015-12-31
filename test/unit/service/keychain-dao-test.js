@@ -40,18 +40,6 @@ describe('Keychain DAO unit tests', function() {
         });
     });
 
-    describe('verify public key', function() {
-        it('should verify public key', function(done) {
-            var uuid = 'asdfasdfasdfasdf';
-            pubkeyDaoStub.verify.returns(resolves());
-
-            keychainDao.verifyPublicKey(uuid).then(function() {
-                expect(pubkeyDaoStub.verify.calledWith(uuid)).to.be.true;
-                done();
-            });
-        });
-    });
-
     describe('listLocalPublicKeys', function() {
         it('should work', function(done) {
             lawnchairDaoStub.list.withArgs('publickey').returns(resolves());

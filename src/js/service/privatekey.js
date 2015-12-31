@@ -177,14 +177,13 @@ PrivateKey.prototype.upload = function(options) {
 };
 
 /**
- * Check if matching private key is stored in IMAP.
+ * Check if any private key is stored in IMAP.
  */
 PrivateKey.prototype.isSynced = function() {
     var self = this;
 
     return self._getFolder().then(function(path) {
         return self._fetchMessage({
-            keyId: self._pgp.getKeyId(),
             path: path
         });
     }).then(function(msg) {
@@ -196,18 +195,15 @@ PrivateKey.prototype.isSynced = function() {
 
 /**
  * Verify the download request for the private PGP key.
- * @param  {String}   options.userId The user's email address
- * @param  {String}   options.keyId The private key id
  * @return {Object} {_id:[hex encoded capital 16 char key id], encryptedPrivateKey:[base64 encoded], encryptedUserId: [base64 encoded]}
  */
-PrivateKey.prototype.download = function(options) {
+PrivateKey.prototype.download = function() {
     var self = this,
         path, message;
 
     return self._getFolder().then(function(fullPath) {
         path = fullPath;
         return self._fetchMessage({
-            keyId: options.keyId,
             path: path
         }).then(function(msg) {
             if (!msg) {
@@ -250,8 +246,6 @@ PrivateKey.prototype.download = function(options) {
         var encryptedKeyBuf = payloadBuf.subarray(offset, payloadBuf.length);
 
         return {
-            _id: options.keyId,
-            userId: options.userId,
             encryptedPrivateKey: util.str2Base64(util.uint8Arr2BinStr(encryptedKeyBuf)),
             salt: util.str2Base64(util.uint8Arr2BinStr(saltBuf)),
             iv: util.str2Base64(util.uint8Arr2BinStr(ivBuf))
@@ -261,19 +255,18 @@ PrivateKey.prototype.download = function(options) {
 
 /**
  * This is called after the encrypted private key has successfully been downloaded and it's ready to be decrypted and stored in localstorage.
- * @param  {String}   options._id The private PGP key id
- * @param  {String}   options.userId The user's email address
  * @param  {String}   options.code The randomly generated or self selected code used to derive the key for the decryption of the private PGP key
  * @param  {String}   options.encryptedPrivateKey The encrypted private PGP key
  * @param  {String}   options.salt The salt required to derive the code derived key
  * @param  {String}   options.iv The iv used to encrypt the private PGP key
+ * @return {Object}   The user's keypair to be stored in the local keychain.
  */
 PrivateKey.prototype.decrypt = function(options) {
     var self = this,
         config = self._appConfig.config,
         keySize = config.symKeySize;
 
-    if (!options._id || !options.userId || !options.code || !options.salt || !options.encryptedPrivateKey || !options.iv) {
+    if (!options.code || !options.salt || !options.encryptedPrivateKey || !options.iv) {
         return new Promise(function() {
             throw new Error('Incomplete arguments!');
         });
@@ -288,21 +281,27 @@ PrivateKey.prototype.decrypt = function(options) {
 
     }).then(function(privateKeyArmored) {
         // validate pgp key
-        var keyParams;
+        var keyParams, publicKeyArmored;
         try {
             keyParams = self._pgp.getKeyParams(privateKeyArmored);
+            publicKeyArmored = self._pgp.extractPublicKey(privateKeyArmored);
         } catch (e) {
-            throw new Error('Error parsing private PGP key!');
-        }
-
-        if (keyParams._id !== options._id || keyParams.userId !== options.userId) {
-            throw new Error('Private key parameters don\'t match with public key\'s!');
+            throw new Error('Error parsing PGP key!');
         }
 
         return {
-            _id: options._id,
-            userId: options.userId,
-            encryptedKey: privateKeyArmored
+            privateKey: {
+                _id: keyParams._id,
+                userId: keyParams.userId,
+                userIds: keyParams.userIds,
+                encryptedKey: privateKeyArmored
+            },
+            publicKey: {
+                _id: keyParams._id,
+                userId: keyParams.userId,
+                userIds: keyParams.userIds,
+                publicKey: publicKeyArmored
+            }
         };
     });
 };
@@ -339,16 +338,14 @@ PrivateKey.prototype._getFolder = function() {
 };
 
 PrivateKey.prototype._fetchMessage = function(options) {
-    var self = this;
-
-    if (!options.keyId) {
+    if (!options.path) {
         return new Promise(function() {
             throw new Error('Incomplete arguments!');
         });
     }
 
     // get the metadata for the message
-    return self._imap.listMessages({
+    return this._imap.listMessages({
         path: options.path
     }).then(function(messages) {
         if (!messages.length) {
@@ -357,9 +354,15 @@ PrivateKey.prototype._fetchMessage = function(options) {
         }
 
         // get matching private key if multiple keys uloaded
-        return _.findWhere(messages, {
-            subject: options.keyId
-        });
+        if (options.keyId) {
+            return _.findWhere(messages, {
+                subject: options.keyId
+            });
+        }
+
+        // if no key id was specified return the first synced key
+        return messages[0];
+
     }).catch(function(e) {
         throw new Error('Failed to retrieve PGP key message from IMAP! Reason: ' + e.message);
     });

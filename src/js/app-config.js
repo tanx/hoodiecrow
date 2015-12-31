@@ -13,8 +13,7 @@ module.exports = appCfg;
  */
 appCfg.config = {
     pgpComment: 'Whiteout Mail - https://whiteout.io',
-    keyServerUrl: 'https://keys.whiteout.io',
-    hkpUrl: 'http://keyserver.ubuntu.com',
+    hkpUrl: 'https://keyserver.ubuntu.com',
     adminUrl: 'https://admin-node.whiteout.io',
     settingsUrl: 'https://settings.whiteout.io/autodiscovery/',
     mailServer: {
@@ -32,7 +31,6 @@ appCfg.config = {
     },
     oauthDomains: [/\.gmail\.com$/, /\.googlemail\.com$/],
     ignoreUploadOnSentDomains: [/\.gmail\.com$/, /\.googlemail\.com$/],
-    serverPrivateKeyId: 'EE342F0DDBB0F3BE',
     symKeySize: 256,
     symIvSize: 96,
     asymKeySize: 2048,
@@ -60,15 +58,6 @@ if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifes
 
 function setConfigParams(manifest) {
     var cfg = appCfg.config;
-
-    function getUrl(beginsWith) {
-        return _.find(manifest.permissions, function(permission) {
-            return typeof permission === 'string' && permission.indexOf(beginsWith) === 0;
-        }).replace(/\/$/, ''); // remove last '/' from url due to required syntax in manifest
-    }
-
-    // get key server base url
-    cfg.keyServerUrl = getUrl('https://keys');
     // get the app version
     cfg.appVersion = manifest.version;
 }

@@ -4,7 +4,7 @@
 // Controller
 //
 
-var ContactsCtrl = function($scope, $q, keychain, pgp, dialog, appConfig) {
+var ContactsCtrl = function($scope, $q, keychain, pgp, dialog) {
 
     //
     // scope state
@@ -17,8 +17,6 @@ var ContactsCtrl = function($scope, $q, keychain, pgp, dialog, appConfig) {
             return $scope.listKeys();
         }
     };
-
-    $scope.whiteoutKeyServer = appConfig.config.keyServerUrl.replace(/http[s]?:\/\//, ''); // display key server hostname
 
     //
     // scope functions
