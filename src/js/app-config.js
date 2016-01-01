@@ -18,7 +18,7 @@ module.exports = appCfg;
  * Global app configurations
  */
 appCfg.config = {
-    oauthClientId: '440907777130-bnk8b12nsqmpcf5cdbnhpskefhfhfgu1.apps.googleusercontent.com',
+    oauthClientId: '775974498568-omoqn5jn3us7j76kaevpr2knl4i5fvmd.apps.googleusercontent.com',
     oauthScopes: ['https://www.googleapis.com/auth/gmail.modify', 'email'],
     baseUrl: window.location.origin + window.location.pathname,
     pgpComment: 'Hoodiecrow - https://hoodiecrow.com',
