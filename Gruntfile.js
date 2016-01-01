@@ -393,7 +393,9 @@ module.exports = function(grunt) {
 
         'gh-pages': {
             options: {
-                base: 'dist'
+                base: 'dist',
+                repo: 'git@github.com:hoodiecrow-app/hoodiecrow-app.github.io.git',
+                branch: 'master'
             },
             src: ['**']
         },
