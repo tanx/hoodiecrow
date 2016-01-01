@@ -84,6 +84,12 @@ module.exports = function(grunt) {
                 cwd: 'src/',
                 src: ['*.js', '*.json', 'manifest.*'],
                 dest: 'dist/'
+            },
+            'gh-pages': {
+                expand: true,
+                cwd: 'res/',
+                src: ['CNAME'],
+                dest: 'dist/'
             }
         },
 
