@@ -77,8 +77,8 @@ Dummy.prototype.listMails = function() {
     var Email = function(unread, attachments, answered) {
         this.id = id-- + '';
         this.from = [{
-            name: 'Whiteout Support',
-            address: 'support@whiteout.io'
+            name: 'Hoodiecrow Support',
+            address: 'support@hoodiecrow.com'
         }]; // sender address
         this.to = [{
             address: 'max.musterman@gmail.com'

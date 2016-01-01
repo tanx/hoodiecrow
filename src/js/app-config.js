@@ -51,7 +51,7 @@ function setConfigParams(manifest) {
 appCfg.string = {
     fallbackSubject: '(no subject)',
     invitationSubject: 'Invitation to a private conversation',
-    invitationMessage: 'Hi,\n\nI use Hoodiecrow to send and receive encrypted email. I would like to exchange encrypted messages with you as well.\n\nPlease install the Hoodiecrow application. This application makes it easy to read and write messages securely with PGP encryption applied.\n\nGo to the Whiteout Networks homepage to learn more and to download the application: https://hoodiecrow.com\n\n',
+    invitationMessage: 'Hi,\n\nI use Hoodiecrow to send and receive encrypted email. I would like to exchange encrypted messages with you as well.\n\nPlease install the Hoodiecrow application. This application makes it easy to read and write messages securely with PGP encryption applied.\n\nGo to the Hoodiecrow homepage to learn more and to download the application: https://hoodiecrow.com\n\n',
     signature: '\n\n\n--\nSent from Hoodiecrow - https://hoodiecrow.com\n\nMy PGP key: ',
     webSite: 'http://hoodiecrow.com',
     sendBtnClear: 'Send',
@@ -64,7 +64,7 @@ appCfg.string = {
     bugReportTitle: 'Report a bug',
     bugReportSubject: '[Bug] I want to report a bug',
     bugReportBody: 'Steps to reproduce\n1. \n2. \n3. \n\nWhat happens?\n\n\nWhat do you expect to happen instead?\n\n\n\n== PLEASE DONT PUT ANY KEYS HERE! ==\n\n\n## Log\n\nBelow is the log. It includes your interactions with your email provider from the point where you started the app for the last time. Login data and email content has been stripped. Any information provided by you will be used for the purpose of locating and fixing the bug you reported. It will be deleted subsequently. However, you can edit this log and/or remove log data in the event that something would show up.\n\nUser-Agent: {0}\nVersion: {1}\n\n',
-    supportAddress: 'mail.support@whiteout.io',
+    supportAddress: 'mail.support@hoodiecrow.com',
     logoutTitle: 'Logout',
     logoutMessage: 'Are you sure you want to log out? Please back up your encryption key before proceeding!',
     removePreAuthAccountTitle: 'Remove account',
