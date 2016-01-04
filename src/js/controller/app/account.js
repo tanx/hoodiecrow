@@ -1,6 +1,6 @@
 'use strict';
 
-var AccountCtrl = function($scope, $q, $timeout, $location, auth, keychain, pgp, appConfig, download, dialog, privateKey, email) {
+var AccountCtrl = function($scope, $q, $timeout, $location, auth, keychain, pgp, appConfig, download, dialog, privateKey) {
     var userId = auth.emailAddress;
     if (!userId) {
         return;
@@ -63,23 +63,23 @@ var AccountCtrl = function($scope, $q, $timeout, $location, auth, keychain, pgp,
 
         }).then(function(synced) {
             if (synced) {
-                return;
+                return dialog.info({
+                    title: 'Key sync',
+                    message: 'Your encryption key is already backed up.'
+                });
             }
 
             dialog.confirm({
-                title: 'Key backup',
+                title: 'Key sync',
                 message: 'Your encryption key is not backed up. Back up now?',
                 positiveBtnStr: 'Backup',
                 negativeBtnStr: 'Not now',
                 showNegativeBtn: true,
                 callback: function(granted) {
                     if (granted) {
-                        // logout of the current session
-                        email.onDisconnect().then(function() {
-                            // send to key upload screen
-                            $timeout(function() {
-                                $location.path('/login-privatekey-upload');
-                            });
+                        // send to key upload screen
+                        $timeout(function() {
+                            $location.path('/login-privatekey-upload');
                         });
                     }
                 }

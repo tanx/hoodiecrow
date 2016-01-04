@@ -272,9 +272,6 @@ Keychain.prototype.putUserKeyPair = function(keypair) {
 
     // store public key locally
     return self.saveLocalPublicKey(keypair.publicKey).then(function() {
-        // persist public key in cloud storage
-        return self._publicKeyDao.put(keypair.publicKey);
-    }).then(function() {
         // store private key locally
         return self.saveLocalPrivateKey(keypair.privateKey);
     });

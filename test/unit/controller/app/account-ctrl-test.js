@@ -6,17 +6,15 @@ var AccountCtrl = require('../../../../src/js/controller/app/account'),
     Keychain = require('../../../../src/js/service/keychain'),
     Auth = require('../../../../src/js/service/auth'),
     Dialog = require('../../../../src/js/util/dialog'),
-    PrivateKey = require('../../../../src/js/service/privatekey'),
-    Email = require('../../../../src/js/email/gmail');
+    PrivateKey = require('../../../../src/js/service/privatekey');
 
 describe('Account Controller unit test', function() {
     var scope, accountCtrl,
         dummyFingerprint, expectedFingerprint,
         dummyKeyId, expectedKeyId,
-        emailAddress, keySize, pgpStub, keychainStub, authStub, dialogStub, downloadStub, privateKeyStub, emailDaoMock;
+        emailAddress, keySize, pgpStub, keychainStub, authStub, dialogStub, downloadStub, privateKeyStub;
 
     beforeEach(function() {
-        emailDaoMock = sinon.createStubInstance(Email);
         pgpStub = sinon.createStubInstance(PGP);
         authStub = sinon.createStubInstance(Auth);
         keychainStub = sinon.createStubInstance(Keychain);
@@ -53,8 +51,7 @@ describe('Account Controller unit test', function() {
                 pgp: pgpStub,
                 download: downloadStub,
                 dialog: dialogStub,
-                privateKey: privateKeyStub,
-                email: emailDaoMock
+                privateKey: privateKeyStub
             });
         });
     });

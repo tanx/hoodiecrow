@@ -644,11 +644,9 @@ describe('Keychain DAO unit tests', function() {
             };
 
             lawnchairDaoStub.persist.returns(resolves());
-            pubkeyDaoStub.put.returns(resolves());
 
             keychainDao.putUserKeyPair(keypair).then(function() {
                 expect(lawnchairDaoStub.persist.calledTwice).to.be.true;
-                expect(pubkeyDaoStub.put.calledOnce).to.be.true;
                 done();
             });
         });
