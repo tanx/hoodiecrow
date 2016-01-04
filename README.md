@@ -86,7 +86,7 @@ To start the server in development mode (no forced HTTPS, iframe loads http cont
 
 ## License
 
-See the `LICENSE.txt` file.
+See the [LICENSE.txt](https://github.com/tanx/hoodiecrow/blob/master/LICENSE.txt) file.
 
 ### Third party libraries
 
