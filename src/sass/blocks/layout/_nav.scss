@@ -13,11 +13,11 @@
     color: $color-main-text;
 
     h1 {
-        @include scut-image-replace();
-        background: url(../img/whiteout_logo_light.svg) left top no-repeat;
-        background-size: contain;
-        height: 26px;
-        margin-bottom: 40px;
+        height: 32px;
+        margin-bottom: 34px;
+        font-family: $font-family-logo;
+        font-size: 32px;
+        line-height: 32px;
     }
     &__write {
         display: none;
@@ -119,10 +119,10 @@
         color: $color-text;
 
         h1 {
-            height: 26px;
-            margin-bottom: 27px;
-            background-position: center center;
-            background-image: url(../img/whiteout_logo.svg);
+            height: 32px;
+            margin-bottom: 21px;
+            color: $color-main;
+            text-align: center;
         }
         &__write {
             display: block;
