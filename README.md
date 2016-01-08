@@ -1,9 +1,7 @@
 Hoodiecrow [![Build Status](https://travis-ci.org/tanx/hoodiecrow.svg?branch=master)](https://travis-ci.org/tanx/hoodiecrow)
 ==========
 
-Hoodiecrow is a fork of [Whiteout Mail](https://github.com/whiteout-io/mail) an easy to use email client with integrated OpenPGP encryption written in pure JavaScript. Unlike Whiteout though, Hoodiecrow focuses on providing an optimized user experience for Google Mail users via the [REST based Gmail api](https://developers.google.com/gmail/api/), instead of supporting all standard mail servers via IMAP/SMTP.
-
-![Screenshot](https://whiteout.io/img/screens.png)
+Hoodiecrow is a community supported fork of [Whiteout Mail](https://github.com/whiteout-io/mail) an easy to use email client with integrated OpenPGP encryption written in pure JavaScript. Unlike Whiteout, Hoodiecrow focuses on providing an optimized user experience for Google Mail users via the [REST based Gmail api](https://developers.google.com/gmail/api/), instead of supporting all standard mail servers via IMAP/SMTP.
 
 ### Privacy and Security
 
