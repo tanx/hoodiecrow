@@ -1,12 +1,13 @@
 'use strict';
 
+import OAuth from '../../../../src/js/service/oauth';
+import Auth from '../../../../src/js/service/auth';
+
 var LoginCtrl = require('../../../../src/js/controller/login/login'),
     Email = require('../../../../src/js/email/gmail'),
     Account = require('../../../../src/js/email/account'),
     Dialog = require('../../../../src/js/util/dialog'),
     UpdateHandler = require('../../../../src/js/util/update/update-handler'),
-    Auth = require('../../../../src/js/service/auth'),
-    OAuth = require('../../../../src/js/service/oauth').default,
     PrivateKey = require('../../../../src/js/service/privatekey'),
     GmailClient = require('../../../../src/js/email/gmail-client');
 

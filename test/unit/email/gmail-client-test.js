@@ -1,8 +1,9 @@
 'use strict';
 
-var GmailClient = require('../../../src/js/email/gmail-client'),
-    Auth = require('../../../src/js/service/auth'),
-    Base64Url = require('../../../src/js/util/base64url');
+import Auth from '../../../src/js/service/auth';
+import Base64Url from '../../../src/js/util/base64url';
+
+var GmailClient = require('../../../src/js/email/gmail-client');
 
 describe('Gmail Client unit test', function() {
     var client, authStub, base64url;

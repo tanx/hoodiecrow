@@ -1,5 +1,7 @@
 'use strict';
 
+import Auth from '../../../../src/js/service/auth';
+
 var Keychain = require('../../../../src/js/service/keychain'),
     InvitationDAO = require('../../../../src/js/service/invitation'),
     Email = require('../../../../src/js/email/gmail'),
@@ -7,7 +9,6 @@ var Keychain = require('../../../../src/js/service/keychain'),
     ReadCtrl = require('../../../../src/js/controller/app/read'),
     Outbox = require('../../../../src/js/email/outbox'),
     Dialog = require('../../../../src/js/util/dialog'),
-    Auth = require('../../../../src/js/service/auth'),
     Download = require('../../../../src/js/util/download');
 
 describe('Read Controller unit test', function() {

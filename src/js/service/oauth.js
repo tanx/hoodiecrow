@@ -1,3 +1,7 @@
+/**
+ * This module handles OAuth 2.0 authentication required for Google Apis
+ * It can handles web based works flow as well as Chrome App flow
+ */
 export default class OAuth {
 
     constructor(appConfig) {

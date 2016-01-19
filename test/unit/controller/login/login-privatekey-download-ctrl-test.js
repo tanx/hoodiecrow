@@ -1,7 +1,8 @@
 'use strict';
 
-var Auth = require('../../../../src/js/service/auth'),
-    LoginPrivateKeyDownloadCtrl = require('../../../../src/js/controller/login/login-privatekey-download'),
+import Auth from '../../../../src/js/service/auth';
+
+var LoginPrivateKeyDownloadCtrl = require('../../../../src/js/controller/login/login-privatekey-download'),
     Email = require('../../../../src/js/email/gmail'),
     Keychain = require('../../../../src/js/service/keychain'),
     PrivateKey = require('../../../../src/js/service/privatekey');

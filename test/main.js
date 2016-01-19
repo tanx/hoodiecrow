@@ -12,7 +12,7 @@ if (!Function.prototype.bind) {
             throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
         }
 
-        var aArgs = Array.prototype.slice.call(arguments, 1),
+        let aArgs = Array.prototype.slice.call(arguments, 1),
             fToBind = this,
             FNOP = function() {},
             fBound = function() {
@@ -35,7 +35,7 @@ chai.config.includeStack = true;
 // set worker path for tests
 require('../src/js/app-config').config.workerPath = '../lib';
 
-var axe = require('axe-logger');
+const axe = require('axe-logger');
 axe.removeAppender(axe.defaultAppender);
 
 // include angular modules
@@ -49,24 +49,14 @@ require('../src/js/email');
 // Global mocks
 //
 
-window.qMock = function(res, rej) {
-    return new Promise(res, rej);
-};
+window.qMock = (res, rej) => new Promise(res, rej);
 
-window.resolves = function(val) {
-    return new Promise(function(res) {
-        res(val);
-    });
-};
+window.resolves = val => new Promise(res => res(val));
 
-window.rejects = function(val) {
-    return new Promise(function(res, rej) {
-        rej(val);
-    });
-};
+window.rejects = val => new Promise((res, rej) => rej(val));
 
-window.fetchOk = function(body) {
-    var mockResponse = new window.Response(JSON.stringify(body), {
+window.fetchOk = body => {
+    const mockResponse = new window.Response(JSON.stringify(body), {
         status: 200,
         headers: {
             'Content-type': 'application/json'
@@ -75,8 +65,8 @@ window.fetchOk = function(body) {
     return resolves(mockResponse);
 };
 
-window.fetchError = function(status, body) {
-    var mockResponse = new window.Response(JSON.stringify(body), {
+window.fetchError = (status, body) => {
+    const mockResponse = new window.Response(JSON.stringify(body), {
         status: status,
         headers: {
             'Content-type': 'application/json'

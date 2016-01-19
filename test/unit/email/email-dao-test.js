@@ -1,5 +1,7 @@
 'use strict';
 
+import Auth from '../../../src/js/service/auth';
+
 var mailreader = require('mailreader'),
     ImapClient = require('imap-client'),
     PgpMailer = require('pgpmailer'),
@@ -9,7 +11,6 @@ var mailreader = require('mailreader'),
     PGP = require('../../../src/js/crypto/pgp'),
     DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
     appConfig = require('../../../src/js/app-config'),
-    Auth = require('../../../src/js/service/auth'),
     Dialog = require('../../../src/js/util/dialog');
 
 

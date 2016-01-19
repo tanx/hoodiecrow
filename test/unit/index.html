@@ -24,7 +24,7 @@
 
     <script>
       mocha.checkLeaks();
-      mocha.globals(['chrome']);
+      mocha.globals(['chrome', 'setImmediate', 'clearImmediate']);
 
       if (window.mochaPhantomJS) {
         mochaPhantomJS.run();

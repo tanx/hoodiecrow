@@ -1,8 +1,9 @@
 'use strict';
 
+import Auth from '../../../src/js/service/auth';
+
 var Account = require('../../../src/js/email/account'),
     appConfig = require('../../../src/js/app-config'),
-    Auth = require('../../../src/js/service/auth'),
     DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
     Email = require('../../../src/js/email/gmail'),
     Outbox = require('../../../src/js/email/outbox'),
