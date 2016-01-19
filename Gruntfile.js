@@ -11,7 +11,12 @@ module.exports = function(grunt) {
         ignore: ['buffer'], // node apis to be stubbed for runtime
         browserifyOptions: {
             debug: true
-        }
+        },
+        transform: [
+            ["babelify", {
+                presets: ["es2015"]
+            }]
+        ]
     };
 
     // Project configuration.

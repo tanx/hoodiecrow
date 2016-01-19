@@ -1,7 +1,6 @@
 {
     "indent": 4,
     "strict": true,
-    "globalstrict": true,
     "node": true,
     "browser": true,
     "nonew": true,
@@ -16,6 +15,7 @@
     "trailing": true,
     "undef": true,
     "unused": true,
+    "esnext": true,
 
     "predef": [
         "$",
