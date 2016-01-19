@@ -54,7 +54,7 @@
     "jquery": "~2.1.1",
     "mailbuild": "^0.3.7",
     "mailreader": "~0.4.0",
-    "mocha": "^1.21.4",
+    "mocha": "^2.3.4",
     "ng-infinite-scroll": "~1.1.2",
     "openpgp": "^1.0.0",
     "pgpbuilder": "~0.6.0",
