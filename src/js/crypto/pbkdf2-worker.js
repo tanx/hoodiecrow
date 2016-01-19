@@ -1,3 +1,5 @@
+/* global self */
+
 'use strict';
 
 importScripts('forge.min.js');

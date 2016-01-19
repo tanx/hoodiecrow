@@ -1,30 +1,77 @@
 'use strict';
 
-var ngModule = angular.module('woUtil');
-ngModule.service('base64url', Base64Url);
-module.exports = Base64Url;
-
-/*
+/**
  * JavaScript base64 / base64url encoder and decoder
  * http://www.simplycalc.com/base64-source.php
  */
-function Base64Url() {}
+export default class Base64Url {
 
-Base64Url.prototype.encodeBase64 = base64_encode;
-Base64Url.prototype.decode = base64_decode;
-Base64Url.prototype.encode = base64url_encode;
-Base64Url.prototype.sniff = base64url_sniff;
+    /**
+     *  base64_encode
+     * Encode a JavaScript string to base64.
+     * Specified string is first converted from JavaScript UCS-2 to UTF-8.
+     */
+    encodeBase64(str) {
+        const utf8str = unescape(encodeURIComponent(str));
+        return base64_encode_data(utf8str, utf8str.length, b64c);
+    }
 
-var b64c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; // base64 dictionary
-var b64u = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"; // base64url dictionary
-var b64pad = '=';
+    /**
+     * base64url_encode
+     * Encode a JavaScript string to base64url.
+     * Specified string is first converted from JavaScript UCS-2 to UTF-8.
+     */
+    encode(str) {
+        const utf8str = unescape(encodeURIComponent(str));
+        return base64_encode_data(utf8str, utf8str.length, b64u);
+    }
+
+    decode(data) {
+        if (typeof window !== 'undefined' && window.atob) {
+            return atob(data.replace(/\-/g, '+').replace(/_/g, '/'));
+        } else {
+            return base64_decodeJS(data);
+        }
+    }
+
+    /**
+     * base64url_sniff
+     * Check whether specified base64 string contains base64url specific characters.
+     * Return true if specified string is base64url encoded, false otherwise.
+     */
+    sniff(base64) {
+        if (base64.indexOf("-") >= 0) {
+            return true;
+        }
+        if (base64.indexOf("_") >= 0) {
+            return true;
+        }
+        return false;
+    }
+
+}
+
+const ngModule = angular.module('woUtil');
+ngModule.service('base64url', Base64Url);
+
+
+//
+//
+// Helper functions
+//
+//
+
+
+const b64c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; // base64 dictionary
+const b64u = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"; // base64url dictionary
+const b64pad = '=';
 
 /* base64_encode_data
  * Internal helper to encode data to base64 using specified dictionary.
  */
 function base64_encode_data(data, len, b64x) {
-    var dst = "";
-    var i;
+    let dst = "";
+    let i;
 
     for (i = 0; i <= len - 3; i += 3) {
         dst += b64x.charAt(data.charCodeAt(i) >>> 2);
@@ -48,24 +95,6 @@ function base64_encode_data(data, len, b64x) {
     return dst;
 }
 
-/* base64_encode
- * Encode a JavaScript string to base64.
- * Specified string is first converted from JavaScript UCS-2 to UTF-8.
- */
-function base64_encode(str) {
-    var utf8str = unescape(encodeURIComponent(str));
-    return base64_encode_data(utf8str, utf8str.length, b64c);
-}
-
-/* base64url_encode
- * Encode a JavaScript string to base64url.
- * Specified string is first converted from JavaScript UCS-2 to UTF-8.
- */
-function base64url_encode(str) {
-    var utf8str = unescape(encodeURIComponent(str));
-    return base64_encode_data(utf8str, utf8str.length, b64u);
-}
-
 /* base64_charIndex
  * Internal helper to translate a base64 character to its integer index.
  */
@@ -85,8 +114,8 @@ function base64_charIndex(c) {
  * Returned result is a JavaScript (UCS-2) string.
  */
 function base64_decodeJS(data) {
-    var dst = "";
-    var i, a, b, c, d;
+    let dst = "";
+    let i, a, b, c, d;
 
     for (i = 0; i < data.length - 3; i += 4) {
         a = base64_charIndex(data.charAt(i + 0));
@@ -104,26 +133,4 @@ function base64_decodeJS(data) {
     }
 
     return decodeURIComponent(escape(dst));
-}
-
-function base64_decode(data) {
-    if (typeof window !== 'undefined' && window.atob) {
-        return atob(data.replace(/\-/g, '+').replace(/_/g, '/'));
-    } else {
-        return base64_decodeJS(data);
-    }
-}
-
-/* base64url_sniff
- * Check whether specified base64 string contains base64url specific characters.
- * Return true if specified string is base64url encoded, false otherwise.
- */
-function base64url_sniff(base64) {
-    if (base64.indexOf("-") >= 0) {
-        return true;
-    }
-    if (base64.indexOf("_") >= 0) {
-        return true;
-    }
-    return false;
 }

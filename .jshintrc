@@ -23,7 +23,6 @@
         "rejects" : true,
         "fetchOk" : true,
         "fetchError" : true,
-        "self" : true,
         "importScripts" : true,
         "console" : true,
         "process" : true,
