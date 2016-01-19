@@ -7,7 +7,7 @@ require('./offline-cache');
 // Angular app config
 //
 
-var axe = require('axe-logger');
+const axe = require('axe-logger');
 
 // include angular modules
 require('./app-config');
@@ -18,7 +18,7 @@ require('./service');
 require('./email');
 
 // init main angular module including dependencies
-var app = angular.module('mail', [
+const app = angular.module('mail', [
     'ngRoute',
     'ngAnimate',
     'ngTagsInput',
@@ -32,7 +32,7 @@ var app = angular.module('mail', [
 ]);
 
 // set router paths
-app.config(function($routeProvider, $animateProvider) {
+app.config(($routeProvider, $animateProvider) => {
     $routeProvider.when('/login', {
         templateUrl: 'tpl/login.html',
         controller: require('./controller/login/login')
@@ -78,7 +78,7 @@ app.config(function($routeProvider, $animateProvider) {
     $animateProvider.classNameFilter(/lightbox/);
 });
 
-app.run(function($rootScope, oauth) {
+app.run(($rootScope, oauth) => {
     // global state... inherited to all child scopes
     $rootScope.state = {};
     // attach fastclick
@@ -116,7 +116,7 @@ if (window.cordova) {
 }
 
 function bootstrap() {
-    angular.element(document).ready(function() {
+    angular.element(document).ready(() => {
         angular.bootstrap(document, ['mail']);
     });
 }

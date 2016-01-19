@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+const ngModule = angular.module('woServices');
 ngModule.service('publickeyVerifier', PublickeyVerifier);
 module.exports = PublickeyVerifier;
 
@@ -16,16 +16,12 @@ PublickeyVerifier.prototype.uploadPublicKey = function() {
     if (this.keypair && this.hkpUpload) {
         return this._keychain.uploadPublicKey(this.keypair.publicKey);
     }
-    return new Promise(function(resolve) {
-        resolve();
-    });
+    return new Promise(resolve => resolve());
 };
 
 PublickeyVerifier.prototype.persistKeypair = function() {
     if (this.keypair) {
         return this._keychain.putUserKeyPair(this.keypair);
     }
-    return new Promise(function(resolve) {
-        resolve();
-    });
+    return new Promise(resolve => resolve());
 };

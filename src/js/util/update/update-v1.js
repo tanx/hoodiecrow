@@ -8,15 +8,13 @@
  * of the delta sync.
  */
 function updateV1(options) {
-    var emailDbType = 'email_',
+    const emailDbType = 'email_',
         versionDbType = 'dbVersion',
         postUpdateDbVersion = 1;
 
     // remove the emails
-    return options.userStorage.removeList(emailDbType).then(function() {
-        // update the database version to postUpdateDbVersion
-        return options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType);
-    });
+    return options.userStorage.removeList(emailDbType)
+        .then(() => options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType)); // update the database version to postUpdateDbVersion
 }
 
 module.exports = updateV1;

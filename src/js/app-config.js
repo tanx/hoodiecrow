@@ -1,8 +1,8 @@
 'use strict';
 
-var appCfg = {};
+const appCfg = {};
 
-var ngModule = angular.module('woAppConfig', []);
+const ngModule = angular.module('woAppConfig', []);
 ngModule.factory('appConfig', function($timeout) {
     $timeout(function() {
         return window.fetch(appCfg.config.baseUrl + 'manifest.json');

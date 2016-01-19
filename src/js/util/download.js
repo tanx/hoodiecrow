@@ -1,10 +1,10 @@
 'use strict';
 
-var ngModule = angular.module('woUtil');
+const ngModule = angular.module('woUtil');
 ngModule.service('download', Download);
 module.exports = Download;
 
-var util = require('crypto-lib').util;
+const util = require('crypto-lib').util;
 
 /**
  * A download helper to abstract platform specific behavior
@@ -15,11 +15,11 @@ function Download() {}
  * Create download link and click on it.
  */
 Download.prototype.createDownload = function(options) {
-    var contentType = options.contentType || 'application/octet-stream';
-    var filename = options.filename || 'file';
-    var content = options.content;
-    var a = document.createElement('a');
-    var supportsBlob;
+    const contentType = options.contentType || 'application/octet-stream';
+    const filename = options.filename || 'file';
+    const a = document.createElement('a');
+    let content = options.content;
+    let supportsBlob;
 
     try {
         supportsBlob = !!new Blob();

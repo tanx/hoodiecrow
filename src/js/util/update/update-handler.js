@@ -1,10 +1,10 @@
 'use strict';
 
-var ngModule = angular.module('woUtil');
+const ngModule = angular.module('woUtil');
 ngModule.service('updateHandler', UpdateHandler);
 module.exports = UpdateHandler;
 
-var axe = require('axe-logger'),
+const axe = require('axe-logger'),
     cfg = require('../../app-config').config,
     updateV1 = require('./update-v1'),
     updateV2 = require('./update-v2'),
@@ -29,18 +29,17 @@ function UpdateHandler(appConfigStore, accountStore, auth, dialog) {
  * Executes all the necessary updates
  */
 UpdateHandler.prototype.update = function() {
-    var self = this,
-        currentVersion = 0,
+    let currentVersion = 0,
         targetVersion = cfg.dbVersion,
         versionDbType = 'dbVersion';
 
-    return self._appConfigStorage.listItems(versionDbType).then(function(items) {
+    return this._appConfigStorage.listItems(versionDbType).then(items => {
         // parse the database version number
         if (items && items.length > 0) {
             currentVersion = parseInt(items[0], 10);
         }
 
-        return self._applyUpdate({
+        return this._applyUpdate({
             currentVersion: currentVersion,
             targetVersion: targetVersion
         });
@@ -51,9 +50,8 @@ UpdateHandler.prototype.update = function() {
  * Schedules necessary updates and executes thom in order
  */
 UpdateHandler.prototype._applyUpdate = function(options) {
-    var self = this;
-    return new Promise(function(resolve, reject) {
-        var scriptOptions,
+    return new Promise((resolve, reject) => {
+        let scriptOptions,
             queue = [];
 
         if (options.currentVersion >= options.targetVersion) {
@@ -63,14 +61,14 @@ UpdateHandler.prototype._applyUpdate = function(options) {
         }
 
         scriptOptions = {
-            appConfigStorage: self._appConfigStorage,
-            userStorage: self._userStorage,
-            auth: self._auth
+            appConfigStorage: this._appConfigStorage,
+            userStorage: this._userStorage,
+            auth: this._auth
         };
 
         // add all the necessary database updates to the queue
-        for (var i = options.currentVersion; i < options.targetVersion; i++) {
-            queue.push(self._updateScripts[i]);
+        for (let i = options.currentVersion; i < options.targetVersion; i++) {
+            queue.push(this._updateScripts[i]);
         }
 
         // takes the next update from the queue and executes it
@@ -82,7 +80,7 @@ UpdateHandler.prototype._applyUpdate = function(options) {
             }
 
             // process next update
-            var script = queue.shift();
+            const script = queue.shift();
             script(scriptOptions).then(executeNextUpdate).catch(reject);
         }
 
@@ -94,28 +92,22 @@ UpdateHandler.prototype._applyUpdate = function(options) {
  * Check application version and update correspondingly
  */
 UpdateHandler.prototype.checkForUpdate = function() {
-    var self = this;
-
     // Chrome Packaged App
     if (typeof window.chrome !== 'undefined' && chrome.runtime && chrome.runtime.onUpdateAvailable) {
         // check for Chrome app update and restart
-        chrome.runtime.onUpdateAvailable.addListener(function(details) {
+        chrome.runtime.onUpdateAvailable.addListener(details => {
             axe.debug('New Chrome App update... requesting reload.');
             // Chrome downloaded a new app version
-            self._dialog.confirm({
+            this._dialog.confirm({
                 title: 'Update available',
                 message: 'A new version ' + details.version + ' of the app is available. Restart the app to update?',
                 positiveBtnStr: 'Restart',
                 negativeBtnStr: 'Not now',
                 showNegativeBtn: true,
-                callback: function(agree) {
-                    if (agree) {
-                        chrome.runtime.reload();
-                    }
-                }
+                callback: agree => agree && chrome.runtime.reload()
             });
         });
-        chrome.runtime.requestUpdateCheck(function(status) {
+        chrome.runtime.requestUpdateCheck(status => {
             if (status === "update_found") {
                 axe.debug("Update pending...");
             } else if (status === "no_update") {

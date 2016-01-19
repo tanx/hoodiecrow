@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+const ngModule = angular.module('woServices');
 ngModule.service('publicKey', PublicKey);
 module.exports = PublicKey;
 
@@ -15,7 +15,7 @@ function PublicKey(pgp) {
 PublicKey.prototype.get = function(keyId) {
     return this._get({
         keyId: keyId
-    }).then(function(key) {
+    }).then(key => {
         if (key && key._id !== keyId) {
             throw new Error('Key ID of fetched public key does not match!');
         }
@@ -33,23 +33,22 @@ PublicKey.prototype.getByUserId = function(userId) {
 };
 
 PublicKey.prototype._get = function(options) {
-    var self = this;
-    return self._hkp.lookup(options).then(function(publicKeyArmored) {
+    return this._hkp.lookup(options).then(publicKeyArmored => {
         if (!publicKeyArmored) {
             return;
         }
 
-        var keyParams = self._pgp.getKeyParams(publicKeyArmored);
+        const keyParams = this._pgp.getKeyParams(publicKeyArmored);
         return {
             _id: keyParams._id,
             userId: keyParams.userId,
             userIds: keyParams.userIds,
             publicKey: publicKeyArmored,
-            source: self._hkp._baseUrl.split('://')[1]
+            source: this._hkp._baseUrl.split('://')[1]
         };
 
-    }).catch(function(err) {
-        err.code = 42;  // error code for offline
+    }).catch(err => {
+        err.code = 42; // error code for offline
         throw err;
     });
 };
@@ -58,8 +57,8 @@ PublicKey.prototype._get = function(options) {
  * Persist the user's publc key
  */
 PublicKey.prototype.put = function(pubkey) {
-    return this._hkp.upload(pubkey.publicKey).catch(function(err) {
-        err.code = 42;  // error code for offline
+    return this._hkp.upload(pubkey.publicKey).catch(err => {
+        err.code = 42; // error code for offline
         throw err;
     });
 };

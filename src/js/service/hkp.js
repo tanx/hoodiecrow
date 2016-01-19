@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+const ngModule = angular.module('woServices');
 ngModule.service('hkp', HKP);
 module.exports = HKP;
 
@@ -17,6 +17,6 @@ function HKP(appConfig) {
  * @return {String}         The url of the hkp query
  */
 HKP.prototype.getIndexUrl = function(query) {
-    var baseUrl = this._appConfig.config.hkpUrl + '/pks/lookup?op=index&search=';
+    let baseUrl = this._appConfig.config.hkpUrl + '/pks/lookup?op=index&search=';
     return baseUrl + encodeURIComponent(query);
 };

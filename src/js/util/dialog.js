@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woUtil');
+const ngModule = angular.module('woUtil');
 ngModule.service('dialog', Dialog);
 module.exports = Dialog;
 
@@ -58,12 +58,11 @@ Dialog.prototype.confirm = function(options) {
  * Helper function which returns a promise
  */
 Dialog.prototype._handle = function(options, fn, errMsg) {
-    var self = this;
-    return self._timeout(function() {
+    return this._timeout(() => {
         if (fn) {
             return fn(options);
         } else {
-            self._axe.error('dialog service', errMsg + ' function not set!');
+            this._axe.error('dialog service', errMsg + ' function not set!');
         }
     });
 };

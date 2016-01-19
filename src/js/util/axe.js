@@ -1,8 +1,6 @@
 'use strict';
 
-var axe = require('axe-logger');
+const axe = require('axe-logger');
 
-var ngModule = angular.module('woUtil');
-ngModule.factory('axe', function() {
-    return axe;
-});
+const ngModule = angular.module('woUtil');
+ngModule.factory('axe', () => axe);

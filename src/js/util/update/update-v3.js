@@ -7,15 +7,13 @@
  * the outbox uses artificial uids
  */
 function update(options) {
-    var emailDbType = 'email_',
+    const emailDbType = 'email_',
         versionDbType = 'dbVersion',
         postUpdateDbVersion = 3;
 
     // remove the emails
-    return options.userStorage.removeList(emailDbType).then(function() {
-        // update the database version to postUpdateDbVersion
-        return options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType);
-    });
+    return options.userStorage.removeList(emailDbType)
+        .then(() => options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType)); // update the db version
 }
 
 module.exports = update;

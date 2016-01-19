@@ -1,13 +1,13 @@
 'use strict';
 
-var ngModule = angular.module('woUtil');
+const ngModule = angular.module('woUtil');
 ngModule.service('dummy', Dummy);
 module.exports = Dummy;
 
 function Dummy() {}
 
 Dummy.prototype.listFolders = function() {
-    var dummies = [{
+    const dummies = [{
         type: 'Inbox',
         count: 2,
         path: 'INBOX',
@@ -72,9 +72,9 @@ Dummy.prototype.listFolders = function() {
 };
 
 Dummy.prototype.listMails = function() {
-    var id = 1000000;
+    let id = 1000000;
 
-    var Email = function(unread, attachments, answered) {
+    const Email = function(unread, attachments, answered) {
         this.id = id-- + '';
         this.from = [{
             name: 'Hoodiecrow Support',
@@ -129,7 +129,7 @@ Dummy.prototype.listMails = function() {
         this.signaturesValid = true;
     };
 
-    var dummies = [],
+    let dummies = [],
         i = 100;
     while (i--) {
         // every second/third/fourth dummy mail with unread/attachments/answered

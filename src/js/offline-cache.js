@@ -16,7 +16,7 @@
 
 'use strict';
 
-var UPDATE_MSG = 'A new version of Hoodiecrow is available. Restart the app to update?';
+const UPDATE_MSG = 'A new version of Hoodiecrow is available. Restart the app to update?';
 
 if ('serviceWorker' in navigator &&
     // See http://www.chromium.org/Home/chromium-security/prefer-secure-origins-for-powerful-new-features
@@ -49,7 +49,7 @@ function useServiceWorker() {
         registration.onupdatefound = function() {
             // The updatefound event implies that registration.installing is set; see
             // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#service-worker-container-updatefound-event
-            var installingWorker = registration.installing;
+            const installingWorker = registration.installing;
 
             installingWorker.onstatechange = function() {
                 if (installingWorker.state === 'installed') {

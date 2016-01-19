@@ -1,16 +1,11 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+const ngModule = angular.module('woServices');
 
 // expose an instance with the static dbName 'app-config' to store configuration data
-ngModule.factory('appConfigStore', function(appConfigLawnchair) {
-    return new DeviceStorage(appConfigLawnchair);
-});
-
+ngModule.factory('appConfigStore', appConfigLawnchair => new DeviceStorage(appConfigLawnchair));
 // expose a singleton instance of DeviceStorage called 'accountStore' to persist user data
-ngModule.factory('accountStore', function(accountLawnchair) {
-    return new DeviceStorage(accountLawnchair);
-});
+ngModule.factory('accountStore', accountLawnchair => new DeviceStorage(accountLawnchair));
 
 module.exports = DeviceStorage;
 
@@ -41,9 +36,8 @@ DeviceStorage.prototype.init = function(dbName) {
  * @return {Promise}
  */
 DeviceStorage.prototype.storeList = function(list, type) {
-    var self = this;
-    return new Promise(function(resolve) {
-        var key, items = [];
+    return new Promise(resolve => {
+        let key, items = [];
         list = list || [];
 
         // validate type
@@ -52,7 +46,7 @@ DeviceStorage.prototype.storeList = function(list, type) {
         }
 
         // format items for batch storing in dao
-        list.forEach(function(i) {
+        list.forEach(i => {
             key = createKey(i, type);
 
             items.push({
@@ -63,13 +57,13 @@ DeviceStorage.prototype.storeList = function(list, type) {
 
         resolve(items);
 
-    }).then(function(items) {
+    }).then(items => {
         // nothing to store
         if (items.length === 0) {
             return;
         }
 
-        return self._lawnchairDAO.batch(items);
+        return this._lawnchairDAO.batch(items);
     });
 };
 
@@ -105,7 +99,7 @@ DeviceStorage.prototype.clear = function() {
 //
 
 function createKey(i, type) {
-    var key;
+    let key;
 
     // put id in key if available... for easy querying
     if (i.id) {

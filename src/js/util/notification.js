@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woUtil');
+const ngModule = angular.module('woUtil');
 ngModule.service('notification', Notif);
 module.exports = Notif;
 
@@ -23,41 +23,39 @@ function Notif(appConfig, axe) {
  * @returns {Notification} A notification instance
  */
 Notif.prototype.create = function(options) {
-    var self = this;
-
     options.onClick = options.onClick || function() {};
 
     if (!window.Notification) {
         return;
     }
 
-    if (!self.hasPermission) {
+    if (!this.hasPermission) {
         // don't wait until callback returns
-        Notification.requestPermission(function(permission) {
+        Notification.requestPermission(permission => {
             if (permission === "granted") {
-                self.hasPermission = true;
+                this.hasPermission = true;
             }
         });
     }
 
-    var notification;
+    let notification;
     try {
         notification = new Notification(options.title, {
             body: options.message,
-            icon: self._appConfig.config.iconPath
+            icon: this._appConfig.config.iconPath
         });
     } catch (err) {
-        self._axe.error('Displaying notification failed: ' + err.message);
+        this._axe.error('Displaying notification failed: ' + err.message);
         return;
     }
 
-    notification.onclick = function() {
+    notification.onclick = () => {
         window.focus();
         options.onClick();
     };
 
     if (options.timeout > 0) {
-        setTimeout(function() {
+        setTimeout(() => {
             notification.close();
         }, options.timeout);
     }

@@ -1,6 +1,6 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+const ngModule = angular.module('woServices');
 ngModule.service('invitation', Invitation);
 module.exports = Invitation;
 
@@ -19,7 +19,7 @@ function Invitation(appConfig) {
  * @return {Object}                     The mail object
  */
 Invitation.prototype.createMail = function(options) {
-    var str = this._appConfig.string;
+    const str = this._appConfig.string;
 
     return {
         from: [{
