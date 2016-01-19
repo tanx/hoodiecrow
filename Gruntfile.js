@@ -19,6 +19,8 @@ module.exports = function(grunt) {
         ]
     };
 
+    var filesToValidate = ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/**/*-test.js', 'test/integration/**/*-test.js'];
+
     // Project configuration.
     grunt.initConfig({
 
@@ -149,9 +151,18 @@ module.exports = function(grunt) {
         // JavaScript
 
         jshint: {
-            all: ['Gruntfile.js', 'src/*.js', 'src/js/**/*.js', 'test/unit/**/*-test.js', 'test/integration/**/*-test.js'],
+            all: filesToValidate,
             options: {
                 jshintrc: '.jshintrc'
+            }
+        },
+
+        jscs: {
+            src: filesToValidate,
+            options: {
+                config: ".jscsrc",
+                esnext: true, // If you use ES6 http://jscs.info/overview.html#esnext
+                verbose: true, // If you need output with rule names http://jscs.info/overview.html#verbose
             }
         },
 
@@ -699,6 +710,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-shell');
     grunt.loadNpmTasks('grunt-angular-templates');
     grunt.loadNpmTasks('grunt-gh-pages');
+    grunt.loadNpmTasks('grunt-jscs');
     grunt.loadNpmTasks('assemble');
 
     // Build tasks
@@ -734,7 +746,7 @@ module.exports = function(grunt) {
 
     // Test/Dev tasks
     grunt.registerTask('dev', ['connect:dev']);
-    grunt.registerTask('test', ['jshint', 'connect:test', 'mocha_phantomjs']);
+    grunt.registerTask('test', ['jshint', 'jscs', 'connect:test', 'mocha_phantomjs']);
     grunt.registerTask('prod', ['connect:prod']);
 
     //
@@ -796,6 +808,5 @@ module.exports = function(grunt) {
     grunt.registerTask('release-prod', ['dist', 'manifest-prod', 'clean:release', 'swPrecache:prod', 'compress']);
     grunt.registerTask('default', ['release-dev']);
     grunt.registerTask('deploy-gh-pages', ['release-prod', 'gh-pages']);
-
 
 };
