@@ -41,26 +41,22 @@ export default class OAuth {
      * Catch the OAuth2 token and other parameters.
      */
     oauthCallback() {
-        const params = () => {
-            const hashParams = {};
-            let e,
-                a = /\+/g, // Regex for replacing addition symbol with a space
-                r = /([^&;=]+)=?([^&;]*)/g,
-                d = s => decodeURIComponent(s.replace(a, " ")),
-                q = window.location.hash.substring(1);
+        const hashParams = {};
+        let e,
+            a = /\+/g, // Regex for replacing addition symbol with a space
+            r = /([^&;=]+)=?([^&;]*)/g,
+            d = s => decodeURIComponent(s.replace(a, " ")),
+            q = window.location.hash.substring(1);
 
+        e = r.exec(q);
+        while (e) {
+            hashParams[d(e[1])] = d(e[2]);
             e = r.exec(q);
-            while (e) {
-                hashParams[d(e[1])] = d(e[2]);
-                e = r.exec(q);
-            }
+        }
 
-            return hashParams;
-        };
-
-        this.accessToken = params.access_token;
-        this.tokenType = params.token_type;
-        this.expiresIn = params.expires_in;
+        this.accessToken = hashParams.access_token;
+        this.tokenType = hashParams.token_type;
+        this.expiresIn = hashParams.expires_in;
     }
 
     /**
