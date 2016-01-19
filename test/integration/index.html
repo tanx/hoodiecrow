@@ -23,13 +23,7 @@
     <script src="index.js"></script>
 
     <script>
-      if (window.mochaPhantomJS) {
-        mochaPhantomJS.run();
-      } else {
-        setTimeout(function() {
-          mocha.run();
-        }, 1000)
-      }
+      mocha.run();
     </script>
   </body>
 </html>
