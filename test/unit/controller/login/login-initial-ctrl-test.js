@@ -1,8 +1,7 @@
 'use strict';
 
-import Auth from '../../../../src/js/service/auth';
-
-var PublicKeyVerifier = require('../../../../src/js/service/publickey-verifier'),
+var Auth = require('../../../../src/js/service/auth'),
+    PublicKeyVerifier = require('../../../../src/js/service/publickey-verifier'),
     LoginInitialCtrl = require('../../../../src/js/controller/login/login-initial'),
     Email = require('../../../../src/js/email/gmail');
 

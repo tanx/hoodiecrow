@@ -1,11 +1,10 @@
 'use strict';
 
-import Auth from '../../../../src/js/service/auth';
-
 var WriteCtrl = require('../../../../src/js/controller/app/write'),
     Email = require('../../../../src/js/email/gmail'),
     Outbox = require('../../../../src/js/email/outbox'),
     Keychain = require('../../../../src/js/service/keychain'),
+    Auth = require('../../../../src/js/service/auth'),
     PGP = require('../../../../src/js/crypto/pgp'),
     Status = require('../../../../src/js/util/status'),
     Dialog = require('../../../../src/js/util/dialog'),

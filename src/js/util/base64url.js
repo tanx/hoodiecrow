@@ -1,66 +1,19 @@
 'use strict';
 
-/**
+const ngModule = angular.module('woUtil');
+ngModule.service('base64url', Base64Url);
+module.exports = Base64Url;
+
+/*
  * JavaScript base64 / base64url encoder and decoder
  * http://www.simplycalc.com/base64-source.php
  */
-export default class Base64Url {
+function Base64Url() {}
 
-    /**
-     *  base64_encode
-     * Encode a JavaScript string to base64.
-     * Specified string is first converted from JavaScript UCS-2 to UTF-8.
-     */
-    encodeBase64(str) {
-        const utf8str = unescape(encodeURIComponent(str));
-        return base64_encode_data(utf8str, utf8str.length, b64c);
-    }
-
-    /**
-     * base64url_encode
-     * Encode a JavaScript string to base64url.
-     * Specified string is first converted from JavaScript UCS-2 to UTF-8.
-     */
-    encode(str) {
-        const utf8str = unescape(encodeURIComponent(str));
-        return base64_encode_data(utf8str, utf8str.length, b64u);
-    }
-
-    decode(data) {
-        if (typeof window !== 'undefined' && window.atob) {
-            return atob(data.replace(/\-/g, '+').replace(/_/g, '/'));
-        } else {
-            return base64_decodeJS(data);
-        }
-    }
-
-    /**
-     * base64url_sniff
-     * Check whether specified base64 string contains base64url specific characters.
-     * Return true if specified string is base64url encoded, false otherwise.
-     */
-    sniff(base64) {
-        if (base64.indexOf("-") >= 0) {
-            return true;
-        }
-        if (base64.indexOf("_") >= 0) {
-            return true;
-        }
-        return false;
-    }
-
-}
-
-const ngModule = angular.module('woUtil');
-ngModule.service('base64url', Base64Url);
-
-
-//
-//
-// Helper functions
-//
-//
-
+Base64Url.prototype.encodeBase64 = base64_encode;
+Base64Url.prototype.decode = base64_decode;
+Base64Url.prototype.encode = base64url_encode;
+Base64Url.prototype.sniff = base64url_sniff;
 
 const b64c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; // base64 dictionary
 const b64u = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"; // base64url dictionary
@@ -93,6 +46,24 @@ function base64_encode_data(data, len, b64x) {
     }
 
     return dst;
+}
+
+/* base64_encode
+ * Encode a JavaScript string to base64.
+ * Specified string is first converted from JavaScript UCS-2 to UTF-8.
+ */
+function base64_encode(str) {
+    const utf8str = unescape(encodeURIComponent(str));
+    return base64_encode_data(utf8str, utf8str.length, b64c);
+}
+
+/* base64url_encode
+ * Encode a JavaScript string to base64url.
+ * Specified string is first converted from JavaScript UCS-2 to UTF-8.
+ */
+function base64url_encode(str) {
+    const utf8str = unescape(encodeURIComponent(str));
+    return base64_encode_data(utf8str, utf8str.length, b64u);
 }
 
 /* base64_charIndex
@@ -133,4 +104,26 @@ function base64_decodeJS(data) {
     }
 
     return decodeURIComponent(escape(dst));
+}
+
+function base64_decode(data) {
+    if (typeof window !== 'undefined' && window.atob) {
+        return atob(data.replace(/\-/g, '+').replace(/_/g, '/'));
+    } else {
+        return base64_decodeJS(data);
+    }
+}
+
+/* base64url_sniff
+ * Check whether specified base64 string contains base64url specific characters.
+ * Return true if specified string is base64url encoded, false otherwise.
+ */
+function base64url_sniff(base64) {
+    if (base64.indexOf("-") >= 0) {
+        return true;
+    }
+    if (base64.indexOf("_") >= 0) {
+        return true;
+    }
+    return false;
 }

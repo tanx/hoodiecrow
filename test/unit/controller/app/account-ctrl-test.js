@@ -1,11 +1,10 @@
 'use strict';
 
-import Auth from '../../../../src/js/service/auth';
-
 var AccountCtrl = require('../../../../src/js/controller/app/account'),
     PGP = require('../../../../src/js/crypto/pgp'),
     Download = require('../../../../src/js/util/download'),
     Keychain = require('../../../../src/js/service/keychain'),
+    Auth = require('../../../../src/js/service/auth'),
     Dialog = require('../../../../src/js/util/dialog'),
     PrivateKey = require('../../../../src/js/service/privatekey');
 

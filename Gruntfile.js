@@ -1,6 +1,6 @@
-module.exports = function(grunt) {
-    'use strict';
+'use strict';
 
+module.exports = function(grunt) {
     require('time-grunt')(grunt);
 
     var version = grunt.option('release'),

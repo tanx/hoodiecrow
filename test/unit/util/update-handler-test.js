@@ -1,8 +1,7 @@
 'use strict';
 
-import Auth from '../../../src/js/service/auth';
-
 var DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
+    Auth = require('../../../src/js/service/auth'),
     cfg = require('../../../src/js/app-config').config,
     UpdateHandler = require('../../../src/js/util/update/update-handler'),
     Dialog = require('../../../src/js/util/dialog');

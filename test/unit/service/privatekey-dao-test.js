@@ -1,8 +1,7 @@
 'use strict';
 
-import Auth from '../../../src/js/service/auth';
-
-var PrivateKey = require('../../../src/js/service/privatekey'),
+var Auth = require('../../../src/js/service/auth'),
+    PrivateKey = require('../../../src/js/service/privatekey'),
     PGP = require('../../../src/js/crypto/pgp'),
     Crypto = require('../../../src/js/crypto/crypto'),
     axe = require('axe-logger'),

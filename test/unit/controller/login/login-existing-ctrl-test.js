@@ -1,8 +1,7 @@
 'use strict';
 
-import Auth from '../../../../src/js/service/auth';
-
-var Account = require('../../../../src/js/email/account'),
+var Auth = require('../../../../src/js/service/auth'),
+    Account = require('../../../../src/js/email/account'),
     Dialog = require('../../../../src/js/util/dialog'),
     LoginExistingCtrl = require('../../../../src/js/controller/login/login-existing'),
     EmailDAO = require('../../../../src/js/email/gmail'),

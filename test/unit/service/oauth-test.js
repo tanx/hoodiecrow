@@ -1,8 +1,7 @@
 'use strict';
 
-import OAuth from '../../../src/js/service/oauth';
-
-var appConfig = require('../../../src/js/app-config');
+var OAuth = require('../../../src/js/service/oauth'),
+    appConfig = require('../../../src/js/app-config');
 
 describe('OAuth unit tests', function() {
     var oauth, identityStub, getPlatformInfoStub, removeCachedStub,
