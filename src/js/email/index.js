@@ -1,7 +1,6 @@
 'use strict';
 
-angular.module('woEmail', ['woAppConfig', 'woUtil', 'woServices', 'woCrypto']);
-
+import './ng-module';
 import './mailreader';
 import './pgpbuilder';
 import './mailbuild';

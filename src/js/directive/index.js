@@ -1,7 +1,6 @@
 'use strict';
 
-angular.module('woDirectives', []);
-
+import './ng-module';
 import './common';
 import './key-shortcuts';
 import './mail-list';

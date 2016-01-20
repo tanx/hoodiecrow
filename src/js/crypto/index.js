@@ -1,6 +1,5 @@
 'use strict';
 
-angular.module('woCrypto', ['woAppConfig', 'woUtil']);
-
+import './ng-module';
 import './pgp';
 import './crypto';

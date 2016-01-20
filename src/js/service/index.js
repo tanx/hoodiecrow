@@ -1,7 +1,6 @@
 'use strict';
 
-angular.module('woServices', ['woAppConfig', 'woUtil', 'woCrypto']);
-
+import './ng-module';
 import './invitation';
 import './oauth';
 import './privatekey';
