@@ -1,7 +1,6 @@
 'use strict';
 
-angular.module('woUtil', []);
-
+import './ng-module';
 import './axe';
 import './dummy';
 import './dialog';

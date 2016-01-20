@@ -1,6 +1,6 @@
 'use strict';
 
-const axe = require('axe-logger');
+import axe from 'axe-logger';
 
 const ngModule = angular.module('woUtil');
 ngModule.factory('axe', () => axe);
