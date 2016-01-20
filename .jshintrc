@@ -1,6 +1,5 @@
 {
     "strict": true,
-    "globalstrict": true,
     "node": true,
     "browser": true,
     "nonew": true,

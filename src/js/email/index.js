@@ -1,5 +1,3 @@
-'use strict';
-
 import './ng-module';
 import './mailreader';
 import './pgpbuilder';

@@ -1,5 +1,3 @@
-'use strict';
-
 import './ng-module';
 import './common';
 import './key-shortcuts';
