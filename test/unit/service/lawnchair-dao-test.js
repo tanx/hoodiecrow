@@ -31,9 +31,9 @@ describe('Lawnchair DAO unit tests', function() {
         lawnchairDao.clear().then(done);
     });
 
-    describe('read', function() {
+    describe('init', function() {
         it('should fail', function(done) {
-            lawnchairDao.read(undefined).catch(function(err) {
+            lawnchairDao.init(undefined).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -59,14 +59,29 @@ describe('Lawnchair DAO unit tests', function() {
     });
 
     describe('persist/read/remove', function() {
-        it('should fail', function(done) {
+        it('should fail when reading with no key', function(done) {
+            lawnchairDao.read(undefined).catch(function(err) {
+                expect(err).to.exist;
+                done();
+            });
+        });
+
+        it('should fail when persisting with no key', function(done) {
             lawnchairDao.persist(undefined, data).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
         });
-        it('should fail', function(done) {
-            lawnchairDao.persist('1234', undefined).catch(function(err) {
+
+        it('should fail when persisting with no key', function(done) {
+            lawnchairDao.persist(key, undefined).catch(function(err) {
+                expect(err).to.exist;
+                done();
+            });
+        });
+
+        it('should fail when persisting with no input', function(done) {
+            lawnchairDao.persist(undefined, undefined).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
@@ -88,14 +103,62 @@ describe('Lawnchair DAO unit tests', function() {
     });
 
     describe('batch/list/removeList', function() {
-        it('should fails', function(done) {
+        it('should fail', function(done) {
             lawnchairDao.batch({}).catch(function(err) {
                 expect(err).to.exist;
                 done();
             });
         });
 
-        it('should work', function(done) {
+        it('should filter only first type', function(done) {
+            var list = [{
+                key: key,
+                object: data
+            }, {
+                key: key2,
+                object: data2
+            }];
+
+            lawnchairDao.batch(list).then(function() {
+                return lawnchairDao.list(key);
+            }).then(function(fetched) {
+                expect(fetched.length).to.equal(1);
+                expect(fetched[0]).to.deep.equal(list[0].object);
+                return lawnchairDao.removeList(key);
+            }).then(function() {
+                return lawnchairDao.list('type');
+            }).then(function(fetched) {
+                expect(fetched.length).to.equal(1);
+                expect(fetched[0]).to.deep.equal(list[1].object);
+                done();
+            });
+        });
+
+        it('should filter only second type', function(done) {
+            var list = [{
+                key: key,
+                object: data
+            }, {
+                key: key2,
+                object: data2
+            }];
+
+            lawnchairDao.batch(list).then(function() {
+                return lawnchairDao.list(key2);
+            }).then(function(fetched) {
+                expect(fetched.length).to.equal(1);
+                expect(fetched[0]).to.deep.equal(list[1].object);
+                return lawnchairDao.removeList(key2);
+            }).then(function() {
+                return lawnchairDao.list('type');
+            }).then(function(fetched) {
+                expect(fetched.length).to.equal(1);
+                expect(fetched[0]).to.deep.equal(list[0].object);
+                done();
+            });
+        });
+
+        it('should filter all', function(done) {
             var list = [{
                 key: key,
                 object: data
@@ -109,12 +172,37 @@ describe('Lawnchair DAO unit tests', function() {
             }).then(function(fetched) {
                 expect(fetched.length).to.equal(2);
                 expect(fetched[0]).to.deep.equal(list[0].object);
+                expect(fetched[1]).to.deep.equal(list[1].object);
                 return lawnchairDao.removeList('type');
             }).then(function() {
                 return lawnchairDao.list('type');
             }).then(function(fetched) {
                 expect(fetched).to.exist;
                 expect(fetched.length).to.equal(0);
+                done();
+            });
+        });
+
+        it('should filter none', function(done) {
+            var list = [{
+                key: key,
+                object: data
+            }, {
+                key: key2,
+                object: data2
+            }];
+
+            lawnchairDao.batch(list).then(function() {
+                return lawnchairDao.list('type_3');
+            }).then(function(fetched) {
+                expect(fetched.length).to.equal(0);
+                return lawnchairDao.removeList('type_3');
+            }).then(function() {
+                return lawnchairDao.list('type');
+            }).then(function(fetched) {
+                expect(fetched.length).to.equal(2);
+                expect(fetched[0]).to.deep.equal(list[0].object);
+                expect(fetched[1]).to.deep.equal(list[1].object);
                 done();
             });
         });

@@ -1,9 +1,9 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+const ngModule = angular.module('woServices');
 ngModule.service('appConfigLawnchair', LawnchairDAO);
 ngModule.service('accountLawnchair', LawnchairDAO);
-module.exports = LawnchairDAO;
+export default LawnchairDAO;
 
 /**
  * Handles generic caching of JSON objects in a lawnchair adapter
@@ -16,21 +16,14 @@ function LawnchairDAO() {}
  * @return {Promise}
  */
 LawnchairDAO.prototype.init = function(dbName) {
-    var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
         if (!dbName) {
             throw new Error('Lawnchair DB name must be specified!');
         }
 
-        self._db = new Lawnchair({
+        this._db = new Lawnchair({
             name: dbName
-        }, function(success) {
-            if (success) {
-                resolve();
-            } else {
-                reject(new Error('Lawnchair initialization ' + dbName + ' failed!'));
-            }
-        });
+        }, success => success ? resolve() : reject(new Error('Lawnchair initialization ' + dbName + ' failed!')));
     });
 };
 
@@ -39,23 +32,15 @@ LawnchairDAO.prototype.init = function(dbName) {
  * @return {Promise}
  */
 LawnchairDAO.prototype.persist = function(key, object) {
-    var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
         if (!key || !object) {
             throw new Error('Key and Object must be set!');
         }
 
-        self._db.save({
+        this._db.save({
             key: key,
             object: object
-        }, function(persisted) {
-            if (persisted.key !== key) {
-                reject(new Error('Persisting failed!'));
-                return;
-            }
-
-            resolve();
-        });
+        }, persisted => (persisted.key !== key) ? reject(new Error('Persisting failed!')) : resolve());
     });
 };
 
@@ -64,19 +49,12 @@ LawnchairDAO.prototype.persist = function(key, object) {
  * @return {Promise}
  */
 LawnchairDAO.prototype.batch = function(list) {
-    var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
         if (!(list instanceof Array)) {
             throw new Error('Input must be of type Array!');
         }
 
-        self._db.batch(list, function(res) {
-            if (!res) {
-                reject(new Error('Persisting batch failed!'));
-            } else {
-                resolve();
-            }
-        });
+        this._db.batch(list, res => !res ? reject(new Error('Persisting batch failed!')) : resolve());
     });
 };
 
@@ -85,19 +63,12 @@ LawnchairDAO.prototype.batch = function(list) {
  * @return {Promise}
  */
 LawnchairDAO.prototype.read = function(key) {
-    var self = this;
-    return new Promise(function(resolve) {
+    return new Promise(resolve => {
         if (!key) {
             throw new Error('Key must be specified!');
         }
 
-        self._db.get(key, function(o) {
-            if (o) {
-                resolve(o.object);
-            } else {
-                resolve();
-            }
-        });
+        this._db.get(key, o => o ? resolve(o.object) : resolve());
     });
 };
 
@@ -107,9 +78,8 @@ LawnchairDAO.prototype.read = function(key) {
  * @return {Promise}
  */
 LawnchairDAO.prototype.list = function(query, exactMatchOnly) {
-    var self = this;
-    return new Promise(function(resolve) {
-        var matchingKeys = [];
+    return new Promise(resolve => {
+        let matchingKeys = [];
 
         // validate input
         if ((Array.isArray(query) && query.length === 0) || (!Array.isArray(query) && !query)) {
@@ -122,17 +92,10 @@ LawnchairDAO.prototype.list = function(query, exactMatchOnly) {
         }
 
         // get all keys
-        self._db.keys(function(keys) {
+        this._db.keys(keys => {
             // check if there are keys in the db that start with the respective query
-            matchingKeys = keys.filter(function(key) {
-                return query.filter(function(type) {
-                    if (exactMatchOnly) {
-                        return key === type;
-                    } else {
-                        return key.indexOf(type) === 0;
-                    }
-                }).length > 0;
-            });
+            matchingKeys = keys.filter(key => query.filter(type =>
+                exactMatchOnly ? key === type : key.indexOf(type) === 0).length > 0);
 
             if (matchingKeys.length === 0) {
                 // no matching keys, resolve
@@ -141,13 +104,7 @@ LawnchairDAO.prototype.list = function(query, exactMatchOnly) {
             }
 
             // fetch all items from data-store with matching keys
-            self._db.get(matchingKeys, function(intervalList) {
-                var result = intervalList.map(function(item) {
-                    return item.object;
-                });
-
-                resolve(result);
-            });
+            this._db.get(matchingKeys, items => resolve(items.map(item => item.object)));
         });
     });
 };
@@ -157,16 +114,7 @@ LawnchairDAO.prototype.list = function(query, exactMatchOnly) {
  * @return {Promise}
  */
 LawnchairDAO.prototype.remove = function(key) {
-    var self = this;
-    return new Promise(function(resolve, reject) {
-        self._db.remove(key, function(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
+    return new Promise((resolve, reject) => this._db.remove(key, err => err ? reject(err) : resolve()));
 };
 
 /**
@@ -174,36 +122,26 @@ LawnchairDAO.prototype.remove = function(key) {
  * @return {Promise}
  */
 LawnchairDAO.prototype.removeList = function(type) {
-    var self = this;
-    return new Promise(function(resolve) {
-        var matchingKeys = [],
-            after;
+    return new Promise(resolve => {
+        const matchingKeys = [];
 
         // validate type
         if (!type) {
             throw new Error('Type is not set!');
         }
 
-        // get all keys
-        self._db.keys(function(keys) {
-            // check if key begins with type
-            keys.forEach(function(key) {
-                if (key.indexOf(type) === 0) {
-                    matchingKeys.push(key);
-                }
-            });
-
-            if (matchingKeys.length < 1) {
-                resolve();
-                return;
-            }
-
-            // remove all matching keys
-            after = _.after(matchingKeys.length, resolve);
-            _.each(matchingKeys, function(key) {
-                self._db.remove(key, after);
-            });
+        // get all keys that begins with type
+        this._db.keys(keys => {
+            keys.forEach(key => key.indexOf(type) === 0 && matchingKeys.push(key));
+            resolve(matchingKeys);
         });
+
+    }).then(matchingKeys => {
+        // remove all matching keys
+        const jobs = [];
+        matchingKeys.forEach(key => jobs.push(this.remove(key)));
+
+        return Promise.all(jobs);
     });
 };
 
@@ -212,14 +150,5 @@ LawnchairDAO.prototype.removeList = function(type) {
  * @return {Promise}
  */
 LawnchairDAO.prototype.clear = function() {
-    var self = this;
-    return new Promise(function(resolve, reject) {
-        self._db.nuke(function(err) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
+    return new Promise((resolve, reject) => this._db.nuke(err => err ? reject(err) : resolve()));
 };
