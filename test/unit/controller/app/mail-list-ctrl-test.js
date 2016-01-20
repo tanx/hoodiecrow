@@ -1,11 +1,11 @@
 'use strict';
 
-var MailListCtrl = require('../../../../src/js/controller/app/mail-list'),
-    EmailDAO = require('../../../../src/js/email/gmail'),
-    KeychainDAO = require('../../../../src/js/service/keychain'),
-    Status = require('../../../../src/js/util/status'),
-    Dialog = require('../../../../src/js/util/dialog'),
-    Search = require('../../../../src/js/email/search');
+import MailListCtrl from '../../../../src/js/controller/app/mail-list';
+import EmailDAO from '../../../../src/js/email/gmail';
+import KeychainDAO from '../../../../src/js/service/keychain';
+import Status from '../../../../src/js/util/status';
+import Dialog from '../../../../src/js/util/dialog';
+import Search from '../../../../src/js/email/search';
 
 describe('Mail List controller unit test', function() {
     var scope, ctrl, statusMock, notificationMock, emailMock, keychainMock, dialogMock, searchMock,
