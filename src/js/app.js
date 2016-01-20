@@ -1,10 +1,7 @@
 'use strict';
 
-// use service-worker or app-cache for offline caching
-import initOfflineCache from './offline-cache';
-initOfflineCache();
-
-import axe from 'axe-logger';
+// init offline cache
+import './offline-cache';
 
 // import angular modules
 import './app-config';
@@ -38,9 +35,11 @@ import DialogCtrl from './controller/app/dialog';
 import ActionBarCtrl from './controller/app/action-bar';
 import StatusDisplayCtrl from './controller/app/status-display';
 
+
 //
 // Angular app config
 //
+
 
 // init main angular module including dependencies
 const app = angular.module('mail', [
@@ -125,18 +124,20 @@ app.controller('DialogCtrl', DialogCtrl);
 app.controller('ActionBarCtrl', ActionBarCtrl);
 app.controller('StatusDisplayCtrl', StatusDisplayCtrl);
 
+
 //
 // Manual angular bootstraping
 //
 
+
 // are we running in a cordova app or in a browser environment?
 if (window.cordova) {
     // wait for 'deviceready' event to make sure plugins are loaded
-    axe.debug('Assuming Cordova environment...');
+    console.log('Assuming Cordova environment...');
     document.addEventListener('deviceready', bootstrap, false);
 } else {
     // No need to wait on events... just start the app
-    axe.debug('Assuming Browser environment...');
+    console.log('Assuming Browser environment...');
     bootstrap();
 }
 

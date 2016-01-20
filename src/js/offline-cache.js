@@ -1,40 +1,23 @@
-/**
- * Copyright 2015 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 'use strict';
-
-const UPDATE_MSG = 'A new version of Hoodiecrow is available. Restart the app to update?';
 
 /**
  * This module initializes the offline cache either using service worker or app cache
  * depending on what the platform offers. Service workers are prefered.
  */
-export default function() {
-    if ('serviceWorker' in navigator &&
-        // See http://www.chromium.org/Home/chromium-security/prefer-secure-origins-for-powerful-new-features
-        (window.location.protocol === 'https:' ||
-            window.location.hostname === 'localhost' ||
-            window.location.hostname.indexOf('127.') === 0)) {
-        // prefer new service worker cache
-        useServiceWorker();
 
-    } else if ('applicationCache' in window) {
-        // Fall back to app cache
-        useAppCache();
-    }
+const UPDATE_MSG = 'A new version of Hoodiecrow is available. Restart the app to update?';
+
+if ('serviceWorker' in navigator &&
+    // See http://www.chromium.org/Home/chromium-security/prefer-secure-origins-for-powerful-new-features
+    (window.location.protocol === 'https:' ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname.indexOf('127.') === 0)) {
+    // prefer new service worker cache
+    useServiceWorker();
+
+} else if ('applicationCache' in window) {
+    // Fall back to app cache
+    useAppCache();
 }
 
 function useServiceWorker() {
