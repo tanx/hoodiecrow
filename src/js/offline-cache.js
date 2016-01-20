@@ -18,17 +18,23 @@
 
 const UPDATE_MSG = 'A new version of Hoodiecrow is available. Restart the app to update?';
 
-if ('serviceWorker' in navigator &&
-    // See http://www.chromium.org/Home/chromium-security/prefer-secure-origins-for-powerful-new-features
-    (window.location.protocol === 'https:' ||
-        window.location.hostname === 'localhost' ||
-        window.location.hostname.indexOf('127.') === 0)) {
-    // prefer new service worker cache
-    useServiceWorker();
+/**
+ * This module initializes the offline cache either using service worker or app cache
+ * depending on what the platform offers. Service workers are prefered.
+ */
+export default function() {
+    if ('serviceWorker' in navigator &&
+        // See http://www.chromium.org/Home/chromium-security/prefer-secure-origins-for-powerful-new-features
+        (window.location.protocol === 'https:' ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname.indexOf('127.') === 0)) {
+        // prefer new service worker cache
+        useServiceWorker();
 
-} else if ('applicationCache' in window) {
-    // Fall back to app cache
-    useAppCache();
+    } else if ('applicationCache' in window) {
+        // Fall back to app cache
+        useAppCache();
+    }
 }
 
 function useServiceWorker() {
@@ -38,7 +44,7 @@ function useServiceWorker() {
     // See https://github.com/slightlyoff/ServiceWorker/issues/468
     navigator.serviceWorker.register('service-worker.js', {
         scope: './'
-    }).then(function(registration) {
+    }).then(registration => {
         // Check to see if there's an updated version of service-worker.js with new files to cache:
         // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#service-worker-registration-update-method
         if (typeof registration.update === 'function') {
@@ -46,12 +52,12 @@ function useServiceWorker() {
         }
 
         // updatefound is fired if service-worker.js changes.
-        registration.onupdatefound = function() {
+        registration.onupdatefound = () => {
             // The updatefound event implies that registration.installing is set; see
             // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#service-worker-container-updatefound-event
             const installingWorker = registration.installing;
 
-            installingWorker.onstatechange = function() {
+            installingWorker.onstatechange = () => {
                 if (installingWorker.state === 'installed') {
                     if (navigator.serviceWorker.controller) {
                         // At this point, the old content will have been purged and the fresh content will
@@ -71,15 +77,14 @@ function useServiceWorker() {
                 }
             };
         };
-    }).catch(function(e) {
-        console.error('Error during service worker registration:', e);
-    });
+
+    }).catch(e => console.error('Error during service worker registration:', e));
 }
 
 function useAppCache() {
-    window.onload = function() {
+    window.onload = () => {
         // Check if a new AppCache is available on page load.
-        window.applicationCache.onupdateready = function() {
+        window.applicationCache.onupdateready = () => {
             if (window.applicationCache.status === window.applicationCache.UPDATEREADY) {
                 // Browser downloaded a new app cache
                 if (window.confirm(UPDATE_MSG)) {

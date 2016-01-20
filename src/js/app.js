@@ -1,21 +1,46 @@
 'use strict';
 
 // use service-worker or app-cache for offline caching
-require('./offline-cache');
+import initOfflineCache from './offline-cache';
+initOfflineCache();
+
+import axe from 'axe-logger';
+
+// import angular modules
+import './app-config';
+import './directive';
+import './util';
+import './crypto';
+import './service';
+import './email';
+
+// import angular controllers for login views
+import LoginCtrl from './controller/login/login';
+import AddAccountCtrl from './controller/login/add-account';
+import LoginPrivatekeyUploadCtrl from './controller/login/login-privatekey-upload';
+import LoginVerifyPublickeyCtrl from './controller/login/login-verify-public-key';
+import LoginExistingCtrl from './controller/login/login-existing';
+import LoginInitialCtrl from './controller/login/login-initial';
+import LoginNewDeviceCtrl from './controller/login/login-new-device';
+import LoginPrivatekeyDownloadCtrl from './controller/login/login-privatekey-download';
+import NavigationCtrl from './controller/app/navigation';
+
+// import angular controllers for app views
+import ReadCtrl from './controller/app/read';
+import WriteCtrl from './controller/app/write';
+import MailListCtrl from './controller/app/mail-list';
+import AccountCtrl from './controller/app/account';
+import SetPassphraseCtrl from './controller/app/set-passphrase';
+import PublicKeyImportCtrl from './controller/app/publickey-import';
+import ContactsCtrl from './controller/app/contacts';
+import AboutCtrl from './controller/app/about';
+import DialogCtrl from './controller/app/dialog';
+import ActionBarCtrl from './controller/app/action-bar';
+import StatusDisplayCtrl from './controller/app/status-display';
 
 //
 // Angular app config
 //
-
-const axe = require('axe-logger');
-
-// include angular modules
-require('./app-config');
-require('./directive');
-require('./util');
-require('./crypto');
-require('./service');
-require('./email');
 
 // init main angular module including dependencies
 const app = angular.module('mail', [
@@ -35,39 +60,39 @@ const app = angular.module('mail', [
 app.config(($routeProvider, $animateProvider) => {
     $routeProvider.when('/login', {
         templateUrl: 'tpl/login.html',
-        controller: require('./controller/login/login')
+        controller: LoginCtrl
     });
     $routeProvider.when('/add-account', {
         templateUrl: 'tpl/add-account.html',
-        controller: require('./controller/login/add-account')
+        controller: AddAccountCtrl
     });
     $routeProvider.when('/login-privatekey-upload', {
         templateUrl: 'tpl/login-privatekey-upload.html',
-        controller: require('./controller/login/login-privatekey-upload')
+        controller: LoginPrivatekeyUploadCtrl
     });
     $routeProvider.when('/login-verify-public-key', {
         templateUrl: 'tpl/login-verify-public-key.html',
-        controller: require('./controller/login/login-verify-public-key')
+        controller: LoginVerifyPublickeyCtrl
     });
     $routeProvider.when('/login-existing', {
         templateUrl: 'tpl/login-existing.html',
-        controller: require('./controller/login/login-existing')
+        controller: LoginExistingCtrl
     });
     $routeProvider.when('/login-initial', {
         templateUrl: 'tpl/login-initial.html',
-        controller: require('./controller/login/login-initial')
+        controller: LoginInitialCtrl
     });
     $routeProvider.when('/login-new-device', {
         templateUrl: 'tpl/login-new-device.html',
-        controller: require('./controller/login/login-new-device')
+        controller: LoginNewDeviceCtrl
     });
     $routeProvider.when('/login-privatekey-download', {
         templateUrl: 'tpl/login-privatekey-download.html',
-        controller: require('./controller/login/login-privatekey-download')
+        controller: LoginPrivatekeyDownloadCtrl
     });
     $routeProvider.when('/account', {
         templateUrl: 'tpl/desktop.html',
-        controller: require('./controller/app/navigation'),
+        controller: NavigationCtrl,
         reloadOnSearch: false // don't reload controllers in main app when query params change
     });
     $routeProvider.otherwise({
@@ -88,17 +113,17 @@ app.run(($rootScope, oauth) => {
 });
 
 // inject controllers from ng-included view templates
-app.controller('ReadCtrl', require('./controller/app/read'));
-app.controller('WriteCtrl', require('./controller/app/write'));
-app.controller('MailListCtrl', require('./controller/app/mail-list'));
-app.controller('AccountCtrl', require('./controller/app/account'));
-app.controller('SetPassphraseCtrl', require('./controller/app/set-passphrase'));
-app.controller('PublicKeyImportCtrl', require('./controller/app/publickey-import'));
-app.controller('ContactsCtrl', require('./controller/app/contacts'));
-app.controller('AboutCtrl', require('./controller/app/about'));
-app.controller('DialogCtrl', require('./controller/app/dialog'));
-app.controller('ActionBarCtrl', require('./controller/app/action-bar'));
-app.controller('StatusDisplayCtrl', require('./controller/app/status-display'));
+app.controller('ReadCtrl', ReadCtrl);
+app.controller('WriteCtrl', WriteCtrl);
+app.controller('MailListCtrl', MailListCtrl);
+app.controller('AccountCtrl', AccountCtrl);
+app.controller('SetPassphraseCtrl', SetPassphraseCtrl);
+app.controller('PublicKeyImportCtrl', PublicKeyImportCtrl);
+app.controller('ContactsCtrl', ContactsCtrl);
+app.controller('AboutCtrl', AboutCtrl);
+app.controller('DialogCtrl', DialogCtrl);
+app.controller('ActionBarCtrl', ActionBarCtrl);
+app.controller('StatusDisplayCtrl', StatusDisplayCtrl);
 
 //
 // Manual angular bootstraping
