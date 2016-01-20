@@ -2,10 +2,10 @@
 
 angular.module('woDirectives', []);
 
-require('./common');
-require('./key-shortcuts');
-require('./mail-list');
-require('./write');
-require('./read');
-require('./contacts');
-require('./login-new-device');
+import './common';
+import './key-shortcuts';
+import './mail-list';
+import './write';
+import './read';
+import './contacts';
+import './login-new-device';

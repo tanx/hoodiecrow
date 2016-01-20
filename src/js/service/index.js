@@ -2,13 +2,13 @@
 
 angular.module('woServices', ['woAppConfig', 'woUtil', 'woCrypto']);
 
-require('./invitation');
-require('./oauth');
-require('./privatekey');
-require('./publickey');
-require('./hkp');
-require('./lawnchair');
-require('./devicestorage');
-require('./auth');
-require('./keychain');
-require('./publickey-verifier');
+import './invitation';
+import './oauth';
+import './privatekey';
+import './publickey';
+import './hkp';
+import './lawnchair';
+import './devicestorage';
+import './auth';
+import './keychain';
+import './publickey-verifier';

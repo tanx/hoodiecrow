@@ -2,11 +2,11 @@
 
 angular.module('woUtil', []);
 
-require('./axe');
-require('./dummy');
-require('./dialog');
-require('./update/update-handler');
-require('./status');
-require('./download');
-require('./notification');
-require('./base64url');
+import './axe';
+import './dummy';
+import './dialog';
+import './update/update-handler';
+import './status';
+import './download';
+import './notification';
+import './base64url';

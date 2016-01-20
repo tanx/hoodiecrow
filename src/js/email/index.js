@@ -2,11 +2,11 @@
 
 angular.module('woEmail', ['woAppConfig', 'woUtil', 'woServices', 'woCrypto']);
 
-require('./mailreader');
-require('./pgpbuilder');
-require('./mailbuild');
-require('./gmail-client');
-require('./gmail');
-require('./outbox');
-require('./account');
-require('./search');
+import './mailreader';
+import './pgpbuilder';
+import './mailbuild';
+import './gmail-client';
+import './gmail';
+import './outbox';
+import './account';
+import './search';
