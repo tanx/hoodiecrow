@@ -1,8 +1,6 @@
 'use strict';
 
-var Mailbuild = require('mailbuild');
+import Mailbuild from 'mailbuild';
 
-var ngModule = angular.module('woEmail');
-ngModule.factory('mailbuild', function() {
-    return Mailbuild;
-});
+const ngModule = angular.module('woEmail');
+ngModule.factory('mailbuild', () => Mailbuild);

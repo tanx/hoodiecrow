@@ -1,9 +1,9 @@
 'use strict';
 
-var mailreader = require('mailreader');
+import mailreader from 'mailreader';
 
-var ngModule = angular.module('woEmail');
-ngModule.factory('mailreader', function(appConfig) {
+const ngModule = angular.module('woEmail');
+ngModule.factory('mailreader', appConfig => {
     mailreader.startWorker(appConfig.config.workerPath + '/mailreader-parser-worker.min.js');
     return mailreader;
 });

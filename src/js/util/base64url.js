@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woUtil');
 ngModule.service('base64url', Base64Url);
-module.exports = Base64Url;
+export default Base64Url;
 
 /*
  * JavaScript base64 / base64url encoder and decoder

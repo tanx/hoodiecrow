@@ -6,6 +6,7 @@ import appConfig from '../../../src/js/app-config';
 const cfg = appConfig.config;
 import UpdateHandler from '../../../src/js/util/update/update-handler';
 import Dialog from '../../../src/js/util/dialog';
+import axe from 'axe-logger';
 
 describe('UpdateHandler', function() {
     var updateHandler, appConfigStorageStub, authStub, userStorageStub, dialogStub, origDbVersion;
@@ -18,7 +19,7 @@ describe('UpdateHandler', function() {
         userStorageStub = sinon.createStubInstance(DeviceStorageDAO);
         authStub = sinon.createStubInstance(Auth);
         dialogStub = sinon.createStubInstance(Dialog);
-        updateHandler = new UpdateHandler(appConfigStorageStub, userStorageStub, authStub, dialogStub);
+        updateHandler = new UpdateHandler(appConfigStorageStub, userStorageStub, authStub, dialogStub, appConfig, axe);
     });
 
     afterEach(function() {

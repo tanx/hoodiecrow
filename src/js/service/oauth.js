@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woServices');
 ngModule.service('oauth', OAuth);
-module.exports = OAuth;
+export default OAuth;
 
 /**
  * This module handles OAuth 2.0 authentication required for Google Apis

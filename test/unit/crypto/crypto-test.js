@@ -1,5 +1,6 @@
 'use strict';
 
+import axe from 'axe-logger';
 import Crypto from '../../../src/js/crypto/crypto';
 import appConfig from '../../../src/js/app-config';
 const config = appConfig.config;
@@ -15,7 +16,7 @@ describe('Crypto unit tests', function() {
         ivSize = config.symIvSize;
 
     beforeEach(function() {
-        crypto = new Crypto();
+        crypto = new Crypto(appConfig, axe);
     });
 
     afterEach(function() {});

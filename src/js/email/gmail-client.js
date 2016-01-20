@@ -1,8 +1,10 @@
 'use strict';
 
-var ngModule = angular.module('woEmail');
+import addressparser from 'wo-addressparser';
+
+const ngModule = angular.module('woEmail');
 ngModule.service('gmailClient', GmailClient);
-module.exports = GmailClient;
+export default GmailClient;
 
 /**
  * This module wraps the REST based Google Mail api and provides a similar high-level
@@ -11,7 +13,6 @@ module.exports = GmailClient;
 function GmailClient(auth, base64url) {
     this._auth = auth;
     this._base64url = base64url;
-    this._addressparser = require('wo-addressparser');
 }
 
 /**
@@ -144,10 +145,10 @@ GmailClient.prototype.getMessage = function(message) {
         // headers
         message.internalDate = gMsg.internalDate; // internal creation timestamp (epoch ms), determines ordering
         message.subject = getHeader(gMsg.payload, 'Subject') || '(no subject)';
-        message.from = self._addressparser.parse(getHeader(gMsg.payload, 'From'));
-        message.to = self._addressparser.parse(getHeader(gMsg.payload, 'To'));
-        message.cc = self._addressparser.parse(getHeader(gMsg.payload, 'Cc'));
-        message.bcc = self._addressparser.parse(getHeader(gMsg.payload, 'Bcc'));
+        message.from = addressparser.parse(getHeader(gMsg.payload, 'From'));
+        message.to = addressparser.parse(getHeader(gMsg.payload, 'To'));
+        message.cc = addressparser.parse(getHeader(gMsg.payload, 'Cc'));
+        message.bcc = addressparser.parse(getHeader(gMsg.payload, 'Bcc'));
         message.sentDate = getHeader(gMsg.payload, 'Date') ? new Date(getHeader(gMsg.payload, 'Date')) : new Date();
         // flags
         message.unread = _.contains(gMsg.labelIds, 'UNREAD');

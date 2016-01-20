@@ -1,8 +1,6 @@
 'use strict';
 
-var PgpBuilder = require('pgpbuilder');
+import PgpBuilder from 'pgpbuilder';
 
-var ngModule = angular.module('woEmail');
-ngModule.factory('pgpbuilder', function() {
-    return new PgpBuilder();
-});
+const ngModule = angular.module('woEmail');
+ngModule.factory('pgpbuilder', () => new PgpBuilder());

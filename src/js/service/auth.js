@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woServices');
 ngModule.service('auth', Auth);
-module.exports = Auth;
+export default Auth;
 
 const APP_CONFIG_DB_NAME = 'app-config';
 const EMAIL_ADDR_DB_KEY = 'emailaddress';

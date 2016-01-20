@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woUtil');
 ngModule.service('dialog', Dialog);
-module.exports = Dialog;
+export default Dialog;
 
 /**
  * A central service to display messages to the user in a dialog

@@ -90,4 +90,4 @@ var AccountCtrl = function($scope, $q, $timeout, $location, auth, keychain, pgp,
 
 };
 
-module.exports = AccountCtrl;
+export default AccountCtrl;

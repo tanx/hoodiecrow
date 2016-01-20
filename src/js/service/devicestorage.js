@@ -7,7 +7,7 @@ ngModule.factory('appConfigStore', appConfigLawnchair => new DeviceStorage(appCo
 // expose a singleton instance of DeviceStorage called 'accountStore' to persist user data
 ngModule.factory('accountStore', accountLawnchair => new DeviceStorage(accountLawnchair));
 
-module.exports = DeviceStorage;
+export default DeviceStorage;
 
 //
 // Implementation
@@ -47,7 +47,7 @@ DeviceStorage.prototype.storeList = function(list, type) {
 
         // format items for batch storing in dao
         list.forEach(i => {
-            key = createKey(i, type);
+            key = i.id ? (type + '_' + i.id) : type;
 
             items.push({
                 key: key,
@@ -93,20 +93,3 @@ DeviceStorage.prototype.listItems = function(query, exactMatchOnly) {
 DeviceStorage.prototype.clear = function() {
     return this._lawnchairDAO.clear();
 };
-
-//
-// helper functions
-//
-
-function createKey(i, type) {
-    let key;
-
-    // put id in key if available... for easy querying
-    if (i.id) {
-        key = type + '_' + i.id;
-    } else {
-        key = type;
-    }
-
-    return key;
-}

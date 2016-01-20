@@ -63,4 +63,4 @@ var SetPassphraseCtrl = function($scope, $q, pgp, keychain, dialog) {
     };
 };
 
-module.exports = SetPassphraseCtrl;
+export default SetPassphraseCtrl;

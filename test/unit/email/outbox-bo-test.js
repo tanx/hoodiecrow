@@ -4,6 +4,7 @@ import OutboxBO from '../../../src/js/email/outbox';
 import KeychainDAO from '../../../src/js/service/keychain';
 import EmailDAO from '../../../src/js/email/gmail';
 import DeviceStorageDAO from '../../../src/js/service/devicestorage';
+import appConfig from '../../../src/js/app-config';
 
 describe('Outbox unit test', function() {
     var outbox, emailDaoStub, devicestorageStub, keychainStub,
@@ -22,7 +23,7 @@ describe('Outbox unit test', function() {
         };
         devicestorageStub = sinon.createStubInstance(DeviceStorageDAO);
         keychainStub = sinon.createStubInstance(KeychainDAO);
-        outbox = new OutboxBO(emailDaoStub, keychainStub, devicestorageStub);
+        outbox = new OutboxBO(emailDaoStub, keychainStub, devicestorageStub, appConfig);
     });
 
     afterEach(function() {});

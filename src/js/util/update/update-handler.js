@@ -1,28 +1,29 @@
 'use strict';
 
+import updateV1 from './update-v1';
+import updateV2 from './update-v2';
+import updateV3 from './update-v3';
+import updateV4 from './update-v4';
+import updateV5 from './update-v5';
+import updateV6 from './update-v6';
+import updateV7 from './update-v7';
+let axe, cfg;
+
 const ngModule = angular.module('woUtil');
 ngModule.service('updateHandler', UpdateHandler);
-module.exports = UpdateHandler;
-
-const axe = require('axe-logger'),
-    cfg = require('../../app-config').config,
-    updateV1 = require('./update-v1'),
-    updateV2 = require('./update-v2'),
-    updateV3 = require('./update-v3'),
-    updateV4 = require('./update-v4'),
-    updateV5 = require('./update-v5'),
-    updateV6 = require('./update-v6'),
-    updateV7 = require('./update-v7');
+export default UpdateHandler;
 
 /**
  * Handles database migration
  */
-function UpdateHandler(appConfigStore, accountStore, auth, dialog) {
+function UpdateHandler(appConfigStore, accountStore, auth, dialog, appConfig, axe) {
     this._appConfigStorage = appConfigStore;
     this._userStorage = accountStore;
     this._updateScripts = [updateV1, updateV2, updateV3, updateV4, updateV5, updateV6, updateV7];
     this._auth = auth;
     this._dialog = dialog;
+    cfg = appConfig.config;
+    axe = axe;
 }
 
 /**

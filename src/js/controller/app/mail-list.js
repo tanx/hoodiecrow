@@ -348,4 +348,4 @@ var MailListCtrl = function($scope, $timeout, $location, $filter, $q, status, no
     };
 };
 
-module.exports = MailListCtrl;
+export default MailListCtrl;

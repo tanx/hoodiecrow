@@ -6,7 +6,7 @@
  * In database version 2, the stored email objects have to be purged, because the
  * new data model stores information about the email structure in the property 'bodyParts'.
  */
-function updateV2(options) {
+export default function(options) {
     const emailDbType = 'email_',
         versionDbType = 'dbVersion',
         postUpdateDbVersion = 2;
@@ -15,5 +15,3 @@ function updateV2(options) {
     return options.userStorage.removeList(emailDbType)
         .then(() => options.appConfigStorage.storeList([postUpdateDbVersion], versionDbType)); // update the db version
 }
-
-module.exports = updateV2;

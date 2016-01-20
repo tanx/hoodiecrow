@@ -83,4 +83,4 @@ var LoginPrivateKeyDownloadCtrl = function($scope, $location, $routeParams, $q, 
     }
 };
 
-module.exports = LoginPrivateKeyDownloadCtrl;
+export default LoginPrivateKeyDownloadCtrl;

@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woUtil');
 ngModule.service('status', Status);
-module.exports = Status;
+export default Status;
 
 /**
  * A central service to display status updates to the user

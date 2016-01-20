@@ -1,14 +1,15 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+import cryptoLib from 'crypto-lib';
+const util = cryptoLib.util;
+
+const ngModule = angular.module('woServices');
 ngModule.service('privateKey', PrivateKey);
-module.exports = PrivateKey;
+export default PrivateKey;
 
-var util = require('crypto-lib').util;
-
-var IMAP_KEYS_FOLDER = 'openpgp_keys';
-var MIME_TYPE = 'application/x.encrypted-pgp-key';
-var MSG_PART_TYPE_ATTACHMENT = 'attachment';
+const IMAP_KEYS_FOLDER = 'openpgp_keys';
+const MIME_TYPE = 'application/x.encrypted-pgp-key';
+const MSG_PART_TYPE_ATTACHMENT = 'attachment';
 
 function PrivateKey(auth, mailbuild, mailreader, appConfig, pgp, crypto, axe, gmailClient) {
     this._auth = auth;

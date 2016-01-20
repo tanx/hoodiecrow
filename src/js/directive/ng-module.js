@@ -1,1 +1,1 @@
-export default angular.module('woDirectives', []);
+angular.module('woDirectives', []);

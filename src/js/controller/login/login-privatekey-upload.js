@@ -1,6 +1,7 @@
 'use strict';
 
-var util = require('crypto-lib').util;
+import cryptoLib from 'crypto-lib';
+const util = cryptoLib.util;
 
 var LoginPrivateKeyUploadCtrl = function($scope, $location, $routeParams, $q, auth, privateKey) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
@@ -80,4 +81,4 @@ var LoginPrivateKeyUploadCtrl = function($scope, $location, $routeParams, $q, au
     }
 };
 
-module.exports = LoginPrivateKeyUploadCtrl;
+export default LoginPrivateKeyUploadCtrl;

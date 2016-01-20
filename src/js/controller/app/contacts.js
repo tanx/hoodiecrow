@@ -56,4 +56,4 @@ var ContactsCtrl = function($scope, $q, keychain, pgp, dialog) {
     };
 };
 
-module.exports = ContactsCtrl;
+export default ContactsCtrl;

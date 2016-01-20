@@ -1,19 +1,21 @@
 'use strict';
 
-var ngModule = angular.module('woEmail');
-ngModule.service('outbox', Outbox);
-module.exports = Outbox;
+import cryptoLib from 'crypto-lib';
+const util = cryptoLib.util;
+let config;
 
-var util = require('crypto-lib').util,
-    config = require('../app-config').config,
-    outboxDb = 'email_OUTBOX';
+const ngModule = angular.module('woEmail');
+ngModule.service('outbox', Outbox);
+export default Outbox;
+
+const outboxDb = 'email_OUTBOX';
 
 /**
  * High level business object that orchestrates the local outbox.
  * The local outbox takes care of the emails before they are being sent.
  * It also checks periodically if there are any mails in the local device storage to be sent.
  */
-function Outbox(email, keychain, accountStore) {
+function Outbox(email, keychain, accountStore, appConfig) {
     /** @private */
     this._emailDao = email;
 
@@ -22,6 +24,8 @@ function Outbox(email, keychain, accountStore) {
 
     /** @private */
     this._devicestorage = accountStore;
+
+    config = appConfig.config;
 
     /**
      * Semaphore-esque flag to avoid 'concurrent' calls to _processOutbox when the timeout fires, but a call is still in process.

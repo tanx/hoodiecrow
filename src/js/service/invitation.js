@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woServices');
 ngModule.service('invitation', Invitation);
-module.exports = Invitation;
+export default Invitation;
 
 /**
  * The Invitation is a high level Data Access Object that access the invitation service REST endpoint.

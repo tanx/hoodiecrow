@@ -1,8 +1,8 @@
 'use strict';
 
-var ngModule = angular.module('woEmail');
+const ngModule = angular.module('woEmail');
 ngModule.service('search', Search);
-module.exports = Search;
+export default Search;
 
 function Search() {}
 
@@ -21,7 +21,7 @@ Search.prototype.filter = function(messages, query) {
     // escape search string
     query = query.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
     // compare all strings (case insensitive)
-    var regex = new RegExp(query, 'i');
+    const regex = new RegExp(query, 'i');
 
     function contains(input) {
         if (!input) {
@@ -35,7 +35,7 @@ Search.prototype.filter = function(messages, query) {
             return false;
         }
 
-        for (var i = 0; i < header.length; i++) {
+        for (let i = 0; i < header.length; i++) {
             if (contains(header[i].name) || contains(header[i].address)) {
                 return true;
             }

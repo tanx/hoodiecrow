@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woServices');
 ngModule.service('publickeyVerifier', PublickeyVerifier);
-module.exports = PublickeyVerifier;
+export default PublickeyVerifier;
 
 function PublickeyVerifier(keychain) {
     this._keychain = keychain;

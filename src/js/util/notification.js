@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woUtil');
 ngModule.service('notification', Notif);
-module.exports = Notif;
+export default Notif;
 
 function Notif(appConfig, axe) {
     this._appConfig = appConfig;

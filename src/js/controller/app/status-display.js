@@ -1,6 +1,6 @@
 'use strict';
 
-var StatusDisplayCtrl = function($scope) {
+const StatusDisplayCtrl = function($scope) {
 
     $scope.$on('status', function(e, text, time) {
         $scope.text = text;
@@ -13,4 +13,4 @@ var StatusDisplayCtrl = function($scope) {
 
 };
 
-module.exports = StatusDisplayCtrl;
+export default StatusDisplayCtrl;

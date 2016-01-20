@@ -292,4 +292,4 @@ var ActionBarCtrl = function($scope, $q, email, dialog, status) {
     }
 };
 
-module.exports = ActionBarCtrl;
+export default ActionBarCtrl;

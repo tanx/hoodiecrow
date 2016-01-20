@@ -1,10 +1,10 @@
 'use strict';
 
-var ngModule = angular.module('woServices');
+const ngModule = angular.module('woServices');
 ngModule.service('keychain', Keychain);
-module.exports = Keychain;
+export default Keychain;
 
-var DB_PUBLICKEY = 'publickey',
+const DB_PUBLICKEY = 'publickey',
     DB_PRIVATEKEY = 'privatekey';
 
 /**

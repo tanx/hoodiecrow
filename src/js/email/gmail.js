@@ -1,10 +1,10 @@
 'use strict';
 
-var ngModule = angular.module('woEmail');
-ngModule.service('email', Gmail);
-module.exports = Gmail;
+let config;
 
-var config = require('../app-config').config;
+const ngModule = angular.module('woEmail');
+ngModule.service('email', Gmail);
+export default Gmail;
 
 //
 //
@@ -47,8 +47,8 @@ function Gmail(gmailClient, keychain, pgp, accountStore, pgpbuilder, mailreader,
     this._pgpbuilder = pgpbuilder;
     this._mailreader = mailreader;
     this._dialog = dialog;
-    this._appConfig = appConfig;
     this._auth = auth;
+    config = appConfig.config;
 }
 
 

@@ -16,7 +16,7 @@ const POST_UPDATE_DB_VERSION = 5;
  * Due to an overlooked issue, there may be multiple folders, e.g. for sent mails.
  * This removes the "duplicate" folders.
  */
-function update(options) {
+export default function(options) {
     // remove the emails
     return options.userStorage.listItems(FOLDER_DB_TYPE).then(stored => {
         const folders = stored[0] || [];
@@ -36,5 +36,3 @@ function update(options) {
 
     }).then(() => options.appConfigStorage.storeList([POST_UPDATE_DB_VERSION], VERSION_DB_TYPE)); // update the db version
 }
-
-module.exports = update;

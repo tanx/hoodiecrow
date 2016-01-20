@@ -1,6 +1,7 @@
 'use strict';
 
-var util = require('crypto-lib').util;
+import cryptoLib from 'crypto-lib';
+const util = cryptoLib.util;
 
 //
 // Controller
@@ -501,4 +502,4 @@ var WriteCtrl = function($scope, $window, $filter, $q, appConfig, auth, keychain
     }
 };
 
-module.exports = WriteCtrl;
+export default WriteCtrl;

@@ -59,4 +59,4 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
     }
 };
 
-module.exports = LoginExistingCtrl;
+export default LoginExistingCtrl;

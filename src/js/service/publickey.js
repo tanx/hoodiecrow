@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woServices');
 ngModule.service('publicKey', PublicKey);
-module.exports = PublicKey;
+export default PublicKey;
 
 function PublicKey(pgp) {
     this._pgp = pgp;

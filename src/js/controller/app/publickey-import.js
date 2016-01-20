@@ -75,4 +75,4 @@ var PublickeyImportCtrl = function($scope, $q, keychain, pgp, hkp, dialog, appCo
     };
 };
 
-module.exports = PublickeyImportCtrl;
+export default PublickeyImportCtrl;

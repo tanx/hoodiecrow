@@ -23,4 +23,4 @@ var PublicKeyVerifierCtrl = function($scope, $location, $q, auth, publickeyVerif
     publickeyVerifier.uploadPublicKey().then($scope.persistKeypair);
 };
 
-module.exports = PublicKeyVerifierCtrl;
+export default PublicKeyVerifierCtrl;

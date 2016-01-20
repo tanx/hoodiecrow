@@ -12,7 +12,7 @@ ngModule.factory('appConfig', function($timeout) {
 
     return appCfg;
 });
-module.exports = appCfg;
+export default appCfg;
 
 /**
  * Global app configurations

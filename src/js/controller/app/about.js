@@ -1,6 +1,6 @@
 'use strict';
 
-var AboutCtrl = function($scope, appConfig) {
+const AboutCtrl = function($scope, appConfig) {
 
     //
     // scope state
@@ -22,4 +22,4 @@ var AboutCtrl = function($scope, appConfig) {
 
 };
 
-module.exports = AboutCtrl;
+export default AboutCtrl;

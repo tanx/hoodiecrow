@@ -98,4 +98,4 @@ var LoginCtrl = function($scope, $timeout, $location, updateHandler, account, au
 
 };
 
-module.exports = LoginCtrl;
+export default LoginCtrl;

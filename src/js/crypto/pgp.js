@@ -1,16 +1,17 @@
 'use strict';
 
-var ngModule = angular.module('woCrypto');
-ngModule.service('pgp', PGP);
-module.exports = PGP;
+const util = openpgp.util;
+let config;
 
-var util = openpgp.util,
-    config = require('../app-config').config;
+const ngModule = angular.module('woCrypto');
+ngModule.service('pgp', PGP);
+export default PGP;
 
 /**
  * High level crypto api that handles all calls to OpenPGP.js
  */
-function PGP() {
+function PGP(appConfig) {
+    config = appConfig.config;
     openpgp.config.commentstring = config.pgpComment;
     openpgp.config.prefer_hash_algorithm = openpgp.enums.hash.sha256;
     openpgp.initWorker(config.workerPath + '/openpgp.worker.min.js');

@@ -2,16 +2,16 @@
 
 'use strict';
 
-importScripts('forge.min.js');
+import pbkdf2 from './pbkdf2';
 
-var pbkdf2 = require('./pbkdf2');
+importScripts('forge.min.js');
 
 /**
  * In the web worker thread context, 'this' and 'self' can be used as a global
  * variable namespace similar to the 'window' object in the main thread
  */
 self.onmessage = function(e) {
-    var i = e.data,
+    let i = e.data,
         key = null;
 
     if (i.password && i.salt && i.keySize) {

@@ -178,4 +178,4 @@ var NavigationCtrl = function($scope, $location, $q, $timeout, account, email, o
     }
 };
 
-module.exports = NavigationCtrl;
+export default NavigationCtrl;

@@ -1,6 +1,6 @@
 'use strict';
 
-var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, auth, pgp, keychain, publickeyVerifier) {
+var LoginNewDeviceCtrl = function($scope, $location, $routeParams, $q, email, auth, pgp, keychain, publickeyVerifier) {
     !$routeParams.dev && !auth.isInitialized() && $location.path('/'); // init app
 
     $scope.incorrect = false;
@@ -116,4 +116,4 @@ var LoginExistingCtrl = function($scope, $location, $routeParams, $q, email, aut
     }
 };
 
-module.exports = LoginExistingCtrl;
+export default LoginNewDeviceCtrl;

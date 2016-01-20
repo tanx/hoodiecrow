@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woServices');
 ngModule.service('hkp', HKP);
-module.exports = HKP;
+export default HKP;
 
 /**
  * A HKP client for fetching public PGP keys from standard key servers

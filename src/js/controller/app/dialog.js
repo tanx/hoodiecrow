@@ -59,4 +59,4 @@ var DialogCtrl = function($scope, dialog) {
     };
 };
 
-module.exports = DialogCtrl;
+export default DialogCtrl;

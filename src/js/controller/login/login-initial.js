@@ -77,4 +77,4 @@ var LoginInitialCtrl = function($scope, $location, $routeParams, $q, email, auth
     }
 };
 
-module.exports = LoginInitialCtrl;
+export default LoginInitialCtrl;

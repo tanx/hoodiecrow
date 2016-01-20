@@ -1,6 +1,7 @@
 'use strict';
 
 import PGP from '../../../src/js/crypto/pgp';
+import appConfig from '../../../src/js/app-config';
 
 describe('PGP Crypto Api unit tests', function() {
     this.timeout(20000);
@@ -39,7 +40,7 @@ describe('PGP Crypto Api unit tests', function() {
         '-----END PGP PRIVATE KEY BLOCK-----\r\n';
 
     beforeEach(function() {
-        pgp = new PGP();
+        pgp = new PGP(appConfig);
     });
 
     afterEach(function() {});

@@ -161,4 +161,4 @@ var ReadCtrl = function($scope, $location, $q, email, invitation, outbox, pgp, k
     };
 };
 
-module.exports = ReadCtrl;
+export default ReadCtrl;

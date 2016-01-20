@@ -1,10 +1,11 @@
 'use strict';
 
+import cryptoLib from 'crypto-lib';
+const util = cryptoLib.util;
+
 const ngModule = angular.module('woUtil');
 ngModule.service('download', Download);
-module.exports = Download;
-
-const util = require('crypto-lib').util;
+export default Download;
 
 /**
  * A download helper to abstract platform specific behavior

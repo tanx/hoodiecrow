@@ -2,7 +2,7 @@
 
 const ngModule = angular.module('woUtil');
 ngModule.service('dummy', Dummy);
-module.exports = Dummy;
+export default Dummy;
 
 function Dummy() {}
 
