@@ -1,8 +1,7 @@
 'use strict';
 
-var Auth = require('../../../src/js/service/auth'),
-    OAuth = require('../../../src/js/service/oauth'),
-    DeviceStorageDAO = require('../../../src/js/service/devicestorage');
+import Auth from '../../../src/js/service/auth';
+import DeviceStorageDAO from '../../../src/js/service/devicestorage';
 
 describe('Auth unit tests', function() {
     // Constants
