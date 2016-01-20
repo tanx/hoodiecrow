@@ -172,9 +172,7 @@ Auth.prototype._loadCredentials = function() {
         return new Promise(resolve => resolve());
     }
 
-    const loadFromDB = key => {
-        return this._appConfigStore.listItems(key).then(cachedItems => cachedItems && cachedItems[0]);
-    };
+    const loadFromDB = key => this._appConfigStore.listItems(key).then(cachedItems => cachedItems && cachedItems[0]);
 
     return loadFromDB(REALNAME_DB_KEY).then(realname => {
         this.realname = realname;
