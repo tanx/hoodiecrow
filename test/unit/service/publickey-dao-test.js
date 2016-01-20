@@ -1,8 +1,8 @@
 'use strict';
 
-var PGP = require('../../../src/js/crypto/pgp'),
-    PublicKeyDAO = require('../../../src/js/service/publickey'),
-    appConfig = require('../../../src/js/app-config');
+import PGP from '../../../src/js/crypto/pgp';
+import PublicKeyDAO from '../../../src/js/service/publickey';
+import appConfig from '../../../src/js/app-config';
 
 describe('Public Key DAO unit tests', function() {
 

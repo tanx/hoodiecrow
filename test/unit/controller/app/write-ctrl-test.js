@@ -1,14 +1,14 @@
 'use strict';
 
-var WriteCtrl = require('../../../../src/js/controller/app/write'),
-    Email = require('../../../../src/js/email/gmail'),
-    Outbox = require('../../../../src/js/email/outbox'),
-    Keychain = require('../../../../src/js/service/keychain'),
-    Auth = require('../../../../src/js/service/auth'),
-    PGP = require('../../../../src/js/crypto/pgp'),
-    Status = require('../../../../src/js/util/status'),
-    Dialog = require('../../../../src/js/util/dialog'),
-    Invitation = require('../../../../src/js/service/invitation');
+import WriteCtrl from '../../../../src/js/controller/app/write';
+import Email from '../../../../src/js/email/gmail';
+import Outbox from '../../../../src/js/email/outbox';
+import Keychain from '../../../../src/js/service/keychain';
+import Auth from '../../../../src/js/service/auth';
+import PGP from '../../../../src/js/crypto/pgp';
+import Status from '../../../../src/js/util/status';
+import Dialog from '../../../../src/js/util/dialog';
+import Invitation from '../../../../src/js/service/invitation';
 
 describe('Write controller unit test', function() {
     var ctrl, scope,

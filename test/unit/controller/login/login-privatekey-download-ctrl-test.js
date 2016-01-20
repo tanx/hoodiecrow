@@ -1,10 +1,10 @@
 'use strict';
 
-var Auth = require('../../../../src/js/service/auth'),
-    LoginPrivateKeyDownloadCtrl = require('../../../../src/js/controller/login/login-privatekey-download'),
-    Email = require('../../../../src/js/email/gmail'),
-    Keychain = require('../../../../src/js/service/keychain'),
-    PrivateKey = require('../../../../src/js/service/privatekey');
+import Auth from '../../../../src/js/service/auth';
+import LoginPrivateKeyDownloadCtrl from '../../../../src/js/controller/login/login-privatekey-download';
+import Email from '../../../../src/js/email/gmail';
+import Keychain from '../../../../src/js/service/keychain';
+import PrivateKey from '../../../../src/js/service/privatekey';
 
 describe('Login Private Key Download Controller unit test', function() {
     var scope, location, ctrl,

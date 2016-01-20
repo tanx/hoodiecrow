@@ -1,9 +1,9 @@
 'use strict';
 
-var ContactsCtrl = require('../../../../src/js/controller/app/contacts'),
-    Keychain = require('../../../../src/js/service/keychain'),
-    PGP = require('../../../../src/js/crypto/pgp'),
-    Dialog = require('../../../../src/js/util/dialog');
+import ContactsCtrl from '../../../../src/js/controller/app/contacts';
+import Keychain from '../../../../src/js/service/keychain';
+import PGP from '../../../../src/js/crypto/pgp';
+import Dialog from '../../../../src/js/util/dialog';
 
 describe('Contacts Controller unit test', function() {
     var scope, contactsCtrl, keychainStub, pgpStub, dialogStub;

@@ -1,11 +1,11 @@
 'use strict';
 
-var NavigationCtrl = require('../../../../src/js/controller/app/navigation'),
-    Email = require('../../../../src/js/email/gmail'),
-    Account = require('../../../../src/js/email/account'),
-    Outbox = require('../../../../src/js/email/outbox'),
-    Dialog = require('../../../../src/js/util/dialog'),
-    Notif = require('../../../../src/js/util/notification');
+import NavigationCtrl from '../../../../src/js/controller/app/navigation';
+import Email from '../../../../src/js/email/gmail';
+import Account from '../../../../src/js/email/account';
+import Outbox from '../../../../src/js/email/outbox';
+import Dialog from '../../../../src/js/util/dialog';
+import Notif from '../../../../src/js/util/notification';
 
 describe('Navigation Controller unit test', function() {
     var scope, ctrl, emailDaoMock, accountMock, notificationStub, dialogStub, outboxBoMock, outboxFolder;

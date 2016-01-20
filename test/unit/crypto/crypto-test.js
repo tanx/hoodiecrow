@@ -1,8 +1,10 @@
 'use strict';
 
-var Crypto = require('../../../src/js/crypto/crypto'),
-    config = require('../../../src/js/app-config').config,
-    util = require('crypto-lib').util;
+import Crypto from '../../../src/js/crypto/crypto';
+import appConfig from '../../../src/js/app-config';
+const config = appConfig.config;
+import cryptoLib from 'crypto-lib';
+const util = cryptoLib.util;
 
 describe('Crypto unit tests', function() {
     this.timeout(20000);

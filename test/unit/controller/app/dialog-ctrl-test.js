@@ -1,6 +1,6 @@
 'use strict';
 
-var DialogCtrl = require('../../../../src/js/controller/app/dialog');
+import DialogCtrl from '../../../../src/js/controller/app/dialog';
 
 describe('Dialog Controller unit test', function() {
     var scope, dialogCtrl, dialogService;

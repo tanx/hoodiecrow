@@ -1,7 +1,7 @@
 'use strict';
 
-var LawnchairDAO = require('../../../src/js/service/lawnchair'),
-    DeviceStorageDAO = require('../../../src/js/service/devicestorage');
+import LawnchairDAO from '../../../src/js/service/lawnchair';
+import DeviceStorageDAO from '../../../src/js/service/devicestorage';
 
 var testUser = 'test@example.com';
 

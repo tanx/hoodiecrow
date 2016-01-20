@@ -1,8 +1,8 @@
 'use strict';
 
-var Auth = require('../../../../src/js/service/auth'),
-    LoginPrivateKeyUploadCtrl = require('../../../../src/js/controller/login/login-privatekey-upload'),
-    PrivateKey = require('../../../../src/js/service/privatekey');
+import Auth from '../../../../src/js/service/auth';
+import LoginPrivateKeyUploadCtrl from '../../../../src/js/controller/login/login-privatekey-upload';
+import PrivateKey from '../../../../src/js/service/privatekey';
 
 describe('Login Private Key Upload Controller unit test', function() {
     var scope, location, ctrl,

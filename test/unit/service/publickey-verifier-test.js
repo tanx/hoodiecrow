@@ -1,7 +1,7 @@
 'use strict';
 
-var KeychainDAO = require('../../../src/js/service/keychain'),
-    PublickeyVerifier = require('../../../src/js/service/publickey-verifier');
+import KeychainDAO from '../../../src/js/service/keychain';
+import PublickeyVerifier from '../../../src/js/service/publickey-verifier';
 
 describe('Public-Key Verifier', function() {
     var verifier;

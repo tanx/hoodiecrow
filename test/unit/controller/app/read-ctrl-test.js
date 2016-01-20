@@ -1,14 +1,14 @@
 'use strict';
 
-var Keychain = require('../../../../src/js/service/keychain'),
-    InvitationDAO = require('../../../../src/js/service/invitation'),
-    Email = require('../../../../src/js/email/gmail'),
-    PGP = require('../../../../src/js/crypto/pgp'),
-    ReadCtrl = require('../../../../src/js/controller/app/read'),
-    Outbox = require('../../../../src/js/email/outbox'),
-    Dialog = require('../../../../src/js/util/dialog'),
-    Auth = require('../../../../src/js/service/auth'),
-    Download = require('../../../../src/js/util/download');
+import Keychain from '../../../../src/js/service/keychain';
+import InvitationDAO from '../../../../src/js/service/invitation';
+import Email from '../../../../src/js/email/gmail';
+import PGP from '../../../../src/js/crypto/pgp';
+import ReadCtrl from '../../../../src/js/controller/app/read';
+import Outbox from '../../../../src/js/email/outbox';
+import Dialog from '../../../../src/js/util/dialog';
+import Auth from '../../../../src/js/service/auth';
+import Download from '../../../../src/js/util/download';
 
 describe('Read Controller unit test', function() {
     var scope, ctrl, keychainMock, invitationMock, emailMock, pgpMock, outboxMock, dialogMock, authMock, downloadMock;

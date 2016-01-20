@@ -1,12 +1,12 @@
 'use strict';
 
-var AccountCtrl = require('../../../../src/js/controller/app/account'),
-    PGP = require('../../../../src/js/crypto/pgp'),
-    Download = require('../../../../src/js/util/download'),
-    Keychain = require('../../../../src/js/service/keychain'),
-    Auth = require('../../../../src/js/service/auth'),
-    Dialog = require('../../../../src/js/util/dialog'),
-    PrivateKey = require('../../../../src/js/service/privatekey');
+import AccountCtrl from '../../../../src/js/controller/app/account';
+import PGP from '../../../../src/js/crypto/pgp';
+import Download from '../../../../src/js/util/download';
+import Keychain from '../../../../src/js/service/keychain';
+import Auth from '../../../../src/js/service/auth';
+import Dialog from '../../../../src/js/util/dialog';
+import PrivateKey from '../../../../src/js/service/privatekey';
 
 describe('Account Controller unit test', function() {
     var scope, accountCtrl,

@@ -1,14 +1,14 @@
 'use strict';
 
-var Account = require('../../../src/js/email/account'),
-    appConfig = require('../../../src/js/app-config'),
-    Auth = require('../../../src/js/service/auth'),
-    DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
-    Email = require('../../../src/js/email/gmail'),
-    Outbox = require('../../../src/js/email/outbox'),
-    Keychain = require('../../../src/js/service/keychain'),
-    UpdateHandler = require('../../../src/js/util/update/update-handler'),
-    Dialog = require('../../../src/js/util/dialog');
+import Account from '../../../src/js/email/account';
+import appConfig from '../../../src/js/app-config';
+import Auth from '../../../src/js/service/auth';
+import DeviceStorageDAO from '../../../src/js/service/devicestorage';
+import Email from '../../../src/js/email/gmail';
+import Outbox from '../../../src/js/email/outbox';
+import Keychain from '../../../src/js/service/keychain';
+import UpdateHandler from '../../../src/js/util/update/update-handler';
+import Dialog from '../../../src/js/util/dialog';
 
 describe('Account Service unit test', function() {
     var account, authStub, outboxStub, emailStub, devicestorageStub, keychainStub, updateHandlerStub, dialogStub,

@@ -1,13 +1,13 @@
 'use strict';
 
-var LawnchairDAO = require('../../../src/js/service/lawnchair'),
-    PublicKeyDAO = require('../../../src/js/service/publickey'),
-    KeychainDAO = require('../../../src/js/service/keychain'),
-    PrivateKeyDAO = require('../../../src/js/service/privatekey'),
-    Crypto = require('../../../src/js/crypto/crypto'),
-    PGP = require('../../../src/js/crypto/pgp'),
-    Dialog = require('../../../src/js/util/dialog'),
-    appConfig = require('../../../src/js/app-config');
+import LawnchairDAO from '../../../src/js/service/lawnchair';
+import PublicKeyDAO from '../../../src/js/service/publickey';
+import KeychainDAO from '../../../src/js/service/keychain';
+import PrivateKeyDAO from '../../../src/js/service/privatekey';
+import Crypto from '../../../src/js/crypto/crypto';
+import PGP from '../../../src/js/crypto/pgp';
+import Dialog from '../../../src/js/util/dialog';
+import appConfig from '../../../src/js/app-config';
 
 var testUser = 'test@example.com';
 

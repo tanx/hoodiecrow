@@ -1,8 +1,8 @@
 'use strict';
 
-var Auth = require('../../../../src/js/service/auth'),
-    PublicKeyVerifier = require('../../../../src/js/service/publickey-verifier'),
-    PublicKeyVerifierCtrl = require('../../../../src/js/controller/login/login-verify-public-key');
+import Auth from '../../../../src/js/service/auth';
+import PublicKeyVerifier from '../../../../src/js/service/publickey-verifier';
+import PublicKeyVerifierCtrl from '../../../../src/js/controller/login/login-verify-public-key';
 
 describe('Public Key Verification Controller unit test', function() {
     // Angular parameters

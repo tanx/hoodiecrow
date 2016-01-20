@@ -1,8 +1,8 @@
 'use strict';
 
-var AddAccountCtrl = require('../../../../src/js/controller/login/add-account'),
-    Dialog = require('../../../../src/js/util/dialog'),
-    GmailClient = require('../../../../src/js/email/gmail-client');
+import AddAccountCtrl from '../../../../src/js/controller/login/add-account';
+import Dialog from '../../../../src/js/util/dialog';
+import GmailClient from '../../../../src/js/email/gmail-client';
 
 describe('Add Account Controller unit test', function() {
     var scope, location, ctrl, dialogStub, gmailClientStub;

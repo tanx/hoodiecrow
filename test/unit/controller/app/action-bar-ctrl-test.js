@@ -1,9 +1,9 @@
 'use strict';
 
-var Email = require('../../../../src/js/email/gmail'),
-    Dialog = require('../../../../src/js/util/dialog'),
-    Status = require('../../../../src/js/util/status'),
-    ActionBarCtrl = require('../../../../src/js/controller/app/action-bar');
+import Email from '../../../../src/js/email/gmail';
+import Dialog from '../../../../src/js/util/dialog';
+import Status from '../../../../src/js/util/status';
+import ActionBarCtrl from '../../../../src/js/controller/app/action-bar';
 
 describe('Action Bar Controller unit test', function() {
     var scope, actionBarCtrl, emailMock, dialogMock, statusMock;

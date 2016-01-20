@@ -1,9 +1,9 @@
 'use strict';
 
-var SetPassphraseCtrl = require('../../../../src/js/controller/app/set-passphrase'),
-    PGP = require('../../../../src/js/crypto/pgp'),
-    Keychain = require('../../../../src/js/service/keychain'),
-    Dialog = require('../../../../src/js/util/dialog');
+import SetPassphraseCtrl from '../../../../src/js/controller/app/set-passphrase';
+import PGP from '../../../../src/js/crypto/pgp';
+import Keychain from '../../../../src/js/service/keychain';
+import Dialog from '../../../../src/js/util/dialog';
 
 describe('Set Passphrase Controller unit test', function() {
     var scope, setPassphraseCtrl,

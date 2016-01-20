@@ -1,11 +1,11 @@
 'use strict';
 
-var Auth = require('../../../../src/js/service/auth'),
-    Account = require('../../../../src/js/email/account'),
-    Dialog = require('../../../../src/js/util/dialog'),
-    LoginExistingCtrl = require('../../../../src/js/controller/login/login-existing'),
-    EmailDAO = require('../../../../src/js/email/gmail'),
-    KeychainDAO = require('../../../../src/js/service/keychain');
+import Auth from '../../../../src/js/service/auth';
+import Account from '../../../../src/js/email/account';
+import Dialog from '../../../../src/js/util/dialog';
+import LoginExistingCtrl from '../../../../src/js/controller/login/login-existing';
+import EmailDAO from '../../../../src/js/email/gmail';
+import KeychainDAO from '../../../../src/js/service/keychain';
 
 describe('Login (existing user) Controller unit test', function() {
     var scope, location, ctrl, emailDaoMock, authMock, accountMock, dialogMock,

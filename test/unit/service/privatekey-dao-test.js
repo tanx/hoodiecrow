@@ -1,14 +1,15 @@
 'use strict';
 
-var Auth = require('../../../src/js/service/auth'),
-    PrivateKey = require('../../../src/js/service/privatekey'),
-    PGP = require('../../../src/js/crypto/pgp'),
-    Crypto = require('../../../src/js/crypto/crypto'),
-    axe = require('axe-logger'),
-    appConfig = require('../../../src/js/app-config'),
-    util = require('crypto-lib').util,
-    Mailbuild = require('mailbuild'),
-    mailreader = require('mailreader');
+import Auth from '../../../src/js/service/auth';
+import PrivateKey from '../../../src/js/service/privatekey';
+import PGP from '../../../src/js/crypto/pgp';
+import Crypto from '../../../src/js/crypto/crypto';
+import axe from 'axe-logger';
+import appConfig from '../../../src/js/app-config';
+import cryptoLib from 'crypto-lib';
+const util = cryptoLib.util;
+import Mailbuild from 'mailbuild';
+import mailreader from 'mailreader';
 
 describe.skip('Private Key DAO unit tests', function() {
 

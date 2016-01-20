@@ -1,17 +1,16 @@
 'use strict';
 
-var mailreader = require('mailreader'),
-    ImapClient = require('imap-client'),
-    PgpMailer = require('pgpmailer'),
-    PgpBuilder = require('pgpbuilder'),
-    EmailDAO = require('../../../src/js/email/email'),
-    KeychainDAO = require('../../../src/js/service/keychain'),
-    PGP = require('../../../src/js/crypto/pgp'),
-    DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
-    appConfig = require('../../../src/js/app-config'),
-    Auth = require('../../../src/js/service/auth'),
-    Dialog = require('../../../src/js/util/dialog');
-
+import mailreader from 'mailreader';
+import ImapClient from 'imap-client';
+import PgpMailer from 'pgpmailer';
+import PgpBuilder from 'pgpbuilder';
+import EmailDAO from '../../../src/js/email/email';
+import KeychainDAO from '../../../src/js/service/keychain';
+import PGP from '../../../src/js/crypto/pgp';
+import DeviceStorageDAO from '../../../src/js/service/devicestorage';
+import appConfig from '../../../src/js/app-config';
+import Auth from '../../../src/js/service/auth';
+import Dialog from '../../../src/js/util/dialog';
 
 describe.skip('Email DAO unit tests', function() {
     // show the stack trace when an error occurred

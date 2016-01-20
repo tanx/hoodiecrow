@@ -1,9 +1,9 @@
 'use strict';
 
-var PublicKeyImportCtrl = require('../../../../src/js/controller/app/publickey-import'),
-    Keychain = require('../../../../src/js/service/keychain'),
-    PGP = require('../../../../src/js/crypto/pgp'),
-    Dialog = require('../../../../src/js/util/dialog');
+import PublicKeyImportCtrl from '../../../../src/js/controller/app/publickey-import';
+import Keychain from '../../../../src/js/service/keychain';
+import PGP from '../../../../src/js/crypto/pgp';
+import Dialog from '../../../../src/js/util/dialog';
 
 describe('Public Key Import Controller unit test', function() {
     var scope, ctrl, keychainStub, pgpStub, dialogStub;

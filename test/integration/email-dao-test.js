@@ -1,13 +1,13 @@
 'use strict';
 
-var ImapClient = require('imap-client'),
-    BrowserCrow = require('browsercrow'),
-    BrowserSMTP = require('browsersmtp'),
-    SmtpClient = require('wo-smtpclient'),
-    LawnchairDAO = require('../../src/js/service/lawnchair'),
-    DeviceStorageDAO = require('../../src/js/service/devicestorage'),
-    mailreader = require('mailreader'),
-    PgpMailer = require('pgpmailer');
+import ImapClient from 'imap-client';
+import BrowserCrow from 'browsercrow';
+import BrowserSMTP from 'browsersmtp';
+import SmtpClient from 'wo-smtpclient';
+import LawnchairDAO from '../../src/js/service/lawnchair';
+import DeviceStorageDAO from '../../src/js/service/devicestorage';
+import mailreader from 'mailreader';
+import PgpMailer from 'pgpmailer';
 
 describe.skip('Email DAO integration tests', function() {
     this.timeout(100000);

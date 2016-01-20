@@ -1,14 +1,14 @@
 'use strict';
 
-var LoginCtrl = require('../../../../src/js/controller/login/login'),
-    Email = require('../../../../src/js/email/gmail'),
-    Account = require('../../../../src/js/email/account'),
-    Dialog = require('../../../../src/js/util/dialog'),
-    UpdateHandler = require('../../../../src/js/util/update/update-handler'),
-    Auth = require('../../../../src/js/service/auth'),
-    OAuth = require('../../../../src/js/service/oauth'),
-    PrivateKey = require('../../../../src/js/service/privatekey'),
-    GmailClient = require('../../../../src/js/email/gmail-client');
+import LoginCtrl from '../../../../src/js/controller/login/login';
+import Email from '../../../../src/js/email/gmail';
+import Account from '../../../../src/js/email/account';
+import Dialog from '../../../../src/js/util/dialog';
+import UpdateHandler from '../../../../src/js/util/update/update-handler';
+import Auth from '../../../../src/js/service/auth';
+import OAuth from '../../../../src/js/service/oauth';
+import PrivateKey from '../../../../src/js/service/privatekey';
+import GmailClient from '../../../../src/js/email/gmail-client';
 
 describe('Login Controller unit test', function() {
     var scope, location, ctrl,

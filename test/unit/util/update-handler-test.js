@@ -1,10 +1,11 @@
 'use strict';
 
-var DeviceStorageDAO = require('../../../src/js/service/devicestorage'),
-    Auth = require('../../../src/js/service/auth'),
-    cfg = require('../../../src/js/app-config').config,
-    UpdateHandler = require('../../../src/js/util/update/update-handler'),
-    Dialog = require('../../../src/js/util/dialog');
+import DeviceStorageDAO from '../../../src/js/service/devicestorage';
+import Auth from '../../../src/js/service/auth';
+import appConfig from '../../../src/js/app-config';
+const cfg = appConfig.config;
+import UpdateHandler from '../../../src/js/util/update/update-handler';
+import Dialog from '../../../src/js/util/dialog';
 
 describe('UpdateHandler', function() {
     var updateHandler, appConfigStorageStub, authStub, userStorageStub, dialogStub, origDbVersion;

@@ -1,11 +1,11 @@
 'use strict';
 
-var PGP = require('../../../../src/js/crypto/pgp'),
-    LoginNewDeviceCtrl = require('../../../../src/js/controller/login/login-new-device'),
-    KeychainDAO = require('../../../../src/js/service/keychain'),
-    PublicKeyVerifier = require('../../../../src/js/service/publickey-verifier'),
-    EmailDAO = require('../../../../src/js/email/gmail'),
-    Auth = require('../../../../src/js/service/auth');
+import PGP from '../../../../src/js/crypto/pgp';
+import LoginNewDeviceCtrl from '../../../../src/js/controller/login/login-new-device';
+import KeychainDAO from '../../../../src/js/service/keychain';
+import PublicKeyVerifier from '../../../../src/js/service/publickey-verifier';
+import EmailDAO from '../../../../src/js/email/gmail';
+import Auth from '../../../../src/js/service/auth';
 
 describe('Login (new device) Controller unit test', function() {
     var scope, ctrl, emailMock, pgpMock, authMock,

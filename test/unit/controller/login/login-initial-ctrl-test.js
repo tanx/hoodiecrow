@@ -1,9 +1,9 @@
 'use strict';
 
-var Auth = require('../../../../src/js/service/auth'),
-    PublicKeyVerifier = require('../../../../src/js/service/publickey-verifier'),
-    LoginInitialCtrl = require('../../../../src/js/controller/login/login-initial'),
-    Email = require('../../../../src/js/email/gmail');
+import Auth from '../../../../src/js/service/auth';
+import PublicKeyVerifier from '../../../../src/js/service/publickey-verifier';
+import LoginInitialCtrl from '../../../../src/js/controller/login/login-initial';
+import Email from '../../../../src/js/email/gmail';
 
 describe('Login (initial user) Controller unit test', function() {
     var scope, ctrl, location, emailMock, authMock, verifierMock,

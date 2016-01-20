@@ -1,7 +1,7 @@
 'use strict';
 
-var InvitationDAO = require('../../../src/js/service/invitation'),
-    appConfig = require('../../../src/js/app-config');
+import InvitationDAO from '../../../src/js/service/invitation';
+import appConfig from '../../../src/js/app-config';
 
 describe('Invitation DAO unit tests', function() {
     var invitationDao,

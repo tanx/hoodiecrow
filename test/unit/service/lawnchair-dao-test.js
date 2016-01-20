@@ -1,7 +1,6 @@
 'use strict';
 
-var LawnchairDAO = require('../../../src/js/service/lawnchair');
-
+import LawnchairDAO from '../../../src/js/service/lawnchair';
 
 var dbName = 'lawnchair@test.com';
 

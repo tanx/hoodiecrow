@@ -1,9 +1,9 @@
 'use strict';
 
-var OutboxBO = require('../../../src/js/email/outbox'),
-    KeychainDAO = require('../../../src/js/service/keychain'),
-    EmailDAO = require('../../../src/js/email/gmail'),
-    DeviceStorageDAO = require('../../../src/js/service/devicestorage');
+import OutboxBO from '../../../src/js/email/outbox';
+import KeychainDAO from '../../../src/js/service/keychain';
+import EmailDAO from '../../../src/js/email/gmail';
+import DeviceStorageDAO from '../../../src/js/service/devicestorage';
 
 describe('Outbox unit test', function() {
     var outbox, emailDaoStub, devicestorageStub, keychainStub,
