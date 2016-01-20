@@ -1,6 +1,7 @@
 'use strict';
 
 import Auth from '../../../src/js/service/auth';
+import OAuth from '../../../src/js/service/oauth';
 import DeviceStorageDAO from '../../../src/js/service/devicestorage';
 
 describe('Auth unit tests', function() {
