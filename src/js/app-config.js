@@ -3,12 +3,9 @@
 const appCfg = {};
 
 const ngModule = angular.module('woAppConfig', []);
-ngModule.factory('appConfig', function($timeout) {
-    $timeout(function() {
-        return window.fetch(appCfg.config.baseUrl + 'manifest.json');
-    }).then(function(response) {
-        return response.json();
-    }).then(setConfigParams);
+ngModule.factory('appConfig', $timeout => {
+    $timeout(() => fetch(appCfg.config.baseUrl + 'manifest.json'))
+        .then(response => response.json()).then(setConfigParams);
 
     return appCfg;
 });
