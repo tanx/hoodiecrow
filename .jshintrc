@@ -21,7 +21,6 @@
         "Promise" : true,
         "resolves" : true,
         "rejects" : true,
-        "fetch" : true,
         "fetchOk" : true,
         "fetchError" : true,
         "importScripts" : true,
