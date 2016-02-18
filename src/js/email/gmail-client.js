@@ -1,6 +1,6 @@
 'use strict';
 
-import addressparser from 'wo-addressparser';
+import addressparser from 'emailjs-addressparser';
 
 const ngModule = angular.module('woEmail');
 ngModule.service('gmailClient', GmailClient);

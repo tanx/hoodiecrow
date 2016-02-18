@@ -46,26 +46,6 @@ describe('PGP Crypto Api unit tests', function() {
     afterEach(function() {});
 
     describe('Generate key pair', function() {
-        it('should fail', function(done) {
-            pgp.generateKeys({
-                emailAddress: 'whiteout.test@t-onlinede',
-                keySize: keySize,
-                passphrase: passphrase
-            }).catch(function(err) {
-                expect(err.message).to.match(/options/);
-                done();
-            });
-        });
-        it('should fail', function(done) {
-            pgp.generateKeys({
-                emailAddress: 'whiteout.testt-online.de',
-                keySize: keySize,
-                passphrase: passphrase
-            }).catch(function(err) {
-                expect(err.message).to.match(/options/);
-                done();
-            });
-        });
         it('should work without realname', function(done) {
             var keyObject;
 
@@ -379,8 +359,8 @@ describe('PGP Crypto Api unit tests', function() {
                 });
             });
             it('should work without signature', function(done) {
-                openpgp.encryptMessage([pgp._publicKey], message).then(function(ct) {
-                    return pgp.decrypt(ct, undefined);
+                openpgp.encrypt({ publicKeys:[pgp._publicKey], data:message }).then(function(ct) {
+                    return pgp.decrypt(ct.data, undefined);
                 }).then(function(pt) {
                     expect(pt.decrypted).to.equal(message);
                     expect(pt.signaturesValid).to.be.undefined;
@@ -409,8 +389,8 @@ describe('PGP Crypto Api unit tests', function() {
             var clearsigned;
 
             beforeEach(function(done) {
-                openpgp.signClearMessage(pgp._privateKey, 'this is a clearsigned message').then(function(signed) {
-                    clearsigned = signed;
+                openpgp.sign({ privateKeys:pgp._privateKey, data:'this is a clearsigned message' }).then(function(signed) {
+                    clearsigned = signed.data;
                     done();
                 });
             });
@@ -441,9 +421,9 @@ describe('PGP Crypto Api unit tests', function() {
 
             beforeEach(function(done) {
                 signedMessage = 'this is a signed message';
-                openpgp.signClearMessage(pgp._privateKey, signedMessage).then(function(clearsigned) {
+                openpgp.sign({ privateKeys:pgp._privateKey, data:signedMessage }).then(function(clearsigned) {
                     var signatureHeader = '-----BEGIN PGP SIGNATURE-----';
-                    signature = signatureHeader + clearsigned.split(signatureHeader).pop();
+                    signature = signatureHeader + clearsigned.data.split(signatureHeader).pop();
                     done();
                 });
             });

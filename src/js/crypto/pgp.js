@@ -1,6 +1,5 @@
 'use strict';
 
-const util = openpgp.util;
 let config;
 
 const ngModule = angular.module('woCrypto');
@@ -14,7 +13,7 @@ function PGP(appConfig) {
     config = appConfig.config;
     openpgp.config.commentstring = config.pgpComment;
     openpgp.config.prefer_hash_algorithm = openpgp.enums.hash.sha256;
-    openpgp.initWorker(config.workerPath + '/openpgp.worker.min.js');
+    openpgp.initWorker({ path: config.workerPath + '/openpgp.worker.min.js' });
 }
 
 /**
@@ -31,30 +30,13 @@ PGP.prototype.getHKPClient = function() {
  * @return {Promise}
  */
 PGP.prototype.generateKeys = function(options) {
-    return new Promise(function(resolve) {
-        var userId, name, passphrase;
-
-        if (!util.emailRegEx.test(options.emailAddress) || !options.keySize) {
-            throw new Error('Crypto init failed. Not all options set!');
-        }
-
-        // generate keypair
-        name = options.realname ? options.realname.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, '').trim() : '';
-        userId = name + ' <' + options.emailAddress + '>';
-        passphrase = (options.passphrase) ? options.passphrase : undefined;
-
-        resolve({
-            userId: userId,
-            passphrase: passphrase
-        });
-
-    }).then(function(res) {
-        return openpgp.generateKeyPair({
-            keyType: 1, // (keytype 1=RSA)
-            numBits: options.keySize,
-            userId: res.userId,
-            passphrase: res.passphrase
-        });
+    return openpgp.generateKey({
+        numBits: options.keySize,
+        userIds: [{
+            name: options.realname ? options.realname.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, '').trim() : '',
+            email: options.emailAddress
+        }],
+        passphrase: (options.passphrase) ? options.passphrase : undefined
     }).then(function(keys) {
         return {
             keyId: keys.key.primaryKey.getKeyId().toHex().toUpperCase(),
@@ -89,7 +71,7 @@ PGP.prototype.getFingerprint = function(keyArmored) {
  * Show a user's key id.
  */
 PGP.prototype.getKeyId = function(keyArmored) {
-    var key, pubKeyId, privKeyId;
+    let key, pubKeyId, privKeyId;
 
     // process armored key input
     if (keyArmored) {
@@ -116,7 +98,7 @@ PGP.prototype.getKeyId = function(keyArmored) {
  * Read all relevant params of an armored key.
  */
 PGP.prototype.getKeyParams = function(keyArmored) {
-    var key, packet, userIds, emailAddress;
+    let key, packet, userIds, emailAddress;
 
     // process armored key input
     if (keyArmored) {
@@ -131,7 +113,7 @@ PGP.prototype.getKeyParams = function(keyArmored) {
 
     // read user names and email addresses
     userIds = [];
-    key.getUserIds().forEach(function(userId) {
+    key.getUserIds().forEach(userId => {
         if (!userId || userId.indexOf('<') < 0 || userId.indexOf('>') < 0) {
             return;
         }
@@ -164,8 +146,8 @@ PGP.prototype.getKeyParams = function(keyArmored) {
  * @return {String}                     The publick PGP key block
  */
 PGP.prototype.extractPublicKey = function(privateKeyArmored) {
-    var privkey = openpgp.key.readArmored(privateKeyArmored).keys[0];
-    var pubkey = privkey.toPublic();
+    const privkey = openpgp.key.readArmored(privateKeyArmored).keys[0];
+    const pubkey = privkey.toPublic();
     return pubkey.armor();
 };
 
@@ -174,38 +156,37 @@ PGP.prototype.extractPublicKey = function(privateKeyArmored) {
  * @return {Promise}
  */
 PGP.prototype.importKeys = function(options) {
-    var self = this;
-    return new Promise(function(resolve) {
-        var pubKeyId, privKeyId;
+    return new Promise(resolve => {
+        let pubKeyId, privKeyId;
 
         // check options
         if (!options.privateKeyArmored || !options.publicKeyArmored) {
             throw new Error('Importing keys failed. Not all options set!');
         }
 
-        function resetKeys() {
-            self._publicKey = undefined;
-            self._privateKey = undefined;
-        }
+        const resetKeys = () => {
+            this._publicKey = undefined;
+            this._privateKey = undefined;
+        };
 
         // read armored keys
         try {
-            self._publicKey = openpgp.key.readArmored(options.publicKeyArmored).keys[0];
-            self._privateKey = openpgp.key.readArmored(options.privateKeyArmored).keys[0];
+            this._publicKey = openpgp.key.readArmored(options.publicKeyArmored).keys[0];
+            this._privateKey = openpgp.key.readArmored(options.privateKeyArmored).keys[0];
         } catch (e) {
             resetKeys();
             throw new Error('Importing keys failed. Parsing error!');
         }
 
         // decrypt private key with passphrase
-        if (!self._privateKey.decrypt(options.passphrase)) {
+        if (!this._privateKey.decrypt(options.passphrase)) {
             resetKeys();
             throw new Error('Incorrect passphrase!');
         }
 
         // check if keys have the same id
-        pubKeyId = self._publicKey.primaryKey.getKeyId().toHex();
-        privKeyId = self._privateKey.primaryKey.getKeyId().toHex();
+        pubKeyId = this._publicKey.primaryKey.getKeyId().toHex();
+        privKeyId = this._privateKey.primaryKey.getKeyId().toHex();
         if (!pubKeyId || !privKeyId || pubKeyId !== privKeyId) {
             resetKeys();
             throw new Error('Key IDs dont match!');
@@ -220,16 +201,15 @@ PGP.prototype.importKeys = function(options) {
  * @return {Promise}
  */
 PGP.prototype.exportKeys = function() {
-    var self = this;
-    return new Promise(function(resolve) {
-        if (!self._publicKey || !self._privateKey) {
+    return new Promise(resolve => {
+        if (!this._publicKey || !this._privateKey) {
             throw new Error('Could not export keys!');
         }
 
         resolve({
-            keyId: self._publicKey.primaryKey.getKeyId().toHex().toUpperCase(),
-            privateKeyArmored: self._privateKey.armor(),
-            publicKeyArmored: self._publicKey.armor()
+            keyId: this._publicKey.primaryKey.getKeyId().toHex().toUpperCase(),
+            privateKeyArmored: this._privateKey.armor(),
+            publicKeyArmored: this._publicKey.armor()
         });
     });
 };
@@ -239,8 +219,8 @@ PGP.prototype.exportKeys = function() {
  * @return {Promise}
  */
 PGP.prototype.changePassphrase = function(options) {
-    return new Promise(function(resolve) {
-        var privKey, packets, newPassphrase, newKeyArmored;
+    return new Promise(resolve => {
+        let privKey, packets, newPassphrase, newKeyArmored;
 
         // set undefined instead of empty string as passphrase
         newPassphrase = (options.newPassphrase) ? options.newPassphrase : undefined;
@@ -269,7 +249,7 @@ PGP.prototype.changePassphrase = function(options) {
         // encrypt key with new passphrase
         try {
             packets = privKey.getAllKeyPackets();
-            for (var i = 0; i < packets.length; i++) {
+            for (let i = 0; i < packets.length; i++) {
                 packets[i].encrypt(newPassphrase);
             }
             newKeyArmored = privKey.armor();
@@ -291,19 +271,18 @@ PGP.prototype.changePassphrase = function(options) {
  * @return {Promise}
  */
 PGP.prototype.encrypt = function(plaintext, publicKeysArmored) {
-    var self = this;
-    return new Promise(function(resolve) {
-        var publicKeys;
+    return new Promise(resolve => {
+        let publicKeys;
 
         // check keys
-        if (!self._privateKey) {
+        if (!this._privateKey) {
             throw new Error('Error encrypting. Keys must be set!');
         }
         // parse armored public keys
         try {
             if (publicKeysArmored && publicKeysArmored.length) {
                 publicKeys = [];
-                publicKeysArmored.forEach(function(pubkeyArmored) {
+                publicKeysArmored.forEach(pubkeyArmored => {
                     publicKeys = publicKeys.concat(openpgp.key.readArmored(pubkeyArmored).keys);
                 });
             }
@@ -312,15 +291,11 @@ PGP.prototype.encrypt = function(plaintext, publicKeysArmored) {
         }
         resolve(publicKeys);
 
-    }).then(function(publicKeys) {
-        if (publicKeys) {
-            // encrypt and sign the plaintext
-            return openpgp.signAndEncryptMessage(publicKeys, self._privateKey, plaintext);
-        } else {
-            // if no public keys are available encrypt for myself
-            return openpgp.signAndEncryptMessage([self._publicKey], self._privateKey, plaintext);
-        }
-    });
+    }).then(publicKeys => openpgp.encrypt({
+        data: plaintext,
+        publicKeys: publicKeys ? publicKeys : [this._publicKey],
+        privateKeys: [this._privateKey]
+    })).then(encrypted => encrypted.data);
 };
 
 /**
@@ -331,12 +306,11 @@ PGP.prototype.encrypt = function(plaintext, publicKeysArmored) {
  * @return {Promise}
  */
 PGP.prototype.decrypt = function(ciphertext, publicKeyArmored) {
-    var self = this;
-    return new Promise(function(resolve) {
-        var publicKeys, message;
+    return new Promise(resolve => {
+        let publicKeys, message;
 
         // check keys
-        if (!self._privateKey) {
+        if (!this._privateKey) {
             throw new Error('Error decrypting. Keys must be set!');
         }
         // read keys and ciphertext message
@@ -346,7 +320,7 @@ PGP.prototype.decrypt = function(ciphertext, publicKeyArmored) {
                 publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
             } else {
                 // use own public key to know if signatures are available
-                publicKeys = [self._publicKey];
+                publicKeys = [this._publicKey];
             }
             message = openpgp.message.readArmored(ciphertext);
         } catch (err) {
@@ -357,16 +331,14 @@ PGP.prototype.decrypt = function(ciphertext, publicKeyArmored) {
             message: message
         });
 
-    }).then(function(res) {
-        // decrypt and verify pgp message
-        return openpgp.decryptAndVerifyMessage(self._privateKey, res.publicKeys, res.message);
-    }).then(function(decrypted) {
-        // return decrypted plaintext
-        return {
-            decrypted: decrypted.text,
-            signaturesValid: checkSignatureValidity(decrypted.signatures)
-        };
-    });
+    }).then(res => openpgp.decrypt({ // decrypt and verify pgp message
+        privateKey: this._privateKey,
+        publicKeys: res.publicKeys,
+        message: res.message
+    })).then(decrypted => ({ // return decrypted plaintext
+        decrypted: decrypted.data,
+        signaturesValid: checkSignatureValidity(decrypted.signatures)
+    }));
 };
 
 /**
@@ -377,12 +349,11 @@ PGP.prototype.decrypt = function(ciphertext, publicKeyArmored) {
  * @return {Promise}
  */
 PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmored) {
-    var self = this;
-    return new Promise(function(resolve) {
-        var publicKeys, message;
+    return new Promise(resolve => {
+        let publicKeys, message;
 
         // check keys
-        if (!self._privateKey) {
+        if (!this._privateKey) {
             throw new Error('Error verifying signed PGP message. Keys must be set!');
         }
         // read keys and ciphertext message
@@ -392,7 +363,7 @@ PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmo
                 publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
             } else {
                 // use own public key to know if signatures are available
-                publicKeys = [self._publicKey];
+                publicKeys = [this._publicKey];
             }
             message = openpgp.cleartext.readArmored(clearSignedText);
         } catch (err) {
@@ -403,11 +374,10 @@ PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmo
             message: message
         });
 
-    }).then(function(res) {
-        return openpgp.verifyClearSignedMessage(res.publicKeys, res.message);
-    }).then(function(result) {
-        return checkSignatureValidity(result.signatures);
-    });
+    }).then(res => openpgp.verify({
+        publicKeys:res.publicKeys,
+        message:res.message
+    })).then(result => checkSignatureValidity(result.signatures));
 };
 
 /**
@@ -419,12 +389,11 @@ PGP.prototype.verifyClearSignedMessage = function(clearSignedText, publicKeyArmo
  * @return {Promise}
  */
 PGP.prototype.verifySignedMessage = function(message, pgpSignature, publicKeyArmored) {
-    var self = this;
-    return new Promise(function(resolve) {
-        var publicKeys, signatures;
+    return new Promise(resolve => {
+        let publicKeys, signatures;
 
         // check keys
-        if (!self._privateKey) {
+        if (!this._privateKey) {
             throw new Error('Error verifying signed PGP message. Keys must be set!');
         }
         // read keys and ciphertext message
@@ -434,14 +403,14 @@ PGP.prototype.verifySignedMessage = function(message, pgpSignature, publicKeyArm
                 publicKeys = openpgp.key.readArmored(publicKeyArmored).keys;
             } else {
                 // use own public key to know if signatures are available
-                publicKeys = [self._publicKey];
+                publicKeys = [this._publicKey];
             }
         } catch (err) {
             throw new Error('Error verifying signed PGP message!');
         }
         // check signatures
         try {
-            var msg = openpgp.message.readSignedContent(message, pgpSignature);
+            let msg = openpgp.message.readSignedContent(message, pgpSignature);
             signatures = msg.verify(publicKeys);
         } catch (err) {
             throw new Error('Error verifying signed PGP message!');
@@ -462,17 +431,12 @@ PGP.prototype.verifySignedMessage = function(message, pgpSignature, publicKeyArm
  */
 function checkSignatureValidity(signatures) {
     if (!signatures.length) {
-        // signatures array is empty (the message was not signed)
-        return;
+        return;  // signatures array is empty (the message was not signed)
     }
-
-    for (var i = 0; i < signatures.length; i++) {
+    for (let i = 0; i < signatures.length; i++) {
         if (signatures[i].valid !== true) { // null | false
-            // you're using the wrong public key or signatures are invalid
-            return signatures[i].valid;
+            return signatures[i].valid; // you're using the wrong public key or signatures are invalid
         }
     }
-
-    // everything is in order
-    return true;
+    return true; // everything is in order
 }

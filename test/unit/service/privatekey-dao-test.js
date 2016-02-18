@@ -8,7 +8,7 @@ import axe from 'axe-logger';
 import appConfig from '../../../src/js/app-config';
 import cryptoLib from 'crypto-lib';
 const util = cryptoLib.util;
-import Mailbuild from 'mailbuild';
+import Mailbuild from 'emailjs-mime-builder';
 import mailreader from 'mailreader';
 
 describe.skip('Private Key DAO unit tests', function() {
